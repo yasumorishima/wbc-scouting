@@ -474,7 +474,7 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
     ax.set_xlim(-1.8, 1.8)
     ax.set_ylim(0.5, 4.5)
     ax.set_aspect("equal")
-    ax.set_title(title, fontsize=13, fontweight="bold")
+    ax.set_title(title, fontsize=13, fontweight="bold", color="white")
     ax.set_xlabel("plate_x (ft)")
     ax.set_ylabel("plate_z (ft)")
     return im
@@ -545,7 +545,7 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
     ax.set_xlim(-1.2, 1.2)
     ax.set_ylim(1.0, 4.0)
     ax.set_aspect("equal")
-    ax.set_title(title, fontsize=13, fontweight="bold")
+    ax.set_title(title, fontsize=13, fontweight="bold", color="white")
     ax.set_xlabel("plate_x (ft)")
     ax.set_ylabel("plate_z (ft)")
     return im
