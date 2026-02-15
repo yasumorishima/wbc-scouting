@@ -1,0 +1,65 @@
+name: Fetch Statcast Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      country:
+        description: "Country code (usa, dr, venezuela)"
+        required: true
+        type: choice
+        options:
+          - usa
+      mode:
+        description: "Batters or Pitchers"
+        required: true
+        type: choice
+        options:
+          - batters
+          - pitchers
+      year:
+        description: "Season year (blank = both 2024 & 2025)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - "2024"
+          - "2025"
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pybaseball pandas
+
+      - name: Fetch data
+        run: |
+          SCRIPT="fetch_data_${{ inputs.country }}.py"
+          ARGS=""
+          if [ "${{ inputs.mode }}" = "pitchers" ]; then
+            ARGS="--pitchers"
+          fi
+          if [ -n "${{ inputs.year }}" ]; then
+            ARGS="$ARGS --year ${{ inputs.year }}"
+          fi
+          echo "Running: python $SCRIPT $ARGS"
+          python $SCRIPT $ARGS
+
+      - name: Commit & push CSV
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "data: fetch ${{ inputs.country }} ${{ inputs.mode }} statcast (${{ inputs.year || '2024+2025' }})"
+            git push
+          fi
