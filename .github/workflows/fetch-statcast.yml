@@ -25,6 +25,9 @@ on:
           - "2024"
           - "2025"
 
+permissions:
+  contents: write
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
