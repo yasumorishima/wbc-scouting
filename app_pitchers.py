@@ -117,6 +117,7 @@ TEXTS = {
         "pitcher_summary": "Scouting Summary",
         "pitch_filter": "Filter by pitch type",
         "all_pitches": "All Pitches",
+        "count_pitch_mix": "Pitch Mix by Count",
     },
     "JA": {
         "title": "ベネズエラ 投手スカウティングレポート",
@@ -218,6 +219,7 @@ TEXTS = {
         "pitcher_summary": "スカウティング要約",
         "pitch_filter": "球種で絞り込み",
         "all_pitches": "全球種",
+        "count_pitch_mix": "カウント別 球種配分",
     },
 }
 
@@ -556,26 +558,27 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
     return im
 
 
-def draw_movement_chart(df: pd.DataFrame, title: str, ax, density: bool = False):
+def draw_movement_chart(df: pd.DataFrame, title: str, ax, density: bool = True):
     """Plot pitch movement (pfx_x vs pfx_z) colored by pitch type."""
     valid = df.dropna(subset=["pfx_x", "pfx_z", "pitch_type"]).copy()
     valid["pfx_x_in"] = valid["pfx_x"] * 12
     valid["pfx_z_in"] = valid["pfx_z"] * 12
     top_types = valid["pitch_type"].value_counts().head(8).index
 
-    # Density overlay per pitch type
+    # Density contour per pitch type (clipped to each type's data range)
     if density:
         for pt in top_types:
             sub = valid[valid["pitch_type"] == pt]
-            if len(sub) < 10:
+            if len(sub) < 20:
                 continue
             try:
                 xy = np.vstack([sub["pfx_x_in"].values, sub["pfx_z_in"].values])
                 kde = gaussian_kde(xy, bw_method=0.3)
-                x_range = valid["pfx_x_in"]
-                z_range = valid["pfx_z_in"]
-                xg = np.linspace(x_range.min() - 3, x_range.max() + 3, 100)
-                yg = np.linspace(z_range.min() - 3, z_range.max() + 3, 100)
+                # Grid only within this pitch type's data range (no edge artifacts)
+                xmin, xmax = sub["pfx_x_in"].min(), sub["pfx_x_in"].max()
+                zmin, zmax = sub["pfx_z_in"].min(), sub["pfx_z_in"].max()
+                xg = np.linspace(xmin, xmax, 80)
+                yg = np.linspace(zmin, zmax, 80)
                 xx, yy = np.meshgrid(xg, yg)
                 zz = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
                 color = PITCH_COLORS.get(pt, "#AAAAAA")
@@ -598,9 +601,10 @@ def draw_movement_chart(df: pd.DataFrame, title: str, ax, density: bool = False)
     ax.set_xlabel("Horizontal Break (in)", color="white")
     ax.set_ylabel("Induced Vertical Break (in)", color="white")
     ax.set_title(title, fontsize=13, fontweight="bold", color="white")
-    leg = ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=11,
+    leg = ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=12,
                     facecolor="#0e1117", edgecolor="white",
-                    labelspacing=0.8, borderpad=0.8)
+                    labelspacing=1.0, borderpad=1.0,
+                    markerscale=3.0, handletextpad=0.8)
     for text in leg.get_texts():
         text.set_color("white")
     ax.tick_params(colors="white")
@@ -815,7 +819,7 @@ def main():
         st.markdown(t["glossary_movement"])
     show_mvt_density = st.checkbox(
         "Density contour" if lang == "EN" else "密度等高線を表示",
-        value=False, key="mvt_density",
+        value=True, key="mvt_density",
     )
     fig_m, ax_m = plt.subplots(figsize=(10, 5), facecolor="#0e1117")
     ax_m.set_facecolor("#0e1117")
@@ -981,6 +985,66 @@ def main():
             use_container_width=True,
             hide_index=True,
         )
+
+    # Count-by-pitch-type usage chart (stacked bar)
+    st.subheader(t["count_pitch_mix"])
+    mix_data = count_df.dropna(subset=["pitch_type"]).copy()
+    top_pt = mix_data["pitch_type"].value_counts().head(8).index.tolist()
+    mix_data = mix_data[mix_data["pitch_type"].isin(top_pt)]
+
+    count_labels = []
+    mix_rows = []
+    for b, s in all_counts:
+        cdf = mix_data[(mix_data["balls"] == b) & (mix_data["strikes"] == s)]
+        if len(cdf) < 10:
+            continue
+        count_labels.append(f"{b}-{s}")
+        total = len(cdf)
+        row = {}
+        for pt in top_pt:
+            row[pt] = len(cdf[cdf["pitch_type"] == pt]) / total * 100
+        mix_rows.append(row)
+
+    if mix_rows:
+        fig_mix, ax_mix = plt.subplots(figsize=(10, 5), facecolor="#0e1117")
+        ax_mix.set_facecolor("#0e1117")
+        x = np.arange(len(count_labels))
+        bottoms = np.zeros(len(count_labels))
+        bar_width = 0.6
+
+        for pt in top_pt:
+            vals = [row.get(pt, 0) for row in mix_rows]
+            color = PITCH_COLORS.get(pt, "#AAAAAA")
+            label = PITCH_LABELS.get(pt, pt)
+            ax_mix.bar(x, vals, bar_width, bottom=bottoms, color=color,
+                       label=label, edgecolor="none")
+            # Add percentage label for segments >= 10%
+            for i, v in enumerate(vals):
+                if v >= 10:
+                    ax_mix.text(x[i], bottoms[i] + v / 2, f"{v:.0f}%",
+                                ha="center", va="center", fontsize=8,
+                                fontweight="bold", color="white",
+                                path_effects=[pe.withStroke(linewidth=2,
+                                                            foreground="black")])
+            bottoms += np.array(vals)
+
+        ax_mix.set_xticks(x)
+        ax_mix.set_xticklabels(count_labels, color="white", fontsize=10)
+        ax_mix.set_ylabel("Usage %" if lang == "EN" else "使用率 %",
+                          color="white", fontsize=11)
+        ax_mix.set_ylim(0, 105)
+        ax_mix.tick_params(colors="white")
+        for spine in ax_mix.spines.values():
+            spine.set_color("white")
+        leg_mix = ax_mix.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0),
+                                fontsize=11, facecolor="#0e1117",
+                                edgecolor="white", markerscale=2.0,
+                                labelspacing=0.8, borderpad=0.8)
+        for txt in leg_mix.get_texts():
+            txt.set_color("white")
+        fig_mix.tight_layout(rect=[0, 0, 0.82, 1])
+        st.pyplot(fig_mix)
+        plt.close(fig_mix)
 
 
 if __name__ == "__main__":
