@@ -17,7 +17,7 @@ from players import VENEZUELA_PITCHERS, PITCHER_BY_NAME
 TEXTS = {
     "EN": {
         "title": "Venezuela Pitching Scouting Report",
-        "subtitle": "WBC 2026 — Quarterfinal Opponent Pitching Analysis",
+        "subtitle": "WBC 2026 — Projected Quarterfinal Opponent Pitching Analysis",
         "select_pitcher": "Select Pitcher",
         "team_overview": "Staff Overview",
         "season": "Season",
@@ -65,22 +65,30 @@ TEXTS = {
         "opp_avg": "Opp AVG",
         "opp_slg": "Opp SLG",
         "xwoba_against": "xwOBA Against",
+        "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
+        "strength_note": (
+            "Venezuela's staff is anchored by Pablo López (ace-caliber with elite fastball command), "
+            "supported by a deep bullpen mixing power arms and swing-and-miss stuff. "
+            "Left-handed depth includes Ranger Suárez (high GB%, elite contact management). "
+            "Key vulnerabilities: several relievers rely heavily on fastballs and may be exposed "
+            "by disciplined lineups that sit on velocity."
+        ),
     },
     "JA": {
         "title": "ベネズエラ 投手スカウティングレポート",
-        "subtitle": "WBC 2026 — 準々決勝 対戦相手投手分析",
+        "subtitle": "WBC 2026 — 準々決勝（想定）対戦相手投手分析",
         "select_pitcher": "投手を選択",
         "team_overview": "投手陣概要",
         "season": "シーズン",
         "all_seasons": "全シーズン",
         "profile": "投手プロフィール",
         "team": "チーム",
-        "throws": "投げ手",
+        "throws": "投",
         "role": "役割",
         "arsenal": "球種構成",
         "pitch_type": "球種",
-        "count": "球数",
+        "count": "投球数",
         "usage_pct": "使用率",
         "avg_velo": "平均球速",
         "max_velo": "最高球速",
@@ -117,7 +125,15 @@ TEXTS = {
         "opp_avg": "被打率",
         "opp_slg": "被長打率",
         "xwoba_against": "被xwOBA",
+        "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
+        "strength_note": (
+            "ベネズエラ投手陣はパブロ・ロペスがエース格（速球のコマンドが卓越）。"
+            "リリーフ陣はパワーアームと空振りを取れる球種を持つ投手が揃う。"
+            "左腕はレンジャー・スアレスが中心（高いゴロ率、優れたコンタクト管理）。"
+            "弱点: リリーフの一部は速球依存の傾向があり、"
+            "速球を狙い打てる規律のある打線には対応を迫られる可能性がある。"
+        ),
     },
 }
 
@@ -296,6 +312,74 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
     return im
 
 
+def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
+    """Draw 3×3 zone chart using Statcast zone 1-9 (pitcher version: opp BA)."""
+    hit_events = {"single", "double", "triple", "home_run"}
+    ab_events = hit_events | {"field_out", "strikeout", "grounded_into_double_play",
+                              "double_play", "force_out", "fielders_choice",
+                              "fielders_choice_out", "strikeout_double_play", "field_error"}
+
+    valid = df.dropna(subset=["zone"]).copy()
+    valid["zone"] = valid["zone"].astype(int)
+
+    x_edges = np.linspace(-0.83, 0.83, 4)
+    z_edges = np.linspace(1.5, 3.5, 4)
+
+    grid = np.full((3, 3), np.nan)
+    zone_map = {
+        1: (2, 0), 2: (2, 1), 3: (2, 2),
+        4: (1, 0), 5: (1, 1), 6: (1, 2),
+        7: (0, 0), 8: (0, 1), 9: (0, 2),
+    }
+
+    for zone_num, (row, col) in zone_map.items():
+        zdf = valid[valid["zone"] == zone_num]
+        if metric == "usage":
+            total_in_zone = len(valid[(valid["zone"] >= 1) & (valid["zone"] <= 9)])
+            if len(zdf) >= 3 and total_in_zone > 0:
+                grid[row, col] = len(zdf) / total_in_zone * 100
+        else:  # ba (opp BA)
+            ab = zdf[zdf["events"].isin(ab_events)]
+            hits = zdf[zdf["events"].isin(hit_events)]
+            if len(ab) >= 5:
+                grid[row, col] = len(hits) / len(ab)
+
+    if metric == "usage":
+        vmin, vmax = 0, 20
+        cmap = plt.cm.YlOrRd.copy()
+    else:
+        vmin, vmax = 0, 0.450
+        cmap = plt.cm.RdYlBu_r.copy()
+
+    cmap.set_bad(color="#222222")
+    im = ax.pcolormesh(x_edges, z_edges, grid, cmap=cmap, vmin=vmin, vmax=vmax,
+                       edgecolors="white", linewidth=1.5)
+
+    rect = patches.Rectangle((-0.83, 1.5), 1.66, 2.0,
+                              linewidth=2, edgecolor="black", facecolor="none")
+    ax.add_patch(rect)
+
+    for zone_num, (row, col) in zone_map.items():
+        val = grid[row, col]
+        if not np.isnan(val):
+            cx = (x_edges[col] + x_edges[col + 1]) / 2
+            cz = (z_edges[row] + z_edges[row + 1]) / 2
+            if metric == "usage":
+                txt = f"{val:.1f}%"
+            else:
+                txt = f".{int(val * 1000):03d}"
+            ax.text(cx, cz, txt, ha="center", va="center",
+                    fontsize=12, fontweight="bold", color="white")
+
+    ax.set_xlim(-1.2, 1.2)
+    ax.set_ylim(1.0, 4.0)
+    ax.set_aspect("equal")
+    ax.set_title(title, fontsize=13, fontweight="bold")
+    ax.set_xlabel("plate_x (ft)")
+    ax.set_ylabel("plate_z (ft)")
+    return im
+
+
 def draw_movement_chart(df: pd.DataFrame, title: str, ax):
     """Plot pitch movement (pfx_x vs pfx_z) colored by pitch type."""
     valid = df.dropna(subset=["pfx_x", "pfx_z", "pitch_type"]).copy()
@@ -460,6 +544,9 @@ def main():
                 use_container_width=True,
                 hide_index=True,
             )
+
+            st.subheader(t["team_strengths"])
+            st.info(t["strength_note"])
         else:
             st.warning(t["no_data"])
         return
@@ -540,6 +627,22 @@ def main():
     fig.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
+
+    # 3×3 Zone Chart
+    st.subheader(t["zone_3x3"])
+    fig3, (ax3a, ax3b) = plt.subplots(1, 2, figsize=(10, 4.5), facecolor="#0e1117")
+    for ax in (ax3a, ax3b):
+        ax.set_facecolor("#0e1117")
+        ax.tick_params(colors="white")
+        ax.xaxis.label.set_color("white")
+        ax.yaxis.label.set_color("white")
+        ax.title.set_color("white")
+    draw_zone_3x3(pdf, "usage", t["usage_heatmap"], ax3a)
+    im3 = draw_zone_3x3(pdf, "ba", t["ba_heatmap"], ax3b)
+    fig3.colorbar(im3, ax=[ax3a, ax3b], shrink=0.7, pad=0.02)
+    fig3.tight_layout()
+    st.pyplot(fig3)
+    plt.close(fig3)
 
     st.divider()
 

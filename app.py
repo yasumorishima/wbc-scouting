@@ -4,10 +4,12 @@ import pathlib
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.path as mpath
 import matplotlib_fontja  # noqa: F401 — enables Japanese font
 import numpy as np
 import pandas as pd
 import streamlit as st
+from scipy.stats import gaussian_kde
 
 from players import VENEZUELA_BATTERS, PLAYER_BY_NAME
 
@@ -17,7 +19,7 @@ from players import VENEZUELA_BATTERS, PLAYER_BY_NAME
 TEXTS = {
     "EN": {
         "title": "Venezuela Scouting Report",
-        "subtitle": "WBC 2026 — Quarterfinal Opponent Analysis",
+        "subtitle": "WBC 2026 — Projected Quarterfinal Opponent Analysis",
         "select_player": "Select Player",
         "team_overview": "Team Overview",
         "season": "Season",
@@ -62,10 +64,13 @@ TEXTS = {
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
+        "stadium": "Stadium",
+        "zone_3x3": "Zone Chart (3×3)",
+        "density_map": "Hit Density Map",
     },
     "JA": {
         "title": "ベネズエラ スカウティングレポート",
-        "subtitle": "WBC 2026 — 準々決勝 対戦相手分析",
+        "subtitle": "WBC 2026 — 準々決勝（想定）対戦相手分析",
         "select_player": "選手を選択",
         "team_overview": "チーム概要",
         "season": "シーズン",
@@ -73,7 +78,7 @@ TEXTS = {
         "profile": "選手プロフィール",
         "pos": "ポジション",
         "team": "チーム",
-        "bats": "打席",
+        "bats": "打",
         "zone_heatmap": "ストライクゾーン ヒートマップ",
         "ba_heatmap": "ゾーン別 打率",
         "xwoba_heatmap": "ゾーン別 xwOBA",
@@ -89,7 +94,7 @@ TEXTS = {
         "avg_la": "平均打球角度",
         "pitch_type_perf": "球種別パフォーマンス",
         "pitch_type": "球種",
-        "count": "球数",
+        "count": "投球数",
         "ba": "打率",
         "slg": "長打率",
         "whiff_pct": "空振率",
@@ -109,6 +114,9 @@ TEXTS = {
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
+        "stadium": "球場",
+        "zone_3x3": "ゾーンチャート (3×3)",
+        "density_map": "打球密度マップ",
     },
 }
 
@@ -124,6 +132,35 @@ PITCH_LABELS = {
     "ST": "Sweeper",
     "SV": "Slurve",
 }
+
+# ---------------------------------------------------------------------------
+# Stadium data
+# ---------------------------------------------------------------------------
+STADIUM_SCALE = 2.495 / 2.33
+STADIUM_CSV = pathlib.Path(__file__).parent / "data" / "mlbstadiums_wbc.csv"
+
+STADIUMS = {
+    "EN": {
+        "astros": "Daikin Park (Houston)",
+        "marlins": "LoanDepot Park (Miami)",
+    },
+    "JA": {
+        "astros": "ダイキン・パーク（ヒューストン）",
+        "marlins": "ローンデポ・パーク（マイアミ）",
+    },
+}
+
+
+@st.cache_data
+def load_stadium_coords() -> pd.DataFrame:
+    df = pd.read_csv(STADIUM_CSV)
+    # Apply pybaseball's coordinate transform
+    df["x"] = (df["x"] - 125) * STADIUM_SCALE + 125
+    df["y"] = -((df["y"] - 199) * STADIUM_SCALE + 199)
+    # Negate y to match our positive-y, inverted-axis convention
+    df["y"] = -df["y"]
+    return df
+
 
 # ---------------------------------------------------------------------------
 # Data loading
@@ -271,26 +308,97 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
     return im
 
 
-def draw_spray_chart(df: pd.DataFrame, title: str, ax):
-    """Draw spray chart on a baseball field outline."""
-    # field outline
-    theta = np.linspace(-np.pi / 4, np.pi / 4, 100)
-    fence_r = 250
-    ax.plot(fence_r * np.sin(theta) + 125.42,
-            198.27 - fence_r * np.cos(theta),
-            color="white", linewidth=1.5)
+def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
+    """Draw 3×3 zone chart using Statcast zone 1-9."""
+    hit_events = {"single", "double", "triple", "home_run"}
+    ab_events = hit_events | {"field_out", "strikeout", "grounded_into_double_play",
+                              "double_play", "force_out", "fielders_choice",
+                              "fielders_choice_out", "strikeout_double_play", "field_error"}
 
-    # foul lines
-    ax.plot([125.42, 125.42 + fence_r * np.sin(-np.pi / 4)],
-            [198.27, 198.27 - fence_r * np.cos(-np.pi / 4)],
-            color="white", linewidth=1, linestyle="--")
-    ax.plot([125.42, 125.42 + fence_r * np.sin(np.pi / 4)],
-            [198.27, 198.27 - fence_r * np.cos(np.pi / 4)],
-            color="white", linewidth=1, linestyle="--")
+    valid = df.dropna(subset=["zone"]).copy()
+    valid["zone"] = valid["zone"].astype(int)
 
-    # diamond
-    bases = np.array([[125.42, 198.27], [155, 168], [125.42, 138], [96, 168], [125.42, 198.27]])
-    ax.plot(bases[:, 0], bases[:, 1], color="white", linewidth=1)
+    # Zone layout (catcher's view):
+    # 1 2 3   (top)
+    # 4 5 6   (mid)
+    # 7 8 9   (bottom)
+    # Grid: x from -0.83 to 0.83, z from 1.5 to 3.5
+    x_edges = np.linspace(-0.83, 0.83, 4)
+    z_edges = np.linspace(1.5, 3.5, 4)
+
+    grid = np.full((3, 3), np.nan)
+    zone_map = {
+        1: (2, 0), 2: (2, 1), 3: (2, 2),
+        4: (1, 0), 5: (1, 1), 6: (1, 2),
+        7: (0, 0), 8: (0, 1), 9: (0, 2),
+    }
+
+    for zone_num, (row, col) in zone_map.items():
+        zdf = valid[valid["zone"] == zone_num]
+        if metric == "ba":
+            ab = zdf[zdf["events"].isin(ab_events)]
+            hits = zdf[zdf["events"].isin(hit_events)]
+            if len(ab) >= 5:
+                grid[row, col] = len(hits) / len(ab)
+        else:  # xwoba
+            vals = zdf["estimated_woba_using_speedangle"].dropna()
+            if len(vals) >= 5:
+                grid[row, col] = vals.mean()
+
+    if metric == "ba":
+        vmin, vmax = 0, 0.450
+    else:
+        vmin, vmax = 0.150, 0.500
+
+    cmap = plt.cm.RdYlBu_r.copy()
+    cmap.set_bad(color="#222222")
+    im = ax.pcolormesh(x_edges, z_edges, grid, cmap=cmap, vmin=vmin, vmax=vmax,
+                       edgecolors="white", linewidth=1.5)
+
+    # strike zone box
+    rect = patches.Rectangle((-0.83, 1.5), 1.66, 2.0,
+                              linewidth=2, edgecolor="black", facecolor="none")
+    ax.add_patch(rect)
+
+    # annotate
+    for zone_num, (row, col) in zone_map.items():
+        val = grid[row, col]
+        if not np.isnan(val):
+            cx = (x_edges[col] + x_edges[col + 1]) / 2
+            cz = (z_edges[row] + z_edges[row + 1]) / 2
+            txt = f".{int(val * 1000):03d}"
+            ax.text(cx, cz, txt, ha="center", va="center",
+                    fontsize=12, fontweight="bold", color="white")
+
+    ax.set_xlim(-1.2, 1.2)
+    ax.set_ylim(1.0, 4.0)
+    ax.set_aspect("equal")
+    ax.set_title(title, fontsize=13, fontweight="bold")
+    ax.set_xlabel("plate_x (ft)")
+    ax.set_ylabel("plate_z (ft)")
+    return im
+
+
+def draw_spray_chart(df: pd.DataFrame, title: str, ax, stadium: str = "astros",
+                     density: bool = False):
+    """Draw spray chart on a real stadium outline."""
+    stadium_df = load_stadium_coords()
+    coords = stadium_df[stadium_df["team"] == stadium]
+
+    if coords.empty:
+        # fallback generic arc
+        theta = np.linspace(-np.pi / 4, np.pi / 4, 100)
+        fence_r = 250
+        ax.plot(fence_r * np.sin(theta) + 125.42,
+                198.27 - fence_r * np.cos(theta),
+                color="white", linewidth=1.5)
+    else:
+        for segment in coords["segment"].unique():
+            seg = coords[coords["segment"] == segment]
+            path = mpath.Path(seg[["x", "y"]].values)
+            patch = patches.PathPatch(path, facecolor="none", edgecolor="white",
+                                      lw=1.5, zorder=1)
+            ax.add_patch(patch)
 
     valid = df.dropna(subset=["hc_x", "hc_y", "events"]).copy()
     color_map = {
@@ -300,7 +408,22 @@ def draw_spray_chart(df: pd.DataFrame, title: str, ax):
         "single": "#4caf50",
     }
     valid["color"] = valid["events"].map(color_map).fillna("#888888")
-    valid["zorder"] = valid["events"].apply(lambda x: 5 if x == "home_run" else (4 if x in ("double", "triple") else 3))
+    valid["zorder"] = valid["events"].apply(
+        lambda x: 5 if x == "home_run" else (4 if x in ("double", "triple") else 3)
+    )
+
+    # Density heatmap overlay
+    if density and len(valid) >= 10:
+        try:
+            xy = np.vstack([valid["hc_x"].values, valid["hc_y"].values])
+            kde = gaussian_kde(xy, bw_method=0.15)
+            xg = np.linspace(0, 250, 200)
+            yg = np.linspace(-20, 220, 200)
+            xx, yy = np.meshgrid(xg, yg)
+            zz = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
+            ax.contourf(xx, yy, zz, levels=10, cmap="YlOrRd", alpha=0.35, zorder=2)
+        except np.linalg.LinAlgError:
+            pass  # skip if KDE fails (e.g., collinear data)
 
     for _, row in valid.iterrows():
         ax.scatter(
@@ -543,6 +666,22 @@ def main():
     st.pyplot(fig)
     plt.close(fig)
 
+    # 3×3 Zone Chart
+    st.subheader(t["zone_3x3"])
+    fig3, (ax3a, ax3b) = plt.subplots(1, 2, figsize=(10, 4.5), facecolor="#0e1117")
+    for ax in (ax3a, ax3b):
+        ax.set_facecolor("#0e1117")
+        ax.tick_params(colors="white")
+        ax.xaxis.label.set_color("white")
+        ax.yaxis.label.set_color("white")
+        ax.title.set_color("white")
+    draw_zone_3x3(pdf, "ba", t["ba_heatmap"], ax3a)
+    im3 = draw_zone_3x3(pdf, "xwoba", t["xwoba_heatmap"], ax3b)
+    fig3.colorbar(im3, ax=[ax3a, ax3b], shrink=0.7, pad=0.02)
+    fig3.tight_layout()
+    st.pyplot(fig3)
+    plt.close(fig3)
+
     st.divider()
 
     # Row 3: Spray Chart + Batted Ball
@@ -550,9 +689,17 @@ def main():
 
     with col_spray:
         st.subheader(t["spray_chart"])
+        stadium_keys = list(STADIUMS["EN"].keys())
+        stadium_labels = [STADIUMS[lang][k] for k in stadium_keys]
+        stadium_idx = st.selectbox(t["stadium"], range(len(stadium_keys)),
+                                   format_func=lambda i: stadium_labels[i])
+        stadium_key = stadium_keys[stadium_idx]
+        show_density = st.checkbox(t["density_map"], value=False)
+
         fig_sp, ax_sp = plt.subplots(figsize=(6, 6), facecolor="#0e1117")
         ax_sp.set_facecolor("#0e1117")
-        draw_spray_chart(pdf, player["name"], ax_sp)
+        draw_spray_chart(pdf, player["name"], ax_sp, stadium=stadium_key,
+                         density=show_density)
         fig_sp.tight_layout()
         st.pyplot(fig_sp)
         plt.close(fig_sp)
