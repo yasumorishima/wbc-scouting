@@ -806,15 +806,19 @@ def main():
 
     stats = batting_stats(pdf)
 
-    # Row 1: Profile Card — ⑧ use 6 columns instead of 8 for wider cards
+    # Row 1: Profile Card — 2 rows for readability
     st.header(f"🇻🇪 {player['name']}")
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    c1, c2, c3 = st.columns(3)
     c1.metric(t["pos"], player["pos"])
     c2.metric(t["team"], player["team"])
     c3.metric(t["bats"], player["bats"])
-    c4.metric("AVG / OBP / SLG", f"{stats['AVG']:.3f} / {stats['OBP']:.3f} / {stats['SLG']:.3f}")
-    c5.metric("OPS", f"{stats['OPS']:.3f}")
-    c6.metric("xwOBA", f"{stats['xwOBA']:.3f}" if stats["xwOBA"] else "—")
+
+    c4, c5, c6, c7, c8 = st.columns(5)
+    c4.metric("AVG", f"{stats['AVG']:.3f}")
+    c5.metric("OBP", f"{stats['OBP']:.3f}")
+    c6.metric("SLG", f"{stats['SLG']:.3f}")
+    c7.metric("OPS", f"{stats['OPS']:.3f}")
+    c8.metric("xwOBA", f"{stats['xwOBA']:.3f}" if stats["xwOBA"] else "—")
 
     # ③ Glossary expander for stats
     with st.expander("Stats glossary" if lang == "EN" else "用語の説明を見る"):
@@ -828,10 +832,14 @@ def main():
 
     st.divider()
 
-    # Row 2: Zone Heatmaps
+    # Row 2: Zone Heatmaps — colorbar in dedicated column outside graphs
     st.subheader(t["zone_heatmap"])
     st.caption(t["danger_zone"])
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), facecolor="#0e1117")
+    fig = plt.figure(figsize=(14, 5), facecolor="#0e1117")
+    gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.3)
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[0, 1])
+    cax = fig.add_subplot(gs[0, 2])
     for ax in (ax1, ax2):
         ax.set_facecolor("#0e1117")
         ax.tick_params(colors="white")
@@ -840,14 +848,19 @@ def main():
         ax.title.set_color("white")
     draw_zone_heatmap(pdf, "ba", t["ba_heatmap"], ax1)
     im = draw_zone_heatmap(pdf, "xwoba", t["xwoba_heatmap"], ax2)
-    fig.colorbar(im, ax=[ax1, ax2], shrink=0.7, pad=0.04)
+    cb = fig.colorbar(im, cax=cax)
+    cb.ax.tick_params(colors="white")
     fig.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
 
-    # ⑥ 3×3 Zone Chart — fix colorbar overlap with larger pad
+    # 3×3 Zone Chart — colorbar in dedicated column
     st.subheader(t["zone_3x3"])
-    fig3, (ax3a, ax3b) = plt.subplots(1, 2, figsize=(10, 4.5), facecolor="#0e1117")
+    fig3 = plt.figure(figsize=(12, 4.5), facecolor="#0e1117")
+    gs3 = fig3.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.35)
+    ax3a = fig3.add_subplot(gs3[0, 0])
+    ax3b = fig3.add_subplot(gs3[0, 1])
+    cax3 = fig3.add_subplot(gs3[0, 2])
     for ax in (ax3a, ax3b):
         ax.set_facecolor("#0e1117")
         ax.tick_params(colors="white")
@@ -856,7 +869,8 @@ def main():
         ax.title.set_color("white")
     draw_zone_3x3(pdf, "ba", t["ba_heatmap"], ax3a)
     im3 = draw_zone_3x3(pdf, "xwoba", t["xwoba_heatmap"], ax3b)
-    fig3.colorbar(im3, ax=[ax3a, ax3b], shrink=0.7, pad=0.06)
+    cb3 = fig3.colorbar(im3, cax=cax3)
+    cb3.ax.tick_params(colors="white")
     fig3.tight_layout()
     st.pyplot(fig3)
     plt.close(fig3)
@@ -873,7 +887,6 @@ def main():
         stadium_idx = st.selectbox(t["stadium"], range(len(stadium_keys)),
                                    format_func=lambda i: stadium_labels[i])
         stadium_key = stadium_keys[stadium_idx]
-        # ⑨ Density map default ON
         show_density = st.checkbox(t["density_map"], value=True)
 
         fig_sp, ax_sp = plt.subplots(figsize=(6, 6), facecolor="#0e1117")
@@ -886,7 +899,6 @@ def main():
 
     with col_bb:
         st.subheader(t["batted_ball"])
-        # ③ Glossary for batted ball
         with st.expander("What do these mean?" if lang == "EN" else "用語の説明を見る"):
             st.markdown(t["glossary_batted"])
         profile = batted_ball_profile(pdf, t)
@@ -895,6 +907,24 @@ def main():
                 st.metric(k, v)
         else:
             st.write(t["no_data"])
+
+    # Spray Chart: vs LHP / vs RHP
+    spray_lhp = "Spray Chart — vs LHP" if lang == "EN" else "打球方向図 — vs 左投手"
+    spray_rhp = "Spray Chart — vs RHP" if lang == "EN" else "打球方向図 — vs 右投手"
+    col_sp_l, col_sp_r = st.columns(2)
+    for col_sp, throws, sp_title in [(col_sp_l, "L", spray_lhp), (col_sp_r, "R", spray_rhp)]:
+        with col_sp:
+            split_sp = pdf[pdf["p_throws"] == throws]
+            if split_sp.empty:
+                st.write(t["no_data"])
+                continue
+            fig_sps, ax_sps = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
+            ax_sps.set_facecolor("#0e1117")
+            draw_spray_chart(split_sp, sp_title, ax_sps, stadium=stadium_key,
+                             density=show_density)
+            fig_sps.tight_layout()
+            st.pyplot(fig_sps)
+            plt.close(fig_sps)
 
     st.divider()
 
@@ -972,24 +1002,33 @@ def main():
 
     st.divider()
 
-    # Row 6: Count-based Performance
+    # Row 6: Count-based Performance — full count matrix
     st.subheader(t["count_perf"])
-    # ② Count explanation
     st.caption(t["count_explain"])
 
     count_df = pdf.dropna(subset=["balls", "strikes"]).copy()
-    count_df["count_cat"] = count_df.apply(
-        lambda r: count_category(int(r["balls"]), int(r["strikes"])), axis=1
-    )
+    count_df["balls"] = count_df["balls"].astype(int)
+    count_df["strikes"] = count_df["strikes"].astype(int)
+
+    # All possible counts in game order
+    all_counts = [
+        (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
+        (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
+    ]
 
     count_rows = []
-    for cat, label in [("ahead", t["ahead"]), ("behind", t["behind"]), ("even", t["even"])]:
-        cdf = count_df[count_df["count_cat"] == cat]
+    for b, s in all_counts:
+        cat = count_category(b, s)
+        tag = {"ahead": t["ahead"], "behind": t["behind"], "even": t["even"]}[cat]
+        cdf = count_df[(count_df["balls"] == b) & (count_df["strikes"] == s)]
         if cdf.empty:
             continue
         cs = batting_stats(cdf)
+        if cs["PA"] < 5:
+            continue
         count_rows.append({
-            "Situation": label,
+            ("Count" if lang == "EN" else "カウント"): f"{b}-{s}",
+            ("Type" if lang == "EN" else "分類"): tag,
             "PA": cs["PA"],
             "AVG": cs["AVG"],
             "OBP": cs["OBP"],
@@ -1005,7 +1044,7 @@ def main():
             count_table.style.format({
                 "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                 "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-            }),
+            }).background_gradient(subset=["OPS"], cmap="RdYlGn"),
             use_container_width=True,
             hide_index=True,
         )
