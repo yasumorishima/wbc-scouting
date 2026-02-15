@@ -1017,7 +1017,7 @@ def main():
             color = PITCH_COLORS.get(pt, "#AAAAAA")
             label = PITCH_LABELS.get(pt, pt)
             ax_mix.bar(x, vals, bar_width, bottom=bottoms, color=color,
-                       label=label, edgecolor="none")
+                       label=label, edgecolor="white", linewidth=0.8)
             # Add percentage label for segments >= 10%
             for i, v in enumerate(vals):
                 if v >= 10:
