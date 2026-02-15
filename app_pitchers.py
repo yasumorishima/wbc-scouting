@@ -9,6 +9,7 @@ import matplotlib_fontja  # noqa: F401 — enables Japanese font
 import numpy as np
 import pandas as pd
 import streamlit as st
+from scipy.stats import gaussian_kde
 
 from players import VENEZUELA_PITCHERS, PITCHER_BY_NAME
 
@@ -114,6 +115,8 @@ TEXTS = {
             "vertical axis = induced vertical break. Pitches are colored by type."
         ),
         "pitcher_summary": "Scouting Summary",
+        "pitch_filter": "Filter by pitch type",
+        "all_pitches": "All Pitches",
     },
     "JA": {
         "title": "ベネズエラ 投手スカウティングレポート",
@@ -213,6 +216,8 @@ TEXTS = {
             "縦軸 = 重力に逆らう縦の変化量。球種ごとに色分けされています。"
         ),
         "pitcher_summary": "スカウティング要約",
+        "pitch_filter": "球種で絞り込み",
+        "all_pitches": "全球種",
     },
 }
 
@@ -551,18 +556,41 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
     return im
 
 
-def draw_movement_chart(df: pd.DataFrame, title: str, ax):
+def draw_movement_chart(df: pd.DataFrame, title: str, ax, density: bool = False):
     """Plot pitch movement (pfx_x vs pfx_z) colored by pitch type."""
     valid = df.dropna(subset=["pfx_x", "pfx_z", "pitch_type"]).copy()
+    valid["pfx_x_in"] = valid["pfx_x"] * 12
+    valid["pfx_z_in"] = valid["pfx_z"] * 12
     top_types = valid["pitch_type"].value_counts().head(8).index
+
+    # Density overlay per pitch type
+    if density:
+        for pt in top_types:
+            sub = valid[valid["pitch_type"] == pt]
+            if len(sub) < 10:
+                continue
+            try:
+                xy = np.vstack([sub["pfx_x_in"].values, sub["pfx_z_in"].values])
+                kde = gaussian_kde(xy, bw_method=0.3)
+                x_range = valid["pfx_x_in"]
+                z_range = valid["pfx_z_in"]
+                xg = np.linspace(x_range.min() - 3, x_range.max() + 3, 100)
+                yg = np.linspace(z_range.min() - 3, z_range.max() + 3, 100)
+                xx, yy = np.meshgrid(xg, yg)
+                zz = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
+                color = PITCH_COLORS.get(pt, "#AAAAAA")
+                ax.contour(xx, yy, zz, levels=3, colors=[color], alpha=0.6,
+                           linewidths=1.5, zorder=1)
+            except np.linalg.LinAlgError:
+                pass
 
     for pt in top_types:
         sub = valid[valid["pitch_type"] == pt]
         color = PITCH_COLORS.get(pt, "#AAAAAA")
         label = PITCH_LABELS.get(pt, pt)
         ax.scatter(
-            sub["pfx_x"] * 12, sub["pfx_z"] * 12,  # convert ft to inches
-            c=color, s=15, alpha=0.5, label=label, edgecolors="none",
+            sub["pfx_x_in"], sub["pfx_z_in"],
+            c=color, s=15, alpha=0.5, label=label, edgecolors="none", zorder=3,
         )
 
     ax.axhline(0, color="white", linewidth=0.5, alpha=0.3)
@@ -570,7 +598,8 @@ def draw_movement_chart(df: pd.DataFrame, title: str, ax):
     ax.set_xlabel("Horizontal Break (in)", color="white")
     ax.set_ylabel("Induced Vertical Break (in)", color="white")
     ax.set_title(title, fontsize=13, fontweight="bold", color="white")
-    ax.legend(loc="upper left", fontsize=8, framealpha=0.6)
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=11,
+              framealpha=0.7, labelspacing=0.8, borderpad=0.8)
     ax.tick_params(colors="white")
 
 
@@ -784,12 +813,16 @@ def main():
         st.subheader(t["movement_chart"])
         with st.expander("How to read this chart" if lang == "EN" else "チャートの見方"):
             st.markdown(t["glossary_movement"])
+        show_mvt_density = st.checkbox(
+            "Density contour" if lang == "EN" else "密度等高線を表示",
+            value=True, key="mvt_density",
+        )
         fig_m, ax_m = plt.subplots(figsize=(6, 6), facecolor="#0e1117")
         ax_m.set_facecolor("#0e1117")
         for spine in ax_m.spines.values():
             spine.set_color("white")
-        draw_movement_chart(pdf, pitcher["name"], ax_m)
-        fig_m.tight_layout()
+        draw_movement_chart(pdf, pitcher["name"], ax_m, density=show_mvt_density)
+        fig_m.tight_layout(rect=[0, 0, 0.78, 1])  # leave room for legend
         st.pyplot(fig_m)
         plt.close(fig_m)
 
@@ -806,8 +839,22 @@ def main():
 
     st.divider()
 
+    # --- Pitch type filter (shared for heatmaps, zone, platoon, count) ---
+    avail_types = pdf.dropna(subset=["pitch_type"])["pitch_type"].value_counts().head(8).index.tolist()
+    pitch_options = [t["all_pitches"]] + [PITCH_LABELS.get(pt, pt) for pt in avail_types]
+    selected_pitch = st.selectbox(t["pitch_filter"], pitch_options, key="pitch_filter")
+
+    if selected_pitch == t["all_pitches"]:
+        fdf = pdf  # filtered dataframe
+    else:
+        # reverse lookup from label to code
+        label_to_code = {PITCH_LABELS.get(pt, pt): pt for pt in avail_types}
+        fdf = pdf[pdf["pitch_type"] == label_to_code[selected_pitch]]
+
+    pitch_suffix = f" — {selected_pitch}" if selected_pitch != t["all_pitches"] else ""
+
     # Row 4: Zone Heatmaps — colorbar in dedicated column
-    st.subheader(t["zone_heatmap"])
+    st.subheader(t["zone_heatmap"] + pitch_suffix)
     st.caption(t["danger_zone"])
     fig = plt.figure(figsize=(14, 5), facecolor="#0e1117")
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.3)
@@ -820,8 +867,8 @@ def main():
         ax.xaxis.label.set_color("white")
         ax.yaxis.label.set_color("white")
         ax.title.set_color("white")
-    draw_zone_heatmap(pdf, "usage", t["usage_heatmap"], ax1)
-    im = draw_zone_heatmap(pdf, "ba", t["ba_heatmap"], ax2)
+    draw_zone_heatmap(fdf, "usage", t["usage_heatmap"], ax1)
+    im = draw_zone_heatmap(fdf, "ba", t["ba_heatmap"], ax2)
     cb = fig.colorbar(im, cax=cax)
     cb.ax.tick_params(colors="white")
     fig.tight_layout()
@@ -829,7 +876,7 @@ def main():
     plt.close(fig)
 
     # 3×3 Zone Chart — colorbar in dedicated column
-    st.subheader(t["zone_3x3"])
+    st.subheader(t["zone_3x3"] + pitch_suffix)
     fig3 = plt.figure(figsize=(12, 4.5), facecolor="#0e1117")
     gs3 = fig3.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.35)
     ax3a = fig3.add_subplot(gs3[0, 0])
@@ -841,8 +888,8 @@ def main():
         ax.xaxis.label.set_color("white")
         ax.yaxis.label.set_color("white")
         ax.title.set_color("white")
-    draw_zone_3x3(pdf, "usage", t["usage_heatmap"], ax3a)
-    im3 = draw_zone_3x3(pdf, "ba", t["ba_heatmap"], ax3b)
+    draw_zone_3x3(fdf, "usage", t["usage_heatmap"], ax3a)
+    im3 = draw_zone_3x3(fdf, "ba", t["ba_heatmap"], ax3b)
     cb3 = fig3.colorbar(im3, cax=cax3)
     cb3.ax.tick_params(colors="white")
     fig3.tight_layout()
@@ -852,7 +899,7 @@ def main():
     st.divider()
 
     # Row 5: Platoon Splits
-    st.subheader(t["platoon"])
+    st.subheader(t["platoon"] + pitch_suffix)
     with st.expander("What are platoon splits?" if lang == "EN" else "左右打者別成績とは？"):
         st.markdown(t["glossary_platoon"])
 
@@ -861,7 +908,7 @@ def main():
     for col, stand, label in [(col_l, "L", t["vs_lhb"]), (col_r, "R", t["vs_rhb"])]:
         with col:
             st.markdown(f"**{label}**")
-            split_df = pdf[pdf["stand"] == stand]
+            split_df = fdf[fdf["stand"] == stand]
             if split_df.empty:
                 st.write(t["no_data"])
                 continue
@@ -887,10 +934,10 @@ def main():
     st.divider()
 
     # Row 6: Count-based Performance — full count matrix
-    st.subheader(t["count_perf"])
+    st.subheader(t["count_perf"] + pitch_suffix)
     st.caption(t["count_explain"])
 
-    count_df = pdf.dropna(subset=["balls", "strikes"]).copy()
+    count_df = fdf.dropna(subset=["balls", "strikes"]).copy()
     count_df["balls"] = count_df["balls"].astype(int)
     count_df["strikes"] = count_df["strikes"].astype(int)
 
