@@ -1,0 +1,19 @@
+"""Puerto Rico WBC 2026 roster — MLB pitchers."""
+
+# Note: Luis Quinones (Twins), Eduardo Rivera (Red Sox), Elmer Rodriguez (Yankees),
+# and Ricardo Velez (Rangers) are minor-league prospects without confirmed MLBAM IDs
+# and are excluded from this list.
+
+PR_PITCHERS = [
+    {"name": "Fernando Cruz",  "mlbam_id": 518585, "team": "Yankees",  "throws": "R", "role": "RP"},
+    {"name": "Edwin Díaz",     "mlbam_id": 621242, "team": "Dodgers",  "throws": "R", "role": "RP"},
+    {"name": "José Espada",    "mlbam_id": 664744, "team": "Orioles",  "throws": "R", "role": "RP"},
+    {"name": "Rico Garcia",    "mlbam_id": 670329, "team": "Orioles",  "throws": "R", "role": "RP"},
+    {"name": "Seth Lugo",      "mlbam_id": 607625, "team": "Royals",   "throws": "R", "role": "SP"},
+    {"name": "Jovani Morán",   "mlbam_id": 663558, "team": "Red Sox",  "throws": "L", "role": "RP"},
+    {"name": "Yacksel Ríos",   "mlbam_id": 605441, "team": "Cubs",     "throws": "R", "role": "RP"},
+]
+
+# Lookup helpers
+PITCHER_BY_ID = {p["mlbam_id"]: p for p in PR_PITCHERS}
+PITCHER_BY_NAME = {p["name"]: p for p in PR_PITCHERS}

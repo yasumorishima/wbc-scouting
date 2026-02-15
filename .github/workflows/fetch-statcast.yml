@@ -4,11 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       country:
-        description: "Country code (usa, dr, venezuela)"
+        description: "Country code (usa, dr, venezuela, pr)"
         required: true
         type: choice
         options:
           - usa
+          - pr
       mode:
         description: "Batters or Pitchers"
         required: true
