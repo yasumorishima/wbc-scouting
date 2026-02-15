@@ -598,8 +598,11 @@ def draw_movement_chart(df: pd.DataFrame, title: str, ax, density: bool = False)
     ax.set_xlabel("Horizontal Break (in)", color="white")
     ax.set_ylabel("Induced Vertical Break (in)", color="white")
     ax.set_title(title, fontsize=13, fontweight="bold", color="white")
-    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=11,
-              framealpha=0.7, labelspacing=0.8, borderpad=0.8)
+    leg = ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=11,
+                    facecolor="#0e1117", edgecolor="white",
+                    labelspacing=0.8, borderpad=0.8)
+    for text in leg.get_texts():
+        text.set_color("white")
     ax.tick_params(colors="white")
 
 
@@ -806,43 +809,45 @@ def main():
 
     st.divider()
 
-    # Row 3: Movement Chart + Batted Ball
-    col_mov, col_velo = st.columns([3, 2])
+    # Row 3: Movement Chart (full width, landscape)
+    st.subheader(t["movement_chart"])
+    with st.expander("How to read this chart" if lang == "EN" else "チャートの見方"):
+        st.markdown(t["glossary_movement"])
+    show_mvt_density = st.checkbox(
+        "Density contour" if lang == "EN" else "密度等高線を表示",
+        value=False, key="mvt_density",
+    )
+    fig_m, ax_m = plt.subplots(figsize=(10, 5), facecolor="#0e1117")
+    ax_m.set_facecolor("#0e1117")
+    for spine in ax_m.spines.values():
+        spine.set_color("white")
+    draw_movement_chart(pdf, pitcher["name"], ax_m, density=show_mvt_density)
+    fig_m.tight_layout(rect=[0, 0, 0.82, 1])  # leave room for legend
+    st.pyplot(fig_m)
+    plt.close(fig_m)
 
-    with col_mov:
-        st.subheader(t["movement_chart"])
-        with st.expander("How to read this chart" if lang == "EN" else "チャートの見方"):
-            st.markdown(t["glossary_movement"])
-        show_mvt_density = st.checkbox(
-            "Density contour" if lang == "EN" else "密度等高線を表示",
-            value=True, key="mvt_density",
-        )
-        fig_m, ax_m = plt.subplots(figsize=(6, 6), facecolor="#0e1117")
-        ax_m.set_facecolor("#0e1117")
-        for spine in ax_m.spines.values():
-            spine.set_color("white")
-        draw_movement_chart(pdf, pitcher["name"], ax_m, density=show_mvt_density)
-        fig_m.tight_layout(rect=[0, 0, 0.78, 1])  # leave room for legend
-        st.pyplot(fig_m)
-        plt.close(fig_m)
+    st.divider()
 
-    with col_velo:
-        st.subheader(t["batted_ball"])
-        with st.expander("What do these mean?" if lang == "EN" else "用語の説明を見る"):
-            st.markdown(t["glossary_batted"])
-        bb_profile = batted_ball_against(pdf, t)
-        if bb_profile:
-            for k, v in bb_profile.items():
-                st.metric(k, v)
-        else:
-            st.write(t["no_data"])
+    # Row 3b: Batted Ball Against
+    st.subheader(t["batted_ball"])
+    with st.expander("What do these mean?" if lang == "EN" else "用語の説明を見る"):
+        st.markdown(t["glossary_batted"])
+    bb_profile = batted_ball_against(pdf, t)
+    if bb_profile:
+        bb_cols = st.columns(len(bb_profile))
+        for i, (k, v) in enumerate(bb_profile.items()):
+            bb_cols[i].metric(k, v)
+    else:
+        st.write(t["no_data"])
 
     st.divider()
 
     # --- Pitch type filter (shared for heatmaps, zone, platoon, count) ---
+    st.markdown(f"### {t['pitch_filter']}")
     avail_types = pdf.dropna(subset=["pitch_type"])["pitch_type"].value_counts().head(8).index.tolist()
     pitch_options = [t["all_pitches"]] + [PITCH_LABELS.get(pt, pt) for pt in avail_types]
-    selected_pitch = st.selectbox(t["pitch_filter"], pitch_options, key="pitch_filter")
+    selected_pitch = st.selectbox(t["pitch_filter"], pitch_options, key="pitch_filter",
+                                  label_visibility="collapsed")
 
     if selected_pitch == t["all_pitches"]:
         fdf = pdf  # filtered dataframe
