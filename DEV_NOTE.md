@@ -17,14 +17,18 @@
 - [x] `.gitignore`
 - [x] `data/wbc2026_rosters.csv`: 全20チームMLB選手一覧（Baseball America 2/5発表）
 
+### 完了（2/21）
+1. ✅ **打者データ取得**: 56,114行 → `data/venezuela_statcast.csv`
+2. ✅ **投手データ取得**: 29,301行 → `data/venezuela_pitchers_statcast.csv`
+3. ✅ **GitHub リポジトリ作成・push**: https://github.com/yasumorishima/wbc-scouting（public）
+   - cp932エンコードエラー → `PYTHONUTF8=1`で解決
+   - CSV大容量push → `git config http.postBuffer 157286400`
+
 ### 未完了（次回やること）
-1. **打者データ取得**: `python fetch_data.py` → `data/venezuela_statcast.csv`
-2. **打者アプリ動作確認**: `streamlit run app.py`
-3. **投手データ取得**: `python fetch_data.py --pitchers` → `data/venezuela_pitchers_statcast.csv`
-4. **投手アプリ動作確認**: `streamlit run app_pitchers.py`
-5. **GitHub リポジトリ作成**: `yasumorishima/wbc-scouting`（public）→ CSVごとpush
-6. **Streamlit Community Cloud デプロイ**（打者・投手それぞれ or マルチページ化）
-7. **ブログ記事**（任意）
+1. **Streamlit Community Cloud デプロイ**（ブラウザ操作必要）
+   - 打者: `app.py`、投手: `app_pitchers.py`（別アプリとしてデプロイ）
+2. **デプロイ後URL追記**（README、Profile README等）
+3. **ブログ記事**（任意）
 
 ## MLBAM ID一覧
 
@@ -81,6 +85,15 @@ C:\Users\fw_ya\Desktop\Claude_code\wbc-scouting\
     ├── (venezuela_statcast.csv)         ← fetch_data.py実行後
     └── (venezuela_pitchers_statcast.csv) ← fetch_data.py --pitchers実行後
 ```
+
+## 設計方針
+- **国ごと・打者/投手ごとに完全に別ファイル構成にする**
+- 既存ファイルに他国の選手を追加しない（情報過多を避ける）
+- 選手定義ファイルも打者・投手で分離する
+- 例: ドミニカ → `players_dr_batters.py` / `players_dr_pitchers.py` / `app_dr.py` / `app_dr_pitchers.py`
+- **データ取得はGitHub Actionsで実行**（ローカルPCはRAM 4GBで重いため）
+  - ベネズエラ・ドミニカはローカルで取得済み（そのまま使用）
+  - アメリカ以降はGitHub Actionsワークフローで取得 → 自動commit/push
 
 ## 技術メモ
 - ゾーンヒートマップ: plate_x(-1.5~1.5), plate_z(1.0~4.0)を5×5グリッド分割、セルのサンプル数5以上で表示
