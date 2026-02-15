@@ -5,6 +5,7 @@ import pathlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.path as mpath
+import matplotlib.patheffects as pe
 import matplotlib_fontja  # noqa: F401 — enables Japanese font
 import numpy as np
 import pandas as pd
@@ -39,8 +40,8 @@ TEXTS = {
         "gb_pct": "GB%",
         "ld_pct": "LD%",
         "fb_pct": "FB%",
-        "avg_ev": "Avg EV",
-        "avg_la": "Avg LA",
+        "avg_ev": "Avg EV (mph)",
+        "avg_la": "Avg LA (deg)",
         "pitch_type_perf": "Performance by Pitch Type",
         "pitch_type": "Pitch Type",
         "count": "Count",
@@ -52,21 +53,55 @@ TEXTS = {
         "vs_lhp": "vs LHP",
         "vs_rhp": "vs RHP",
         "count_perf": "Performance by Count",
-        "ahead": "Hitter Ahead",
-        "behind": "Hitter Behind",
-        "even": "Even",
+        "ahead": "Hitter Ahead (B > S)",
+        "behind": "Hitter Behind (S > B)",
+        "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
             "Venezuela's lineup features elite contact ability (Arráez), "
             "power threats (Acuña, S. Perez, Suárez), and speed (Acuña, Chourio, Garcia). "
-            "Key vulnerabilities: several free-swinging hitters with elevated K-rates "
-            "and exploitable platoon splits."
+            "Key vulnerabilities: several free-swinging hitters with elevated K-rates, "
+            "and some batters show weaker numbers against opposite-hand pitching "
+            "(e.g. right-handed batters vs right-handed pitchers)."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
         "stadium": "Stadium",
         "zone_3x3": "Zone Chart (3×3)",
         "density_map": "Hit Density Map",
+        "overview_guide": (
+            "Select a player from the sidebar to see their detailed scouting report: "
+            "zone heatmaps, spray charts, pitch-type performance, platoon splits, and more."
+        ),
+        "count_explain": (
+            "Ahead = ball count > strike count (e.g. 2-1, 3-0). "
+            "Behind = strike count > ball count (e.g. 0-2, 1-2). "
+            "Even = same count (e.g. 1-1, 2-2)."
+        ),
+        "glossary_stats": (
+            "**AVG** = Batting Average (hits / at-bats) | "
+            "**OBP** = On-Base Percentage (how often a batter reaches base) | "
+            "**SLG** = Slugging Percentage (total bases / at-bats, measures power) | "
+            "**OPS** = OBP + SLG (overall offensive value) | "
+            "**xwOBA** = Expected Weighted On-Base Average (batted ball quality based on exit velocity & launch angle)"
+        ),
+        "glossary_pct": (
+            "**K%** = Strikeout rate | **BB%** = Walk rate"
+        ),
+        "glossary_pitch": (
+            "**Whiff%** = Swing-and-miss rate (misses / total swings) | "
+            "**Chase%** = Rate of swinging at pitches outside the strike zone"
+        ),
+        "glossary_batted": (
+            "**Pull%** = Hit to batter's pull side | "
+            "**GB%** = Ground ball rate | **LD%** = Line drive rate | **FB%** = Fly ball rate | "
+            "**Avg EV** = Average exit velocity (mph) | **Avg LA** = Average launch angle (degrees)"
+        ),
+        "glossary_platoon": (
+            "Platoon splits show how a batter performs against left-handed pitchers (LHP) "
+            "vs right-handed pitchers (RHP). Large differences reveal matchup vulnerabilities."
+        ),
+        "player_summary": "Scouting Summary",
     },
     "JA": {
         "title": "ベネズエラ スカウティングレポート",
@@ -78,20 +113,20 @@ TEXTS = {
         "profile": "選手プロフィール",
         "pos": "ポジション",
         "team": "チーム",
-        "bats": "打",
+        "bats": "打席",
         "zone_heatmap": "ストライクゾーン ヒートマップ",
         "ba_heatmap": "ゾーン別 打率",
         "xwoba_heatmap": "ゾーン別 xwOBA",
-        "spray_chart": "スプレーチャート",
+        "spray_chart": "スプレーチャート（打球方向図）",
         "batted_ball": "打球傾向",
-        "pull_pct": "プル%",
+        "pull_pct": "プル%（引っ張り）",
         "cent_pct": "センター%",
-        "oppo_pct": "逆方向%",
+        "oppo_pct": "逆方向%（流し打ち）",
         "gb_pct": "ゴロ%",
         "ld_pct": "ライナー%",
         "fb_pct": "フライ%",
-        "avg_ev": "平均打球速度",
-        "avg_la": "平均打球角度",
+        "avg_ev": "平均打球速度 (mph)",
+        "avg_la": "平均打球角度 (度)",
         "pitch_type_perf": "球種別パフォーマンス",
         "pitch_type": "球種",
         "count": "投球数",
@@ -99,24 +134,60 @@ TEXTS = {
         "slg": "長打率",
         "whiff_pct": "空振率",
         "chase_pct": "チェイス率",
-        "platoon": "左右別スプリット",
+        "platoon": "左右投手別成績",
         "vs_lhp": "vs 左投手",
         "vs_rhp": "vs 右投手",
         "count_perf": "カウント別パフォーマンス",
-        "ahead": "有利カウント",
-        "behind": "不利カウント",
-        "even": "イーブン",
+        "ahead": "有利カウント (B > S)",
+        "behind": "不利カウント (S > B)",
+        "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ベネズエラ打線はアラエスの卓越したコンタクト力、アクーニャ・S.ペレス・スアレスの長打力、"
-            "アクーニャ・チョリオ・ガルシアの走力が特徴。"
-            "弱点: 数名の積極的な打者はK%が高く、プラトーンスプリットを突ける可能性がある。"
+            "ベネズエラ打線はアラエスの卓越したコンタクト力（バットに当てる技術）、"
+            "アクーニャ・S.ペレス・スアレスの長打力、"
+            "アクーニャ・チョリオ・ガルシアの走力が特徴。\n\n"
+            "弱点: 数名の積極的な打者は三振率（K%）が高い。"
+            "また一部の打者は、左投手と右投手で成績に大きな差があり、"
+            "苦手な投手の利き手で攻めることが有効な可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
         "stadium": "球場",
         "zone_3x3": "ゾーンチャート (3×3)",
         "density_map": "打球密度マップ",
+        "overview_guide": (
+            "左のサイドバーから選手を選ぶと、個人の詳細スカウティングレポートを表示します: "
+            "ゾーン別ヒートマップ、打球方向図、球種別成績、左右投手別成績など。"
+        ),
+        "count_explain": (
+            "有利カウント = ボール数 > ストライク数（例: 2-1, 3-0）。"
+            "不利カウント = ストライク数 > ボール数（例: 0-2, 1-2）。"
+            "イーブン = 同数（例: 1-1, 2-2）。"
+        ),
+        "glossary_stats": (
+            "**AVG（打率）** = 安打数 / 打数 | "
+            "**OBP（出塁率）** = 打者が塁に出る割合 | "
+            "**SLG（長打率）** = 塁打数 / 打数（長打力の指標） | "
+            "**OPS** = OBP + SLG（総合的な打撃力） | "
+            "**xwOBA** = 打球の質（打球速度と角度から算出した期待値）"
+        ),
+        "glossary_pct": (
+            "**K%（三振率）** = 打席あたりの三振割合 | **BB%（四球率）** = 打席あたりの四球割合"
+        ),
+        "glossary_pitch": (
+            "**空振率（Whiff%）** = スイングに対する空振りの割合 | "
+            "**チェイス率（Chase%）** = ストライクゾーン外の球に手を出す割合"
+        ),
+        "glossary_batted": (
+            "**プル%** = 引っ張り方向への打球割合 | "
+            "**ゴロ%** = ゴロの割合 | **ライナー%** = ライナーの割合 | **フライ%** = フライの割合 | "
+            "**平均打球速度** = 打球のスピード（mph） | **平均打球角度** = 打球の打ち出し角度"
+        ),
+        "glossary_platoon": (
+            "左右投手別成績は、左投手（LHP）と右投手（RHP）に対する打撃成績です。"
+            "左右で成績に大きな差がある打者は、苦手な側の投手でマッチアップを作ると有利です。"
+        ),
+        "player_summary": "スカウティング要約",
     },
 }
 
@@ -232,9 +303,95 @@ def batting_stats(df: pd.DataFrame) -> dict:
     }
 
 
+def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
+                            lang: str) -> str:
+    """Auto-generate a scouting summary for a player."""
+    strengths = []
+    weaknesses = []
+
+    # Power
+    if stats["SLG"] >= 0.450:
+        strengths.append("elite power (SLG .450+)" if lang == "EN"
+                         else "長打力が非常に高い（SLG .450以上）")
+    elif stats["SLG"] >= 0.400:
+        strengths.append("above-average power" if lang == "EN"
+                         else "平均以上の長打力")
+
+    # Contact
+    if stats["AVG"] >= 0.300:
+        strengths.append("elite contact ability (AVG .300+)" if lang == "EN"
+                         else "卓越したコンタクト力（打率 .300以上）")
+    elif stats["AVG"] >= 0.270:
+        strengths.append("solid contact hitter" if lang == "EN"
+                         else "安定したコンタクトヒッター")
+
+    # Discipline
+    if stats["BB%"] >= 10.0:
+        strengths.append(f"patient approach (BB% {stats['BB%']:.1f})" if lang == "EN"
+                         else f"選球眼が良い（四球率 {stats['BB%']:.1f}%）")
+
+    # xwOBA
+    if stats["xwOBA"] and stats["xwOBA"] >= 0.350:
+        strengths.append("high batted-ball quality (xwOBA .350+)" if lang == "EN"
+                         else "打球の質が高い（xwOBA .350以上）")
+
+    # Strikeouts
+    if stats["K%"] >= 25.0:
+        weaknesses.append(f"high strikeout rate (K% {stats['K%']:.1f})" if lang == "EN"
+                          else f"三振が多い（三振率 {stats['K%']:.1f}%）")
+    elif stats["K%"] >= 20.0:
+        weaknesses.append(f"moderate strikeout rate (K% {stats['K%']:.1f})" if lang == "EN"
+                          else f"三振がやや多い（三振率 {stats['K%']:.1f}%）")
+
+    # Platoon split
+    vs_l = pdf[pdf["p_throws"] == "L"]
+    vs_r = pdf[pdf["p_throws"] == "R"]
+    if not vs_l.empty and not vs_r.empty:
+        s_l = batting_stats(vs_l)
+        s_r = batting_stats(vs_r)
+        if s_l["PA"] >= 30 and s_r["PA"] >= 30:
+            ops_diff = abs(s_l["OPS"] - s_r["OPS"])
+            if ops_diff >= 0.100:
+                weak_side = "LHP" if s_l["OPS"] < s_r["OPS"] else "RHP"
+                weak_ops = s_l["OPS"] if s_l["OPS"] < s_r["OPS"] else s_r["OPS"]
+                if lang == "EN":
+                    weaknesses.append(
+                        f"notable platoon split — weaker vs {weak_side} "
+                        f"(OPS .{int(weak_ops * 1000):03d})"
+                    )
+                else:
+                    weak_ja = "左投手" if weak_side == "LHP" else "右投手"
+                    weaknesses.append(
+                        f"左右差が大きい — {weak_ja}に弱い "
+                        f"（OPS .{int(weak_ops * 1000):03d}）"
+                    )
+
+    # Build summary
+    parts = []
+    if strengths:
+        prefix = "Strengths: " if lang == "EN" else "強み: "
+        parts.append(prefix + ", ".join(strengths) + ".")
+    if weaknesses:
+        prefix = "Weaknesses: " if lang == "EN" else "弱み: "
+        parts.append(prefix + ", ".join(weaknesses) + ".")
+    if not parts:
+        return ("Balanced profile with no extreme strengths or weaknesses."
+                if lang == "EN" else "特に目立つ偏りのないバランス型の打者。")
+    return " ".join(parts)
+
+
 # ---------------------------------------------------------------------------
 # Visualisation helpers
 # ---------------------------------------------------------------------------
+def _zone_text_color(val: float, vmin: float, vmax: float) -> str:
+    """Return black for light cells (mid-range values), white for dark cells."""
+    norm = (val - vmin) / (vmax - vmin) if vmax > vmin else 0.5
+    # Yellow range is roughly 0.3-0.6 normalized — use black text
+    if 0.25 < norm < 0.65:
+        return "black"
+    return "white"
+
+
 def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
     """Draw a 5x5 heatmap over the strike zone."""
     x_bins = np.linspace(-1.5, 1.5, 6)
@@ -291,12 +448,15 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
         for j in range(5):
             val = grid[i, j]
             if not np.isnan(val):
-                txt = f".{int(val * 1000):03d}" if metric == "ba" else f".{int(val * 1000):03d}"
+                txt = f".{int(val * 1000):03d}"
+                txt_color = _zone_text_color(val, vmin, vmax)
                 ax.text(
                     (x_bins[j] + x_bins[j + 1]) / 2,
                     (z_bins[i] + z_bins[i + 1]) / 2,
                     txt, ha="center", va="center",
-                    fontsize=9, fontweight="bold", color="white",
+                    fontsize=9, fontweight="bold", color=txt_color,
+                    path_effects=[pe.withStroke(linewidth=2,
+                                               foreground="white" if txt_color == "black" else "black")],
                 )
 
     ax.set_xlim(-1.8, 1.8)
@@ -309,7 +469,7 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
 
 
 def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
-    """Draw 3×3 zone chart using Statcast zone 1-9."""
+    """Draw 3x3 zone chart using Statcast zone 1-9."""
     hit_events = {"single", "double", "triple", "home_run"}
     ab_events = hit_events | {"field_out", "strikeout", "grounded_into_double_play",
                               "double_play", "force_out", "fielders_choice",
@@ -333,6 +493,11 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
         7: (0, 0), 8: (0, 1), 9: (0, 2),
     }
 
+    if metric == "ba":
+        vmin, vmax = 0, 0.450
+    else:
+        vmin, vmax = 0.150, 0.500
+
     for zone_num, (row, col) in zone_map.items():
         zdf = valid[valid["zone"] == zone_num]
         if metric == "ba":
@@ -344,11 +509,6 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
             vals = zdf["estimated_woba_using_speedangle"].dropna()
             if len(vals) >= 5:
                 grid[row, col] = vals.mean()
-
-    if metric == "ba":
-        vmin, vmax = 0, 0.450
-    else:
-        vmin, vmax = 0.150, 0.500
 
     cmap = plt.cm.RdYlBu_r.copy()
     cmap.set_bad(color="#222222")
@@ -367,8 +527,11 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
             cx = (x_edges[col] + x_edges[col + 1]) / 2
             cz = (z_edges[row] + z_edges[row + 1]) / 2
             txt = f".{int(val * 1000):03d}"
+            txt_color = _zone_text_color(val, vmin, vmax)
             ax.text(cx, cz, txt, ha="center", va="center",
-                    fontsize=12, fontweight="bold", color="white")
+                    fontsize=12, fontweight="bold", color=txt_color,
+                    path_effects=[pe.withStroke(linewidth=2,
+                                               foreground="white" if txt_color == "black" else "black")])
 
     ax.set_xlim(-1.2, 1.2)
     ax.set_ylim(1.0, 4.0)
@@ -582,6 +745,14 @@ def main():
     if selected == t["team_overview"]:
         st.header(f"🇻🇪 {t['team_overview']}")
 
+        # ① Guide text
+        st.info(t["overview_guide"])
+
+        # ③ Glossary for overview table
+        with st.expander(t["glossary_stats"].split("**")[1].split("**")[0] + "..." if lang == "EN" else "用語の説明を見る"):
+            st.markdown(t["glossary_stats"])
+            st.markdown(t["glossary_pct"])
+
         rows = []
         for p in VENEZUELA_BATTERS:
             pdf = df_all[df_all["batter"] == p["mlbam_id"]]
@@ -635,17 +806,25 @@ def main():
 
     stats = batting_stats(pdf)
 
-    # Row 1: Profile Card
+    # Row 1: Profile Card — ⑧ use 6 columns instead of 8 for wider cards
     st.header(f"🇻🇪 {player['name']}")
-    c1, c2, c3, c4, c5, c6, c7, c8 = st.columns(8)
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
     c1.metric(t["pos"], player["pos"])
     c2.metric(t["team"], player["team"])
     c3.metric(t["bats"], player["bats"])
-    c4.metric("AVG", f"{stats['AVG']:.3f}")
-    c5.metric("OBP", f"{stats['OBP']:.3f}")
-    c6.metric("SLG", f"{stats['SLG']:.3f}")
-    c7.metric("OPS", f"{stats['OPS']:.3f}")
-    c8.metric("xwOBA", f"{stats['xwOBA']:.3f}" if stats["xwOBA"] else "—")
+    c4.metric("AVG / OBP / SLG", f"{stats['AVG']:.3f} / {stats['OBP']:.3f} / {stats['SLG']:.3f}")
+    c5.metric("OPS", f"{stats['OPS']:.3f}")
+    c6.metric("xwOBA", f"{stats['xwOBA']:.3f}" if stats["xwOBA"] else "—")
+
+    # ③ Glossary expander for stats
+    with st.expander("Stats glossary" if lang == "EN" else "用語の説明を見る"):
+        st.markdown(t["glossary_stats"])
+        st.markdown(t["glossary_pct"])
+
+    # ⑤ Player scouting summary
+    st.subheader(t["player_summary"])
+    summary = generate_player_summary(stats, pdf, player, lang)
+    st.info(summary)
 
     st.divider()
 
@@ -661,12 +840,12 @@ def main():
         ax.title.set_color("white")
     draw_zone_heatmap(pdf, "ba", t["ba_heatmap"], ax1)
     im = draw_zone_heatmap(pdf, "xwoba", t["xwoba_heatmap"], ax2)
-    fig.colorbar(im, ax=[ax1, ax2], shrink=0.7, pad=0.02)
+    fig.colorbar(im, ax=[ax1, ax2], shrink=0.7, pad=0.04)
     fig.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
 
-    # 3×3 Zone Chart
+    # ⑥ 3×3 Zone Chart — fix colorbar overlap with larger pad
     st.subheader(t["zone_3x3"])
     fig3, (ax3a, ax3b) = plt.subplots(1, 2, figsize=(10, 4.5), facecolor="#0e1117")
     for ax in (ax3a, ax3b):
@@ -677,7 +856,7 @@ def main():
         ax.title.set_color("white")
     draw_zone_3x3(pdf, "ba", t["ba_heatmap"], ax3a)
     im3 = draw_zone_3x3(pdf, "xwoba", t["xwoba_heatmap"], ax3b)
-    fig3.colorbar(im3, ax=[ax3a, ax3b], shrink=0.7, pad=0.02)
+    fig3.colorbar(im3, ax=[ax3a, ax3b], shrink=0.7, pad=0.06)
     fig3.tight_layout()
     st.pyplot(fig3)
     plt.close(fig3)
@@ -694,7 +873,8 @@ def main():
         stadium_idx = st.selectbox(t["stadium"], range(len(stadium_keys)),
                                    format_func=lambda i: stadium_labels[i])
         stadium_key = stadium_keys[stadium_idx]
-        show_density = st.checkbox(t["density_map"], value=False)
+        # ⑨ Density map default ON
+        show_density = st.checkbox(t["density_map"], value=True)
 
         fig_sp, ax_sp = plt.subplots(figsize=(6, 6), facecolor="#0e1117")
         ax_sp.set_facecolor("#0e1117")
@@ -706,6 +886,9 @@ def main():
 
     with col_bb:
         st.subheader(t["batted_ball"])
+        # ③ Glossary for batted ball
+        with st.expander("What do these mean?" if lang == "EN" else "用語の説明を見る"):
+            st.markdown(t["glossary_batted"])
         profile = batted_ball_profile(pdf, t)
         if profile:
             for k, v in profile.items():
@@ -717,11 +900,15 @@ def main():
 
     # Row 4: Pitch Type Performance
     st.subheader(t["pitch_type_perf"])
+    # ③ Glossary for pitch type
+    with st.expander("What are Whiff% and Chase%?" if lang == "EN" else "空振率・チェイス率とは？"):
+        st.markdown(t["glossary_pitch"])
+
     pt_table = pitch_type_table(pdf, t)
     if not pt_table.empty:
         st.dataframe(pt_table, use_container_width=True, hide_index=True)
 
-        # horizontal bar chart for whiff%
+        # ④ horizontal bar chart for whiff% — with value labels
         chart_data = pt_table[[t["pitch_type"], t["whiff_pct"]]].copy()
         chart_data["whiff_val"] = chart_data[t["whiff_pct"]].str.rstrip("%").astype(float)
         chart_data = chart_data.sort_values("whiff_val", ascending=True)
@@ -729,10 +916,18 @@ def main():
         fig_pt, ax_pt = plt.subplots(figsize=(8, max(3, len(chart_data) * 0.5)), facecolor="#0e1117")
         ax_pt.set_facecolor("#0e1117")
         colors = plt.cm.RdYlGn_r(chart_data["whiff_val"] / max(chart_data["whiff_val"].max(), 1))
-        ax_pt.barh(chart_data[t["pitch_type"]], chart_data["whiff_val"], color=colors)
+        bars = ax_pt.barh(chart_data[t["pitch_type"]], chart_data["whiff_val"], color=colors)
+        # Add value labels on bars
+        for bar, val in zip(bars, chart_data["whiff_val"]):
+            ax_pt.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height() / 2,
+                       f"{val:.1f}%", va="center", ha="left", color="white",
+                       fontsize=10, fontweight="bold")
         ax_pt.set_xlabel(t["whiff_pct"], color="white")
         ax_pt.tick_params(colors="white")
         ax_pt.set_title(t["whiff_pct"], color="white", fontweight="bold")
+        # Extend x-axis to fit labels
+        x_max = chart_data["whiff_val"].max()
+        ax_pt.set_xlim(0, x_max * 1.25 if x_max > 0 else 10)
         for spine in ax_pt.spines.values():
             spine.set_color("white")
         fig_pt.tight_layout()
@@ -743,6 +938,10 @@ def main():
 
     # Row 5: Platoon Splits
     st.subheader(t["platoon"])
+    # ③ Glossary for platoon
+    with st.expander("What are platoon splits?" if lang == "EN" else "左右投手別成績とは？"):
+        st.markdown(t["glossary_platoon"])
+
     col_l, col_r = st.columns(2)
 
     for col, throws, label in [(col_l, "L", t["vs_lhp"]), (col_r, "R", t["vs_rhp"])]:
@@ -775,6 +974,9 @@ def main():
 
     # Row 6: Count-based Performance
     st.subheader(t["count_perf"])
+    # ② Count explanation
+    st.caption(t["count_explain"])
+
     count_df = pdf.dropna(subset=["balls", "strikes"]).copy()
     count_df["count_cat"] = count_df.apply(
         lambda r: count_category(int(r["balls"]), int(r["strikes"])), axis=1
