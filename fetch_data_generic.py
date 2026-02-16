@@ -50,7 +50,8 @@ def load_players(country: str, pitchers: bool):
         if isinstance(val, list) and len(val) > 0 and isinstance(val[0], dict):
             if "mlbam_id" in val[0]:
                 return [p for p in val if p["mlbam_id"] != 0]
-    raise SystemExit(f"ERROR: No player list found in {module_name}.py")
+    # No list found or all mlbam_id == 0 → return empty (will be skipped)
+    return []
 
 
 def fetch_batters(players: list, years: list) -> pd.DataFrame:
@@ -76,7 +77,7 @@ def fetch_batters(players: list, years: list) -> pd.DataFrame:
                 print(f"ERROR: {e}")
             time.sleep(2)
     if not frames:
-        raise RuntimeError("No data fetched at all.")
+        return None
     return pd.concat(frames, ignore_index=True)
 
 
@@ -103,7 +104,7 @@ def fetch_pitchers(players: list, years: list) -> pd.DataFrame:
                 print(f"ERROR: {e}")
             time.sleep(2)
     if not frames:
-        raise RuntimeError("No data fetched at all.")
+        return None
     return pd.concat(frames, ignore_index=True)
 
 
@@ -121,10 +122,18 @@ def main():
     out_path = f"data/{args.country}_{'pitchers_' if args.pitchers else ''}statcast.csv"
 
     print(f"Fetching {len(players)} {kind} for {args.country}, seasons {years}")
+    if not players:
+        print("No players with valid mlbam_id — skipping.")
+        return
+
     if args.pitchers:
         df = fetch_pitchers(players, years)
     else:
         df = fetch_batters(players, years)
+
+    if df is None or len(df) == 0:
+        print("No data fetched — skipping.")
+        return
 
     df.to_csv(out_path, index=False)
     print(f"\nSaved {len(df)} rows → {out_path}")
