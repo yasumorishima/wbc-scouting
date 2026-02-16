@@ -1,0 +1,46 @@
+name: Generate Player Files
+
+on:
+  workflow_dispatch:
+    inputs:
+      country:
+        description: "Country code (leave blank for all remaining)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pybaseball pandas
+
+      - name: Generate player files
+        run: |
+          if [ -n "${{ inputs.country }}" ]; then
+            python scripts/gen_player_files.py --country "${{ inputs.country }}"
+          else
+            python scripts/gen_player_files.py
+          fi
+
+      - name: Commit & push generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add players_*.py
+          if git diff --cached --quiet; then
+            echo "No new player files generated"
+          else
+            git commit -m "data: auto-generate players_XX files via playerid_lookup"
+            git push
+          fi

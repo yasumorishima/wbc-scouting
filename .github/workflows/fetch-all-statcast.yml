@@ -1,0 +1,79 @@
+name: Fetch All Countries Statcast
+
+on:
+  workflow_dispatch:
+    inputs:
+      year:
+        description: "Season year (blank = both 2024 & 2025)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - "2024"
+          - "2025"
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false   # 1国失敗しても他は続行
+      matrix:
+        country:
+          - japan
+          - mex
+          - kor
+          - twn
+          - ned
+          - cuba
+          - can
+          - ita
+          - isr
+          - gb
+          - pan
+          - col
+          - nic
+          - aus
+          - bra
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pybaseball pandas
+
+      - name: Fetch batters
+        run: |
+          ARGS="--country ${{ matrix.country }}"
+          if [ -n "${{ inputs.year }}" ]; then
+            ARGS="$ARGS --year ${{ inputs.year }}"
+          fi
+          python fetch_data_generic.py $ARGS
+
+      - name: Fetch pitchers
+        run: |
+          ARGS="--country ${{ matrix.country }} --pitchers"
+          if [ -n "${{ inputs.year }}" ]; then
+            ARGS="$ARGS --year ${{ inputs.year }}"
+          fi
+          python fetch_data_generic.py $ARGS
+
+      - name: Commit & push CSV
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase   # 他jobのpushと競合回避
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No changes for ${{ matrix.country }}"
+          else
+            git commit -m "data: fetch ${{ matrix.country }} statcast (${{ inputs.year || '2024+2025' }})"
+            git push
+          fi

@@ -4,12 +4,29 @@ on:
   workflow_dispatch:
     inputs:
       country:
-        description: "Country code (usa, dr, venezuela, pr)"
+        description: "Country code"
         required: true
         type: choice
         options:
           - usa
+          - dr
+          - venezuela
           - pr
+          - japan
+          - mex
+          - kor
+          - twn
+          - ned
+          - cuba
+          - can
+          - ita
+          - isr
+          - gb
+          - pan
+          - col
+          - nic
+          - aus
+          - bra
       mode:
         description: "Batters or Pitchers"
         required: true
@@ -45,10 +62,16 @@ jobs:
 
       - name: Fetch data
         run: |
+          # Use country-specific script if it exists, else use generic
           SCRIPT="fetch_data_${{ inputs.country }}.py"
-          ARGS=""
+          if [ ! -f "$SCRIPT" ]; then
+            SCRIPT="fetch_data_generic.py"
+            ARGS="--country ${{ inputs.country }}"
+          else
+            ARGS=""
+          fi
           if [ "${{ inputs.mode }}" = "pitchers" ]; then
-            ARGS="--pitchers"
+            ARGS="$ARGS --pitchers"
           fi
           if [ -n "${{ inputs.year }}" ]; then
             ARGS="$ARGS --year ${{ inputs.year }}"
