@@ -419,7 +419,7 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
             if len(cell) >= 5:
                 grid[i, j] = cell.mean()
 
-    cmap = plt.cm.RdYlBu_r
+    cmap = plt.cm.RdYlGn
     cmap.set_bad(color="#222222")
     im = ax.pcolormesh(
         x_bins, z_bins, grid, cmap=cmap, vmin=vmin, vmax=vmax,
@@ -495,7 +495,7 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
             if len(vals) >= 5:
                 grid[row, col] = vals.mean()
 
-    cmap = plt.cm.RdYlBu_r.copy()
+    cmap = plt.cm.RdYlGn.copy()
     cmap.set_bad(color="#222222")
     im = ax.pcolormesh(x_edges, z_edges, grid, cmap=cmap, vmin=vmin, vmax=vmax,
                        edgecolors="white", linewidth=1.5)
