@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "パナマの投手陣はMLB・マイナー経験者を含み、力強い球種で空振りを奪う能力が高い可能性がある。
-
-ブルペンの充実がトーナメントでの鍵になると考えられる。"
+            "パナマの投手陣はMLB・マイナー経験者を含み、力強い球種で空振りを奪う能力が高い可能性がある。\n\nブルペンの充実がトーナメントでの鍵になると考えられる。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

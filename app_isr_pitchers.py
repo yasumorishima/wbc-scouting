@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "イスラエルの投手陣はMLBレベルの経験を持つ投手を含んでいる。
-
-多彩な球種と安定した制球力で対戦相手を苦しめる可能性がある。"
+            "イスラエルの投手陣はMLBレベルの経験を持つ投手を含んでいる。\n\n多彩な球種と安定した制球力で対戦相手を苦しめる可能性がある。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

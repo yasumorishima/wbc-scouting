@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "韓国は規律ある打撃スタイルと高い出塁率を重視するチームとして知られている。
-
-コンタクトヒッターを中心に状況判断に優れた打者が多く、MLB経験者が中軸を担うケースもある。"
+            "韓国は規律ある打撃スタイルと高い出塁率を重視するチームとして知られている。\n\nコンタクトヒッターを中心に状況判断に優れた打者が多く、MLB経験者が中軸を担うケースもある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

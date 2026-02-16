@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "パナマは野球の伝統国であり、MLB経験者を中心とした長打力と機動力のある打線が特徴とされている。
-
-長打と積極的な走塁を組み合わせた攻撃的なスタイルが持ち味の可能性がある。"
+            "パナマは野球の伝統国であり、MLB経験者を中心とした長打力と機動力のある打線が特徴とされている。\n\n長打と積極的な走塁を組み合わせた攻撃的なスタイルが持ち味の可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

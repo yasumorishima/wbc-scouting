@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "プエルトリコの投手陣は歴史的にエリートレベルの投手を多数擁してきた。
-
-高い奪三振能力と安定した制球力を持つ投手陣がトーナメントを通じて支配的な投球を見せる可能性がある。"
+            "プエルトリコの投手陣は歴史的にエリートレベルの投手を多数擁してきた。\n\n高い奪三振能力と安定した制球力を持つ投手陣がトーナメントを通じて支配的な投球を見せる可能性がある。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

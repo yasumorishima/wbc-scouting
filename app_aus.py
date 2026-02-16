@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "オーストラリアのベースボールプログラムは着実に成長しており、MLB組織やプロリーグ出身の選手で構成される見込みである。
-
-コンタクト能力と四球を組み合わせた攻撃的な打線が特徴の可能性がある。"
+            "オーストラリアのベースボールプログラムは着実に成長しており、MLB組織やプロリーグ出身の選手で構成される見込みである。\n\nコンタクト能力と四球を組み合わせた攻撃的な打線が特徴の可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

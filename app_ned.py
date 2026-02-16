@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "オランダはザンダー・ボガーツやディディ・グレゴリアスらMLBレベルの選手を擁し、中軸に安定感がある。
-
-経験豊富な選手と若手の融合が特徴で、コンタクト率が高まると得点力が増す可能性がある。"
+            "オランダはザンダー・ボガーツやディディ・グレゴリアスらMLBレベルの選手を擁し、中軸に安定感がある。\n\n経験豊富な選手と若手の融合が特徴で、コンタクト率が高まると得点力が増す可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

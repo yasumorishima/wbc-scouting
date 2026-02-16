@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "日本はトーナメント屈指の強豪チームと考えられており、バランスの取れた打線と高い選球眼が特徴とされている。
-
-大谷翔平・村上宗隆らを中心に長打力と出塁率を兼ね備えた打者が多く、打線全体の得点力は高い可能性がある。"
+            "日本はトーナメント屈指の強豪チームと考えられており、バランスの取れた打線と高い選球眼が特徴とされている。\n\n大谷翔平・村上宗隆らを中心に長打力と出塁率を兼ね備えた打者が多く、打線全体の得点力は高い可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

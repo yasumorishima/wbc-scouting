@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "コロンビアの投手陣は現役MLB投手を複数含む可能性があり、空振りの奪取と弱い打球の誘発が得意な投手が揃うと考えられる。
-
-投手陣全体の層の厚さが強みとなる可能性がある。"
+            "コロンビアの投手陣は現役MLB投手を複数含む可能性があり、空振りの奪取と弱い打球の誘発が得意な投手が揃うと考えられる。\n\n投手陣全体の層の厚さが強みとなる可能性がある。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

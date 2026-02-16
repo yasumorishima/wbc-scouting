@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "イタリアはイタリア系MLB・マイナー選手を積極的に招集し、打線の質を年々高めていると考えられている。
-
-コンタクト能力の高い選手を中心に、MLB経験者が打線を牽引する可能性がある。"
+            "イタリアはイタリア系MLB・マイナー選手を積極的に招集し、打線の質を年々高めていると考えられている。\n\nコンタクト能力の高い選手を中心に、MLB経験者が打線を牽引する可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

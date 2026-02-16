@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "コロンビアはMLBへの選手輩出が増えており、身体能力の高い打者が揃う可能性がある。
-
-スピードとギャップを突く打撃でランを製造するスタイルが特徴と考えられる。"
+            "コロンビアはMLBへの選手輩出が増えており、身体能力の高い打者が揃う可能性がある。\n\nスピードとギャップを突く打撃でランを製造するスタイルが特徴と考えられる。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

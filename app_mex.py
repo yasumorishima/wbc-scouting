@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "メキシコは積極的な打撃スタイルと中軸の長打力が特徴とされている。
-
-ランディ・アロサレーナらMLB経験豊富な選手を擁し、クラッチヒッターとしての能力が高い可能性がある。"
+            "メキシコは積極的な打撃スタイルと中軸の長打力が特徴とされている。\n\nランディ・アロサレーナらMLB経験豊富な選手を擁し、クラッチヒッターとしての能力が高い可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

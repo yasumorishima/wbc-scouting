@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "イスラエルはユダヤ系のMLB・マイナー選手で構成されており、選球眼の良さとコンタクト能力が特徴とされている。
-
-国際大会での経験を持つ選手も含まれており、出塁率を高める打撃スタイルが持ち味の可能性がある。"
+            "イスラエルはユダヤ系のMLB・マイナー選手で構成されており、選球眼の良さとコンタクト能力が特徴とされている。\n\n国際大会での経験を持つ選手も含まれており、出塁率を高める打撃スタイルが持ち味の可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

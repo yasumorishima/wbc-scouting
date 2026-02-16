@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "イギリスの投手陣はMLB傘下で育成された投手を含む構成が見込まれる。
-
-球速よりも制球力と球種の組み立てが強みとなる可能性がある。"
+            "イギリスの投手陣はMLB傘下で育成された投手を含む構成が見込まれる。\n\n球速よりも制球力と球種の組み立てが強みとなる可能性がある。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

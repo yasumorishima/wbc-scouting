@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "韓国の投手陣は高い制球力と効率的な投球が特徴とされている。
-
-多彩な球種と四球の少なさが強みと考えられ、打ち損じを誘う投球スタイルが持ち味の可能性がある。"
+            "韓国の投手陣は高い制球力と効率的な投球が特徴とされている。\n\n多彩な球種と四球の少なさが強みと考えられ、打ち損じを誘う投球スタイルが持ち味の可能性がある。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "日本の投手陣はトーナメントでも屈指の質と深さを誇ると考えられている。
-
-高い奪三振能力と制球力を持つ先発投手を複数擁し、球種の多彩さと組み立ての巧みさが特徴とされている。"
+            "日本の投手陣はトーナメントでも屈指の質と深さを誇ると考えられている。\n\n高い奪三振能力と制球力を持つ先発投手を複数擁し、球種の多彩さと組み立ての巧みさが特徴とされている。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

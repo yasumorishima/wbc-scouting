@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "カナダの投手陣は複数の現役MLB投手を擁し、高い奪三振能力が期待される。
-
-ブルペンの層の厚さがトーナメントでの重要な武器になる可能性がある。"
+            "カナダの投手陣は複数の現役MLB投手を擁し、高い奪三振能力が期待される。\n\nブルペンの層の厚さがトーナメントでの重要な武器になる可能性がある。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

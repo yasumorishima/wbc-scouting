@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "オランダの投手陣はMLBやトリプルAレベルの投手を含む充実した顔ぶれが期待される。
-
-多様な球種と投球スタイルで打線を抑える能力が高い可能性がある。"
+            "オランダの投手陣はMLBやトリプルAレベルの投手を含む充実した顔ぶれが期待される。\n\n多様な球種と投球スタイルで打線を抑える能力が高い可能性がある。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

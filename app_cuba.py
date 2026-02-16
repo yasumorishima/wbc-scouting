@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "キューバは野球の伝統国として長い歴史を誇り、身体的に強靭な打者が揃う打線が特徴とされている。
-
-積極的な打撃スタイルと長打力が持ち味で、MLB経験を持つキューバ系選手が打線の中心となる可能性がある。"
+            "キューバは野球の伝統国として長い歴史を誇り、身体的に強靭な打者が揃う打線が特徴とされている。\n\n積極的な打撃スタイルと長打力が持ち味で、MLB経験を持つキューバ系選手が打線の中心となる可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

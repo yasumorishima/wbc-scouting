@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "プエルトリコはWBCで輝かしい実績を持つ強豪で、打線にエリートMLB選手が揃うと考えられている。
-
-長打力と出塁率を兼ね備えた打者が中心となり、最も得点力の高いチームの一つになる可能性がある。"
+            "プエルトリコはWBCで輝かしい実績を持つ強豪で、打線にエリートMLB選手が揃うと考えられている。\n\n長打力と出塁率を兼ね備えた打者が中心となり、最も得点力の高いチームの一つになる可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

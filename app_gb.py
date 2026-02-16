@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "イギリスは成長著しいベースボールプログラムを持ち、英国系のMLB・マイナー選手を中心に構成される見込みである。
-
-コンタクト能力と基礎技術を重視した打線が特徴の可能性がある。"
+            "イギリスは成長著しいベースボールプログラムを持ち、英国系のMLB・マイナー選手を中心に構成される見込みである。\n\nコンタクト能力と基礎技術を重視した打線が特徴の可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

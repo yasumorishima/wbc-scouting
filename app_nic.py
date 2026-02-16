@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "ニカラグアは成長著しい野球新興国であり、国内リーグとプロ組織の選手で構成されている。
-
-コンタクト打撃と積極的な走塁を重視するスタイルが特徴の可能性がある。"
+            "ニカラグアは成長著しい野球新興国であり、国内リーグとプロ組織の選手で構成されている。\n\nコンタクト打撃と積極的な走塁を重視するスタイルが特徴の可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

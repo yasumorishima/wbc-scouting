@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "イタリアの投手陣はMLBパイプラインのイタリア系選手で構成される見込みで、制球力と球種の多彩さが特徴とされている。
-
-強力打線に対してダメージを最小化する投球が期待される。"
+            "イタリアの投手陣はMLBパイプラインのイタリア系選手で構成される見込みで、制球力と球種の多彩さが特徴とされている。\n\n強力打線に対してダメージを最小化する投球が期待される。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

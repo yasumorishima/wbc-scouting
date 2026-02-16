@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "チャイニーズタイペイはNPB・CPBL・MLB組織の選手を擁するコンタクト重視の打線が特徴とされている。
-
-選球眼と状況に応じた打撃が持ち味で、コンスタントなコンタクトからの得点製造能力が高い可能性がある。"
+            "チャイニーズタイペイはNPB・CPBL・MLB組織の選手を擁するコンタクト重視の打線が特徴とされている。\n\n選球眼と状況に応じた打撃が持ち味で、コンスタントなコンタクトからの得点製造能力が高い可能性がある。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",

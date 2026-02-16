@@ -70,9 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "メキシコの投手陣は複数のMLBレベルの投手を擁し、多彩な球種で空振りを奪う能力が高い可能性がある。
-
-先発・中継ぎの層の厚さが特徴と考えられる。"
+            "メキシコの投手陣は複数のMLBレベルの投手を擁し、多彩な球種で空振りを奪う能力が高い可能性がある。\n\n先発・中継ぎの層の厚さが特徴と考えられる。"
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "

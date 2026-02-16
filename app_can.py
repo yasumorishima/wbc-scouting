@@ -58,9 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "カナダは近年MLB輩出国として台頭しており、ボー・ビシェットやジョシュ・ネイラーらが中軸を形成する可能性がある。
-
-長打力と塁上への出塁を組み合わせた攻撃的なラインナップが特徴と考えられる。"
+            "カナダは近年MLB輩出国として台頭しており、ボー・ビシェットやジョシュ・ネイラーらが中軸を形成する可能性がある。\n\n長打力と塁上への出塁を組み合わせた攻撃的なラインナップが特徴と考えられる。"
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
