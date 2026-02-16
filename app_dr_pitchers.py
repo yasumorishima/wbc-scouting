@@ -681,7 +681,7 @@ def main():
         layout="wide",
     )
 
-    lang = st.sidebar.radio("Language / \u8a00\u8a9e", ["EN", "JA"], horizontal=True)
+    lang = st.sidebar.radio("Language / \u8a00\u8a9e", ["JA", "EN"], horizontal=True)
     t = TEXTS[lang]
 
     st.sidebar.markdown(f"# \U0001F1E9\U0001F1F4 {t['title']}")

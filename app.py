@@ -724,7 +724,7 @@ def main():
     )
 
     # Sidebar
-    lang = st.sidebar.radio("Language / 言語", ["EN", "JA"], horizontal=True)
+    lang = st.sidebar.radio("Language / 言語", ["JA", "EN"], horizontal=True)
     t = TEXTS[lang]
 
     st.sidebar.markdown(f"# 🇻🇪 {t['title']}")
