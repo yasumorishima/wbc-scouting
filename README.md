@@ -33,6 +33,7 @@ Streamlit Community Cloud にデプロイ済み。MLB で実績のある選手�
 | 🇰🇷 Korea | [Batters](https://wbc-kor-batters.streamlit.app/) | [Pitchers](https://wbc-kor-pitchers.streamlit.app/) |
 | 🇹🇼 Chinese Taipei | [Batters](https://wbc-twn-batters.streamlit.app/) | — |
 | 🇦🇺 Australia | [Batters](https://wbc-aus-batters.streamlit.app/) | — |
+| 🇨🇿 Czechia | — | — |
 
 ### Pool D — Miami
 | チーム | 打者 | 投手 |
@@ -44,7 +45,7 @@ Streamlit Community Cloud にデプロイ済み。MLB で実績のある選手�
 | 🇳🇮 Nicaragua | [Batters](https://wbc-nic-batters.streamlit.app/) | — |
 
 > **備考**
-> - Brazil: MLB 実績選手なし（全員マイナーリーグ）のためダッシュボードなし
+> - Brazil / Czechia: MLB 実績選手なし（全員マイナーリーグ）のためダッシュボードなし
 > - Cuba / Nicaragua / Chinese Taipei / Australia: 投手の MLB Statcast データなしのため投手ダッシュボードなし
 
 ---
