@@ -695,7 +695,7 @@ def count_category(balls: int, strikes: int) -> str:
 def main():
     st.set_page_config(
         page_title="Puerto Rico Scouting — WBC 2026",
-        page_icon="\U0001F1E9\U0001F1F4",
+        page_icon="\U0001F1F5\U0001F1F7",
         layout="wide",
     )
 
@@ -703,7 +703,7 @@ def main():
     lang = st.sidebar.radio("Language / \u8a00\u8a9e", ["JA", "EN"], horizontal=True)
     t = TEXTS[lang]
 
-    st.sidebar.markdown(f"# \U0001F1E9\U0001F1F4 {t['title']}")
+    st.sidebar.markdown(f"# \U0001F1F5\U0001F1F7 {t['title']}")
     st.sidebar.caption(t["subtitle"])
 
     _name_ja_map = {p["name"]: p.get("name_ja", "") for p in PR_BATTERS}
@@ -730,7 +730,7 @@ def main():
     # Team Overview
     # -----------------------------------------------------------------------
     if selected == t["team_overview"]:
-        st.header(f"\U0001F1E9\U0001F1F4 {t['team_overview']}")
+        st.header(f"\U0001F1F5\U0001F1F7 {t['team_overview']}")
 
         st.info(t["overview_guide"])
 
@@ -791,7 +791,7 @@ def main():
 
     stats = batting_stats(pdf)
 
-    st.header(f"\U0001F1E9\U0001F1F4 {_display_name(player['name'])}")
+    st.header(f"\U0001F1F5\U0001F1F7 {_display_name(player['name'])}")
     c1, c2, c3 = st.columns(3)
     c1.metric(t["pos"], player["pos"])
     c2.metric(t["team"], player["team"])

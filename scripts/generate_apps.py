@@ -472,6 +472,14 @@ def _replace_strength_notes(result: str, en_text: str, ja_text: str) -> str:
     return result
 
 
+DR_FLAG_LITERAL = r"\U0001F1E9\U0001F1F4"
+
+
+def _flag_escape(emoji: str) -> str:
+    """Convert flag emoji to \\U escape form for Python source files."""
+    return "".join(f"\\U{ord(c):08X}" for c in emoji)
+
+
 def generate_batter_app(code: str, data: dict, template: str) -> str:
     c = data
     name_en = c["name_en"]
@@ -515,8 +523,8 @@ def generate_batter_app(code: str, data: dict, template: str) -> str:
         'page_title="Dominican Republic Scouting \u2014 WBC 2026",',
         f'page_title="{name_en} Scouting \u2014 WBC 2026",',
     )
-    # 9. Flag emoji (DR = \U0001F1E9\U0001F1F4)
-    result = result.replace("\U0001F1E9\U0001F1F4", flag)
+    # 9. Flag emoji (literal \U escape in template → target country's \U escape)
+    result = result.replace(DR_FLAG_LITERAL, _flag_escape(flag))
     # 10. Variable references
     result = result.replace("DR_BATTERS", f"{var}_BATTERS")
 
@@ -570,8 +578,8 @@ def generate_pitcher_app(code: str, data: dict, template: str) -> str:
         'page_title="Dominican Republic Pitching \u2014 WBC 2026",',
         f'page_title="{name_en} Pitching \u2014 WBC 2026",',
     )
-    # 9. Flag emoji
-    result = result.replace("\U0001F1E9\U0001F1F4", flag)
+    # 9. Flag emoji (literal \U escape in template → target country's \U escape)
+    result = result.replace(DR_FLAG_LITERAL, _flag_escape(flag))
     # 10. Variable references
     result = result.replace("DR_PITCHERS", f"{var}_PITCHERS")
 
