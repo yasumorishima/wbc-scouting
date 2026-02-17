@@ -676,8 +676,19 @@ def main():
     st.sidebar.markdown(f"# \U0001F1E9\U0001F1F4 {t['title']}")
     st.sidebar.caption(t["subtitle"])
 
+    _name_ja_map = {p["name"]: p.get("name_ja", "") for p in COL_PITCHERS}
+
+    def _display_name(name):
+        ja = _name_ja_map.get(name, "")
+        if lang == "JA" and ja:
+            return f"{ja}（{name}）"
+        return name
+
     pitcher_names = [t["team_overview"]] + [p["name"] for p in COL_PITCHERS]
-    selected = st.sidebar.selectbox(t["select_pitcher"], pitcher_names)
+    selected = st.sidebar.selectbox(
+        t["select_pitcher"], pitcher_names,
+        format_func=lambda x: x if x == t["team_overview"] else _display_name(x),
+    )
 
     df_all = load_data()
 
@@ -704,7 +715,7 @@ def main():
             s = pitching_stats(pdf)
             role_label = t["sp"] if p["role"] == "SP" else t["rp"]
             rows.append({
-                "Pitcher": p["name"],
+                "Pitcher": _display_name(p["name"]),
                 t["team"]: p["team"],
                 t["throws"]: p["throws"],
                 t["role"]: role_label,
@@ -749,7 +760,7 @@ def main():
     stats = pitching_stats(pdf)
     role_label = t["sp"] if pitcher["role"] == "SP" else t["rp"]
 
-    st.header(f"\U0001F1E9\U0001F1F4 {pitcher['name']}")
+    st.header(f"\U0001F1E9\U0001F1F4 {_display_name(pitcher['name'])}")
     c1, c2, c3 = st.columns(3)
     c1.metric(t["team"], pitcher["team"])
     c2.metric(t["throws"], pitcher["throws"])

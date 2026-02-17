@@ -1,7 +1,7 @@
 """WBC 2026 Brazil roster — MLB batters."""
 
 BRA_BATTERS = [
-    {"name": "Lucas Ramirez",               "mlbam_id": 0, "pos": "OF", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Lucas Ramirez",               "name_ja": "ルーカス・ラミレス",       "mlbam_id": 0, "pos": "OF", "team": "", "bats": "R"},  # TODO: ID not found
 ]
 
 PLAYER_BY_ID   = {p['mlbam_id']: p for p in BRA_BATTERS}

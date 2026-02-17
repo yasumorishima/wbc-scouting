@@ -730,8 +730,19 @@ def main():
     st.sidebar.markdown(f"# 🇻🇪 {t['title']}")
     st.sidebar.caption(t["subtitle"])
 
+    _name_ja_map = {p["name"]: p.get("name_ja", "") for p in VENEZUELA_BATTERS}
+
+    def _display_name(name):
+        ja = _name_ja_map.get(name, "")
+        if lang == "JA" and ja:
+            return f"{ja}（{name}）"
+        return name
+
     player_names = [t["team_overview"]] + [p["name"] for p in VENEZUELA_BATTERS]
-    selected = st.sidebar.selectbox(t["select_player"], player_names)
+    selected = st.sidebar.selectbox(
+        t["select_player"], player_names,
+        format_func=lambda x: x if x == t["team_overview"] else _display_name(x),
+    )
 
     df_all = load_data()
 
@@ -760,7 +771,7 @@ def main():
                 continue
             s = batting_stats(pdf)
             rows.append({
-                "Player": p["name"],
+                "Player": _display_name(p["name"]),
                 "Pos": p["pos"],
                 "Team": p["team"],
                 "Bats": p["bats"],
@@ -807,7 +818,7 @@ def main():
     stats = batting_stats(pdf)
 
     # Row 1: Profile Card — 2 rows for readability
-    st.header(f"🇻🇪 {player['name']}")
+    st.header(f"🇻🇪 {_display_name(player['name'])}")
     c1, c2, c3 = st.columns(3)
     c1.metric(t["pos"], player["pos"])
     c2.metric(t["team"], player["team"])
