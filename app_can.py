@@ -58,7 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "カナダは近年MLB輩出国として台頭しており、ボー・ビシェットやジョシュ・ネイラーらが中軸を形成する可能性がある。\n\n長打力と塁上への出塁を組み合わせた攻撃的なラインナップが特徴と考えられる。"
+            "Canada has grown significantly as a baseball nation, producing MLB-level talent. The lineup features a mix of power hitters and table-setters, with players like Bo Bichette and Josh Naylor providing dangerous run-producing ability in the heart of the order."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -139,12 +139,9 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ドミニカ共和国はトーナメント屈指の強力打線を誇る。"
-            "ソト・ゲレーロJr.・タティスJr.・マチャドの中軸は圧倒的な長打力を持ち、"
-            "ソトやウェルズは選球眼にも優れている。\n\n"
-            "弱点: 一部の積極的な打者は三振率（K%）が高い。"
-            "また左右の投手で成績に差がある打者もおり、"
-            "苦手な利き手の投手でマッチアップを作ることが有効な可能性がある。"
+            "カナダは近年MLB輩出国として台頭しており、ボー・ビシェットやジョシュ・ネイラーらが中軸を形成する可能性がある。
+
+長打力と塁上への出塁を組み合わせた攻撃的なラインナップが特徴と考えられる。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

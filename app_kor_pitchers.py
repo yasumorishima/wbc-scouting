@@ -70,7 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "韓国の投手陣は高い制球力と効率的な投球が特徴とされている。\n\n多彩な球種と四球の少なさが強みと考えられ、打ち損じを誘う投球スタイルが持ち味の可能性がある。"
+            "South Korea's pitching staff is known for strong command and efficient pitch usage. The rotation may feature arms with diverse pitch mixes and the ability to limit walks and induce weak contact."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -116,7 +116,7 @@ TEXTS = {
         "count_pitch_mix": "Pitch Mix by Count",
     },
     "JA": {
-        "title": "ドミニカ共和国 投手スカウティングレポート",
+        "title": "韓国 投手スカウティングレポート",
         "subtitle": "WBC 2026 — 対戦相手投手分析（想定）",
         "select_pitcher": "投手を選択",
         "team_overview": "投手陣概要",
@@ -168,12 +168,9 @@ TEXTS = {
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "ドミニカ共和国は層の厚い投手陣を誇る。"
-            "先発はアルカンタラ・ベロ・セベリーノとパワーアームが揃い、"
-            "リリーフもドバル・エステベス・ウリベなど高球速の投手が充実。\n\n"
-            "弱点: 一部のリリーフは与四球率が高い傾向がある。"
-            "また投手陣は右腕に偏りがあり、"
-            "左腕はペラルタ・C.サンチェス・ソトの3人に限られる。"
+            "韓国の投手陣は高い制球力と効率的な投球が特徴とされている。
+
+多彩な球種と四球の少なさが強みと考えられ、打ち損じを誘う投球スタイルが持ち味の可能性がある。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "
@@ -670,7 +667,7 @@ def count_category(balls: int, strikes: int) -> str:
 # ---------------------------------------------------------------------------
 def main():
     st.set_page_config(
-        page_title="Dominican Republic Pitching \u2014 WBC 2026",
+        page_title="South Korea Pitching \u2014 WBC 2026",
         page_icon="\U0001F1E9\U0001F1F4",
         layout="wide",
     )

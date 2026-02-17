@@ -58,7 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "メキシコは積極的な打撃スタイルと中軸の長打力が特徴とされている。\n\nランディ・アロサレーナらMLB経験豊富な選手を擁し、クラッチヒッターとしての能力が高い可能性がある。"
+            "Mexico fields a lineup with a mix of MLB veterans and emerging talent. The team is known for aggressive hitting and solid middle-of-the-order power. Key batters such as Randy Arozarena bring elite athleticism and clutch hitting ability, making Mexico a dangerous offensive opponent."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -139,12 +139,9 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ドミニカ共和国はトーナメント屈指の強力打線を誇る。"
-            "ソト・ゲレーロJr.・タティスJr.・マチャドの中軸は圧倒的な長打力を持ち、"
-            "ソトやウェルズは選球眼にも優れている。\n\n"
-            "弱点: 一部の積極的な打者は三振率（K%）が高い。"
-            "また左右の投手で成績に差がある打者もおり、"
-            "苦手な利き手の投手でマッチアップを作ることが有効な可能性がある。"
+            "メキシコは積極的な打撃スタイルと中軸の長打力が特徴とされている。
+
+ランディ・アロサレーナらMLB経験豊富な選手を擁し、クラッチヒッターとしての能力が高い可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

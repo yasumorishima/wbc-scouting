@@ -70,7 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "カナダの投手陣は複数の現役MLB投手を擁し、高い奪三振能力が期待される。\n\nブルペンの層の厚さがトーナメントでの重要な武器になる可能性がある。"
+            "Canada's pitching staff includes several active MLB arms, capable of high strikeout rates and power pitching. The bullpen depth may be a key factor in Canada's tournament performance."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -116,7 +116,7 @@ TEXTS = {
         "count_pitch_mix": "Pitch Mix by Count",
     },
     "JA": {
-        "title": "ドミニカ共和国 投手スカウティングレポート",
+        "title": "カナダ 投手スカウティングレポート",
         "subtitle": "WBC 2026 — 対戦相手投手分析（想定）",
         "select_pitcher": "投手を選択",
         "team_overview": "投手陣概要",
@@ -168,12 +168,9 @@ TEXTS = {
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "ドミニカ共和国は層の厚い投手陣を誇る。"
-            "先発はアルカンタラ・ベロ・セベリーノとパワーアームが揃い、"
-            "リリーフもドバル・エステベス・ウリベなど高球速の投手が充実。\n\n"
-            "弱点: 一部のリリーフは与四球率が高い傾向がある。"
-            "また投手陣は右腕に偏りがあり、"
-            "左腕はペラルタ・C.サンチェス・ソトの3人に限られる。"
+            "カナダの投手陣は複数の現役MLB投手を擁し、高い奪三振能力が期待される。
+
+ブルペンの層の厚さがトーナメントでの重要な武器になる可能性がある。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "
@@ -670,7 +667,7 @@ def count_category(balls: int, strikes: int) -> str:
 # ---------------------------------------------------------------------------
 def main():
     st.set_page_config(
-        page_title="Dominican Republic Pitching \u2014 WBC 2026",
+        page_title="Canada Pitching \u2014 WBC 2026",
         page_icon="\U0001F1E9\U0001F1F4",
         layout="wide",
     )

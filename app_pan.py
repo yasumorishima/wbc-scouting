@@ -58,7 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "パナマは野球の伝統国であり、MLB経験者を中心とした長打力と機動力のある打線が特徴とされている。\n\n長打と積極的な走塁を組み合わせた攻撃的なスタイルが持ち味の可能性がある。"
+            "Panama has a rich baseball history and features a lineup built around MLB-experienced players with power and speed. The team's offensive profile may center on run production through extra-base hits and aggressive baserunning."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -139,12 +139,9 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ドミニカ共和国はトーナメント屈指の強力打線を誇る。"
-            "ソト・ゲレーロJr.・タティスJr.・マチャドの中軸は圧倒的な長打力を持ち、"
-            "ソトやウェルズは選球眼にも優れている。\n\n"
-            "弱点: 一部の積極的な打者は三振率（K%）が高い。"
-            "また左右の投手で成績に差がある打者もおり、"
-            "苦手な利き手の投手でマッチアップを作ることが有効な可能性がある。"
+            "パナマは野球の伝統国であり、MLB経験者を中心とした長打力と機動力のある打線が特徴とされている。
+
+長打と積極的な走塁を組み合わせた攻撃的なスタイルが持ち味の可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

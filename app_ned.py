@@ -58,7 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "オランダはザンダー・ボガーツやディディ・グレゴリアスらMLBレベルの選手を擁し、中軸に安定感がある。\n\n経験豊富な選手と若手の融合が特徴で、コンタクト率が高まると得点力が増す可能性がある。"
+            "The Netherlands features several MLB-caliber players, notably Xander Bogaerts and Didi Gregorius, providing a solid middle-of-the-order core. The lineup blends experience with emerging talent, and can be dangerous when players make consistent contact."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -139,12 +139,9 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ドミニカ共和国はトーナメント屈指の強力打線を誇る。"
-            "ソト・ゲレーロJr.・タティスJr.・マチャドの中軸は圧倒的な長打力を持ち、"
-            "ソトやウェルズは選球眼にも優れている。\n\n"
-            "弱点: 一部の積極的な打者は三振率（K%）が高い。"
-            "また左右の投手で成績に差がある打者もおり、"
-            "苦手な利き手の投手でマッチアップを作ることが有効な可能性がある。"
+            "オランダはザンダー・ボガーツやディディ・グレゴリアスらMLBレベルの選手を擁し、中軸に安定感がある。
+
+経験豊富な選手と若手の融合が特徴で、コンタクト率が高まると得点力が増す可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

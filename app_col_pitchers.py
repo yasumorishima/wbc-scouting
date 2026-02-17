@@ -70,7 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "コロンビアの投手陣は現役MLB投手を複数含む可能性があり、空振りの奪取と弱い打球の誘発が得意な投手が揃うと考えられる。\n\n投手陣全体の層の厚さが強みとなる可能性がある。"
+            "Colombia's pitching staff may include several active MLB arms with the ability to miss bats and generate weak contact. The overall depth of the pitching staff is a potential strength."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -116,7 +116,7 @@ TEXTS = {
         "count_pitch_mix": "Pitch Mix by Count",
     },
     "JA": {
-        "title": "ドミニカ共和国 投手スカウティングレポート",
+        "title": "コロンビア 投手スカウティングレポート",
         "subtitle": "WBC 2026 — 対戦相手投手分析（想定）",
         "select_pitcher": "投手を選択",
         "team_overview": "投手陣概要",
@@ -168,12 +168,9 @@ TEXTS = {
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "ドミニカ共和国は層の厚い投手陣を誇る。"
-            "先発はアルカンタラ・ベロ・セベリーノとパワーアームが揃い、"
-            "リリーフもドバル・エステベス・ウリベなど高球速の投手が充実。\n\n"
-            "弱点: 一部のリリーフは与四球率が高い傾向がある。"
-            "また投手陣は右腕に偏りがあり、"
-            "左腕はペラルタ・C.サンチェス・ソトの3人に限られる。"
+            "コロンビアの投手陣は現役MLB投手を複数含む可能性があり、空振りの奪取と弱い打球の誘発が得意な投手が揃うと考えられる。
+
+投手陣全体の層の厚さが強みとなる可能性がある。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "
@@ -670,7 +667,7 @@ def count_category(balls: int, strikes: int) -> str:
 # ---------------------------------------------------------------------------
 def main():
     st.set_page_config(
-        page_title="Dominican Republic Pitching \u2014 WBC 2026",
+        page_title="Colombia Pitching \u2014 WBC 2026",
         page_icon="\U0001F1E9\U0001F1F4",
         layout="wide",
     )

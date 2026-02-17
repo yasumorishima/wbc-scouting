@@ -70,7 +70,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "日本の投手陣はトーナメントでも屈指の質と深さを誇ると考えられている。\n\n高い奪三振能力と制球力を持つ先発投手を複数擁し、球種の多彩さと組み立ての巧みさが特徴とされている。"
+            "Japan is expected to feature a deep and high-quality pitching staff, with starters capable of elite strikeout rates and strong command. The combination of power pitching and pitch-type variety may make Japan's rotation one of the most difficult to face in the tournament."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -116,7 +116,7 @@ TEXTS = {
         "count_pitch_mix": "Pitch Mix by Count",
     },
     "JA": {
-        "title": "ドミニカ共和国 投手スカウティングレポート",
+        "title": "日本 投手スカウティングレポート",
         "subtitle": "WBC 2026 — 対戦相手投手分析（想定）",
         "select_pitcher": "投手を選択",
         "team_overview": "投手陣概要",
@@ -168,12 +168,9 @@ TEXTS = {
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "ドミニカ共和国は層の厚い投手陣を誇る。"
-            "先発はアルカンタラ・ベロ・セベリーノとパワーアームが揃い、"
-            "リリーフもドバル・エステベス・ウリベなど高球速の投手が充実。\n\n"
-            "弱点: 一部のリリーフは与四球率が高い傾向がある。"
-            "また投手陣は右腕に偏りがあり、"
-            "左腕はペラルタ・C.サンチェス・ソトの3人に限られる。"
+            "日本の投手陣はトーナメントでも屈指の質と深さを誇ると考えられている。
+
+高い奪三振能力と制球力を持つ先発投手を複数擁し、球種の多彩さと組み立ての巧みさが特徴とされている。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "
@@ -670,7 +667,7 @@ def count_category(balls: int, strikes: int) -> str:
 # ---------------------------------------------------------------------------
 def main():
     st.set_page_config(
-        page_title="Dominican Republic Pitching \u2014 WBC 2026",
+        page_title="Japan Pitching \u2014 WBC 2026",
         page_icon="\U0001F1E9\U0001F1F4",
         layout="wide",
     )

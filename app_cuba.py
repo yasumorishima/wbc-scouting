@@ -58,7 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "キューバは野球の伝統国として長い歴史を誇り、身体的に強靭な打者が揃う打線が特徴とされている。\n\n積極的な打撃スタイルと長打力が持ち味で、MLB経験を持つキューバ系選手が打線の中心となる可能性がある。"
+            "Cuba has a legendary baseball tradition and fields a physically imposing lineup. The team historically emphasizes power hitting and aggressive approach at the plate. MLB-experienced Cuban players may bring elite-level talent to anchor the lineup."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -139,12 +139,9 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ドミニカ共和国はトーナメント屈指の強力打線を誇る。"
-            "ソト・ゲレーロJr.・タティスJr.・マチャドの中軸は圧倒的な長打力を持ち、"
-            "ソトやウェルズは選球眼にも優れている。\n\n"
-            "弱点: 一部の積極的な打者は三振率（K%）が高い。"
-            "また左右の投手で成績に差がある打者もおり、"
-            "苦手な利き手の投手でマッチアップを作ることが有効な可能性がある。"
+            "キューバは野球の伝統国として長い歴史を誇り、身体的に強靭な打者が揃う打線が特徴とされている。
+
+積極的な打撃スタイルと長打力が持ち味で、MLB経験を持つキューバ系選手が打線の中心となる可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

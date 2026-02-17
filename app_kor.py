@@ -58,7 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "韓国は規律ある打撃スタイルと高い出塁率を重視するチームとして知られている。\n\nコンタクトヒッターを中心に状況判断に優れた打者が多く、MLB経験者が中軸を担うケースもある。"
+            "South Korea traditionally fields a disciplined, contact-oriented lineup with strong fundamentals. The team tends to emphasize high on-base percentage and situational hitting. MLB-experienced players may anchor the lineup and provide additional power threat."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -139,12 +139,9 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ドミニカ共和国はトーナメント屈指の強力打線を誇る。"
-            "ソト・ゲレーロJr.・タティスJr.・マチャドの中軸は圧倒的な長打力を持ち、"
-            "ソトやウェルズは選球眼にも優れている。\n\n"
-            "弱点: 一部の積極的な打者は三振率（K%）が高い。"
-            "また左右の投手で成績に差がある打者もおり、"
-            "苦手な利き手の投手でマッチアップを作ることが有効な可能性がある。"
+            "韓国は規律ある打撃スタイルと高い出塁率を重視するチームとして知られている。
+
+コンタクトヒッターを中心に状況判断に優れた打者が多く、MLB経験者が中軸を担うケースもある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

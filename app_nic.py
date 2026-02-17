@@ -58,7 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "ニカラグアは成長著しい野球新興国であり、国内リーグとプロ組織の選手で構成されている。\n\nコンタクト打撃と積極的な走塁を重視するスタイルが特徴の可能性がある。"
+            "Nicaragua is a developing baseball nation with a growing presence in international play. The lineup features players from the domestic league and professional organizations, with an emphasis on contact hitting and aggressive baserunning."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -139,12 +139,9 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ドミニカ共和国はトーナメント屈指の強力打線を誇る。"
-            "ソト・ゲレーロJr.・タティスJr.・マチャドの中軸は圧倒的な長打力を持ち、"
-            "ソトやウェルズは選球眼にも優れている。\n\n"
-            "弱点: 一部の積極的な打者は三振率（K%）が高い。"
-            "また左右の投手で成績に差がある打者もおり、"
-            "苦手な利き手の投手でマッチアップを作ることが有効な可能性がある。"
+            "ニカラグアは成長著しい野球新興国であり、国内リーグとプロ組織の選手で構成されている。
+
+コンタクト打撃と積極的な走塁を重視するスタイルが特徴の可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

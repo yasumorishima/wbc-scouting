@@ -58,7 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "イギリスは成長著しいベースボールプログラムを持ち、英国系のMLB・マイナー選手を中心に構成される見込みである。\n\nコンタクト能力と基礎技術を重視した打線が特徴の可能性がある。"
+            "Great Britain has developed a growing baseball program, drawing on British-heritage MLB and MiLB players. The lineup may feature underrated contact hitters and players with strong fundamental skills developed through professional organizations."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -139,12 +139,9 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ドミニカ共和国はトーナメント屈指の強力打線を誇る。"
-            "ソト・ゲレーロJr.・タティスJr.・マチャドの中軸は圧倒的な長打力を持ち、"
-            "ソトやウェルズは選球眼にも優れている。\n\n"
-            "弱点: 一部の積極的な打者は三振率（K%）が高い。"
-            "また左右の投手で成績に差がある打者もおり、"
-            "苦手な利き手の投手でマッチアップを作ることが有効な可能性がある。"
+            "イギリスは成長著しいベースボールプログラムを持ち、英国系のMLB・マイナー選手を中心に構成される見込みである。
+
+コンタクト能力と基礎技術を重視した打線が特徴の可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

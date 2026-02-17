@@ -456,6 +456,19 @@ HAS_PITCHERS_CSV = {
 }
 
 
+def _replace_strength_notes(result: str, en_text: str, ja_text: str) -> str:
+    """Replace both EN and JA strength_note blocks (1st=EN, 2nd=JA)."""
+    pat = re.compile(r'        "strength_note": \(\n.*?        \),', re.DOTALL)
+    matches = list(pat.finditer(result))
+    if len(matches) >= 2:
+        # Replace in reverse order to preserve positions
+        ja_new = f'        "strength_note": (\n            "{ja_text}"\n        ),'
+        en_new = f'        "strength_note": (\n            "{en_text}"\n        ),'
+        result = result[:matches[1].start()] + ja_new + result[matches[1].end():]
+        result = result[:matches[0].start()] + en_new + result[matches[0].end():]
+    return result
+
+
 def generate_batter_app(code: str, data: dict, template: str) -> str:
     c = data
     name_en = c["name_en"]
@@ -480,30 +493,14 @@ def generate_batter_app(code: str, data: dict, template: str) -> str:
         '"title": "Dominican Republic Scouting Report",',
         f'"title": "{name_en} Scouting Report",',
     )
-    # 4. EN strength_note
-    en_note_old = re.search(
-        r'        "strength_note": \(\n.*?        \),',
-        result,
-        re.DOTALL,
-    )
-    if en_note_old:
-        en_note_new = f'        "strength_note": (\n            "{c["batter_en"]}"\n        ),'
-        result = result[:en_note_old.start()] + en_note_new + result[en_note_old.end():]
+    # 4+6. EN & JA strength_note (both at once)
+    result = _replace_strength_notes(result, c["batter_en"], c["batter_ja"])
 
     # 5. JA title
     result = result.replace(
         '"title": "ドミニカ共和国 スカウティングレポート",',
         f'"title": "{name_ja} スカウティングレポート",',
     )
-    # 6. JA strength_note (second occurrence)
-    ja_note_old = re.search(
-        r'        "strength_note": \(\n.*?        \),',
-        result,
-        re.DOTALL,
-    )
-    if ja_note_old:
-        ja_note_new = f'        "strength_note": (\n            "{c["batter_ja"]}"\n        ),'
-        result = result[:ja_note_old.start()] + ja_note_new + result[ja_note_old.end():]
 
     # 7. DATA_PATH
     result = result.replace(
@@ -512,8 +509,8 @@ def generate_batter_app(code: str, data: dict, template: str) -> str:
     )
     # 8. page_title
     result = result.replace(
-        'page_title="Dominican Republic Scouting — WBC 2026",',
-        f'page_title="{name_en} Scouting — WBC 2026",',
+        'page_title="Dominican Republic Scouting \u2014 WBC 2026",',
+        f'page_title="{name_en} Scouting \u2014 WBC 2026",',
     )
     # 9. Flag emoji (DR = \U0001F1E9\U0001F1F4)
     result = result.replace("\U0001F1E9\U0001F1F4", flag)
@@ -547,37 +544,25 @@ def generate_pitcher_app(code: str, data: dict, template: str) -> str:
         '"title": "Dominican Republic Pitching Scouting Report",',
         f'"title": "{name_en} Pitching Scouting Report",',
     )
-    # 4. EN strength_note
-    en_note_old = re.search(
-        r'        "strength_note": \(\n.*?        \),',
-        result,
-        re.DOTALL,
-    )
-    if en_note_old:
-        en_note_new = f'        "strength_note": (\n            "{c["pitcher_en"]}"\n        ),'
-        result = result[:en_note_old.start()] + en_note_new + result[en_note_old.end():]
+    # 4+6. EN & JA strength_note (both at once)
+    result = _replace_strength_notes(result, c["pitcher_en"], c["pitcher_ja"])
 
     # 5. JA title
     result = result.replace(
-        '"title": "ドミニカ共和国 ピッチングスカウティングレポート",',
-        f'"title": "{name_ja} ピッチングスカウティングレポート",',
+        '"title": "ドミニカ共和国 投手スカウティングレポート",',
+        f'"title": "{name_ja} 投手スカウティングレポート",',
     )
-    # 6. JA strength_note
-    ja_note_old = re.search(
-        r'        "strength_note": \(\n.*?        \),',
-        result,
-        re.DOTALL,
-    )
-    if ja_note_old:
-        ja_note_new = f'        "strength_note": (\n            "{c["pitcher_ja"]}"\n        ),'
-        result = result[:ja_note_old.start()] + ja_note_new + result[ja_note_old.end():]
 
     # 7. DATA_PATH
     result = result.replace(
         '"data" / "dr_pitchers_statcast.csv"',
         f'"data" / "{code}_pitchers_statcast.csv"',
     )
-    # 8. page_title
+    # 8. page_title (template has literal \u2014 and also actual — em dash)
+    result = result.replace(
+        'page_title="Dominican Republic Pitching \\u2014 WBC 2026",',
+        f'page_title="{name_en} Pitching \\u2014 WBC 2026",',
+    )
     result = result.replace(
         'page_title="Dominican Republic Pitching \u2014 WBC 2026",',
         f'page_title="{name_en} Pitching \u2014 WBC 2026",',
@@ -593,6 +578,7 @@ def generate_pitcher_app(code: str, data: dict, template: str) -> str:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", default=None, help="Single country code to generate")
+    parser.add_argument("--force", action="store_true", help="Overwrite existing files")
     args = parser.parse_args()
 
     batter_template = (ROOT / "app_dr.py").read_text(encoding="utf-8")
@@ -609,22 +595,22 @@ def main():
 
         # Batter app
         out_batter = ROOT / f"app_{code}.py"
-        if out_batter.exists():
-            print(f"  SKIP (exists): app_{code}.py")
+        if out_batter.exists() and not args.force:
+            print(f"  SKIP (exists): app_{code}.py  (use --force to overwrite)")
         else:
             content = generate_batter_app(code, data, batter_template)
             out_batter.write_text(content, encoding="utf-8")
-            print(f"  CREATED: app_{code}.py")
+            print(f"  {'UPDATED' if out_batter.exists() else 'CREATED'}: app_{code}.py")
 
         # Pitcher app
         if code in HAS_PITCHERS_CSV:
             out_pitcher = ROOT / f"app_{code}_pitchers.py"
-            if out_pitcher.exists():
-                print(f"  SKIP (exists): app_{code}_pitchers.py")
+            if out_pitcher.exists() and not args.force:
+                print(f"  SKIP (exists): app_{code}_pitchers.py  (use --force to overwrite)")
             else:
                 content = generate_pitcher_app(code, data, pitcher_template)
                 out_pitcher.write_text(content, encoding="utf-8")
-                print(f"  CREATED: app_{code}_pitchers.py")
+                print(f"  {'UPDATED' if out_pitcher.exists() else 'CREATED'}: app_{code}_pitchers.py")
         else:
             print(f"  SKIP pitchers (no CSV): app_{code}_pitchers.py")
 

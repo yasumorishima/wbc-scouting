@@ -58,7 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "日本はトーナメント屈指の強豪チームと考えられており、バランスの取れた打線と高い選球眼が特徴とされている。\n\n大谷翔平・村上宗隆らを中心に長打力と出塁率を兼ね備えた打者が多く、打線全体の得点力は高い可能性がある。"
+            "Japan is widely regarded as one of the strongest teams in the tournament, featuring a balanced lineup with elite contact hitters and disciplined plate approach. Key batters include Shohei Ohtani and Munetaka Murakami, both capable of elite power. The lineup's depth and high on-base skills may pose significant challenges for opposing pitchers."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -139,12 +139,9 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ドミニカ共和国はトーナメント屈指の強力打線を誇る。"
-            "ソト・ゲレーロJr.・タティスJr.・マチャドの中軸は圧倒的な長打力を持ち、"
-            "ソトやウェルズは選球眼にも優れている。\n\n"
-            "弱点: 一部の積極的な打者は三振率（K%）が高い。"
-            "また左右の投手で成績に差がある打者もおり、"
-            "苦手な利き手の投手でマッチアップを作ることが有効な可能性がある。"
+            "日本はトーナメント屈指の強豪チームと考えられており、バランスの取れた打線と高い選球眼が特徴とされている。
+
+大谷翔平・村上宗隆らを中心に長打力と出塁率を兼ね備えた打者が多く、打線全体の得点力は高い可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
