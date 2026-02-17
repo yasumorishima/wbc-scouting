@@ -462,8 +462,11 @@ def _replace_strength_notes(result: str, en_text: str, ja_text: str) -> str:
     matches = list(pat.finditer(result))
     if len(matches) >= 2:
         # Replace in reverse order to preserve positions
-        ja_new = f'        "strength_note": (\n            "{ja_text}"\n        ),'
-        en_new = f'        "strength_note": (\n            "{en_text}"\n        ),'
+        # Escape newlines so they stay as \n in the output Python file
+        en_escaped = en_text.replace("\n", "\\n")
+        ja_escaped = ja_text.replace("\n", "\\n")
+        ja_new = f'        "strength_note": (\n            "{ja_escaped}"\n        ),'
+        en_new = f'        "strength_note": (\n            "{en_escaped}"\n        ),'
         result = result[:matches[1].start()] + ja_new + result[matches[1].end():]
         result = result[:matches[0].start()] + en_new + result[matches[0].end():]
     return result
