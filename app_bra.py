@@ -97,6 +97,7 @@ TEXTS = {
             "Platoon splits show how a batter performs against left-handed pitchers (LHP) "
             "vs right-handed pitchers (RHP). Large differences reveal matchup vulnerabilities."
         ),
+        "player": "Player",
         "player_summary": "Scouting Summary",
     },
     "JA": {
@@ -178,6 +179,7 @@ TEXTS = {
             "左右投手別成績は、左投手（LHP）と右投手（RHP）に対する打撃成績です。"
             "左右で成績に大きな差がある打者は、苦手な側の投手でマッチアップを作ると有利です。"
         ),
+        "player": "選手",
         "player_summary": "スカウティング要約",
     },
 }
@@ -745,7 +747,7 @@ def main():
                 continue
             s = batting_stats(pdf)
             rows.append({
-                "Player": _display_name(p["name"]),
+                t["player"]: _display_name(p["name"]),
                 "Pos": p["pos"],
                 "Team": p["team"],
                 "Bats": p["bats"],

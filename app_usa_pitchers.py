@@ -117,6 +117,7 @@ TEXTS = {
             "Each dot represents a pitch. Horizontal axis = glove-side break, "
             "vertical axis = induced vertical break. Pitches are colored by type."
         ),
+        "pitcher": "Pitcher",
         "pitcher_summary": "Scouting Summary",
         "pitch_filter": "Filter by pitch type",
         "all_pitches": "All Pitches",
@@ -221,6 +222,7 @@ TEXTS = {
             "各ドットが1球を表します。横軸 = グラブ側への曲がり、"
             "縦軸 = 重力に逆らう縦の変化量。球種ごとに色分けされています。"
         ),
+        "pitcher": "投手",
         "pitcher_summary": "スカウティング要約",
         "pitch_filter": "球種で絞り込み",
         "all_pitches": "全球種",
@@ -689,6 +691,14 @@ def main():
     st.sidebar.markdown(f"# \U0001F1FA\U0001F1F8 {t['title']}")
     st.sidebar.caption(t["subtitle"])
 
+    _name_ja_map = {p["name"]: p.get("name_ja", "") for p in USA_PITCHERS}
+
+    def _display_name(name):
+        ja = _name_ja_map.get(name, "")
+        if lang == "JA" and ja:
+            return f"{ja}（{name}）"
+        return name
+
     pitcher_names = [t["team_overview"]] + [p["name"] for p in USA_PITCHERS]
     selected = st.sidebar.selectbox(t["select_pitcher"], pitcher_names)
 
@@ -717,7 +727,7 @@ def main():
             s = pitching_stats(pdf)
             role_label = t["sp"] if p["role"] == "SP" else t["rp"]
             rows.append({
-                "Pitcher": p["name"],
+                t["pitcher"]: _display_name(p["name"]),
                 t["team"]: p["team"],
                 t["throws"]: p["throws"],
                 t["role"]: role_label,
