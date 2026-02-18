@@ -115,6 +115,13 @@ TEXTS = {
         "pitch_filter": "Filter by pitch type",
         "all_pitches": "All Pitches",
         "count_pitch_mix": "Pitch Mix by Count",
+        "glossary_count": (
+            "**Pitches** = Total pitches thrown | "
+            "**Opp AVG** = Opponents' batting average against | "
+            "**Opp SLG** = Opponents' slugging percentage against | "
+            "**K%** = Strikeout rate (strikeouts / plate appearances) | "
+            "**BB%** = Walk rate (walks / plate appearances)"
+        ),
     },
     "JA": {
         "title": "イギリス 投手スカウティングレポート",
@@ -214,6 +221,13 @@ TEXTS = {
         "pitch_filter": "球種で絞り込み",
         "all_pitches": "全球種",
         "count_pitch_mix": "カウント別 球種配分",
+        "glossary_count": (
+            "**投球数（Pitches）** = 投じた総球数 | "
+            "**被打率（Opp AVG）** = 対戦打者の打率 | "
+            "**被長打率（Opp SLG）** = 対戦打者の長打率 | "
+            "**奪三振率（K%）** = 打席あたりの三振を奪う割合 | "
+            "**与四球率（BB%）** = 打席あたりの四球を与える割合"
+        ),
     },
 }
 
@@ -964,6 +978,7 @@ def main():
             use_container_width=True,
             hide_index=True,
         )
+        st.caption(t["glossary_count"])
 
     # Pitch Mix by Count
     st.subheader(t["count_pitch_mix"])

@@ -19,7 +19,7 @@ from players_can_batters import CAN_BATTERS, PLAYER_BY_NAME
 # ---------------------------------------------------------------------------
 TEXTS = {
     "EN": {
-        "title": "Canada Scouting Report",
+        "title": "Canada Batter Scouting Report",
         "subtitle": "WBC 2026 — Projected Opponent Analysis",
         "select_player": "Select Player",
         "team_overview": "Team Overview",
@@ -58,7 +58,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Canada has grown significantly as a baseball nation, producing MLB-level talent. The lineup features a mix of power hitters and table-setters, with players like Bo Bichette and Josh Naylor providing dangerous run-producing ability in the heart of the order."
+            "Canada has grown significantly as a baseball nation, producing MLB-level talent in recent years. The lineup is expected to feature a mix of power hitters and table-setters, capable of providing dangerous run-producing ability throughout the order."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -99,9 +99,17 @@ TEXTS = {
         ),
         "player": "Player",
         "player_summary": "Scouting Summary",
+        "glossary_count": (
+            "**PA** = Plate Appearances (total times at bat) | "
+            "**AVG** = Batting Average (hits / at-bats) | "
+            "**OBP** = On-Base Percentage | "
+            "**SLG** = Slugging Percentage (total bases / at-bats) | "
+            "**OPS** = OBP + SLG (overall offensive value) | "
+            "**K%** = Strikeout rate | **BB%** = Walk rate"
+        ),
     },
     "JA": {
-        "title": "カナダ スカウティングレポート",
+        "title": "カナダ 打者スカウティングレポート",
         "subtitle": "WBC 2026 — 対戦相手分析（想定）",
         "select_player": "選手を選択",
         "team_overview": "チーム概要",
@@ -140,7 +148,7 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "カナダは近年MLB輩出国として台頭しており、ボー・ビシェットやジョシュ・ネイラーらが中軸を形成する可能性がある。\n\n長打力と塁上への出塁を組み合わせた攻撃的なラインナップが特徴と考えられる。"
+            "カナダは近年MLB選手を多く輩出する野球大国として台頭しており、長打力と出塁力を兼ね備えた選手が中軸を形成すると考えられる。\n\n攻撃的なラインナップで、得点力の高いチームになる可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
@@ -181,6 +189,14 @@ TEXTS = {
         ),
         "player": "選手",
         "player_summary": "スカウティング要約",
+        "glossary_count": (
+            "**PA（打席数）** = 打席に立った総回数 | "
+            "**AVG（打率）** = 安打数 ÷ 打数 | "
+            "**OBP（出塁率）** = 塁に出た割合 | "
+            "**SLG（長打率）** = 塁打数 ÷ 打数 | "
+            "**OPS** = OBP + SLG（総合打撃指標） | "
+            "**K%（三振率）** = 打席あたりの三振割合 | **BB%（四球率）** = 打席あたりの四球割合"
+        ),
     },
 }
 
@@ -744,6 +760,21 @@ def main():
         for p in CAN_BATTERS:
             pdf = df_all[df_all["batter"] == p["mlbam_id"]]
             if pdf.empty:
+                rows.append({
+                    t["player"]: _display_name(p["name"]),
+                    "Pos": p["pos"],
+                    "Team": p["team"],
+                    "Bats": p["bats"],
+                    "PA": None,
+                    "AVG": None,
+                    "OBP": None,
+                    "SLG": None,
+                    "OPS": None,
+                    "HR": None,
+                    "K%": None,
+                    "BB%": None,
+                    "xwOBA": None,
+                })
                 continue
             s = batting_stats(pdf)
             rows.append({
@@ -769,7 +800,7 @@ def main():
                     "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                     "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
                     "xwOBA": "{:.3f}",
-                }).background_gradient(subset=["OPS"], cmap="RdYlGn")
+                }, na_rep="—").background_gradient(subset=["OPS"], cmap="RdYlGn")
                 .background_gradient(subset=["K%"], cmap="RdYlGn_r"),
                 use_container_width=True,
                 hide_index=True,
@@ -1025,6 +1056,7 @@ def main():
             use_container_width=True,
             hide_index=True,
         )
+        st.caption(t["glossary_count"])
 
 
 if __name__ == "__main__":

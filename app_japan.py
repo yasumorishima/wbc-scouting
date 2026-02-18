@@ -19,7 +19,7 @@ from players_japan_batters import JAPAN_BATTERS, PLAYER_BY_NAME
 # ---------------------------------------------------------------------------
 TEXTS = {
     "EN": {
-        "title": "Japan Scouting Report",
+        "title": "Japan Batter Scouting Report",
         "subtitle": "WBC 2026 — Projected Opponent Analysis",
         "select_player": "Select Player",
         "team_overview": "Team Overview",
@@ -99,9 +99,17 @@ TEXTS = {
         ),
         "player": "Player",
         "player_summary": "Scouting Summary",
+        "glossary_count": (
+            "**PA** = Plate Appearances (total times at bat) | "
+            "**AVG** = Batting Average (hits / at-bats) | "
+            "**OBP** = On-Base Percentage | "
+            "**SLG** = Slugging Percentage (total bases / at-bats) | "
+            "**OPS** = OBP + SLG (overall offensive value) | "
+            "**K%** = Strikeout rate | **BB%** = Walk rate"
+        ),
     },
     "JA": {
-        "title": "日本 スカウティングレポート",
+        "title": "日本 打者スカウティングレポート",
         "subtitle": "WBC 2026 — 対戦相手分析（想定）",
         "select_player": "選手を選択",
         "team_overview": "チーム概要",
@@ -181,6 +189,14 @@ TEXTS = {
         ),
         "player": "選手",
         "player_summary": "スカウティング要約",
+        "glossary_count": (
+            "**PA（打席数）** = 打席に立った総回数 | "
+            "**AVG（打率）** = 安打数 ÷ 打数 | "
+            "**OBP（出塁率）** = 塁に出た割合 | "
+            "**SLG（長打率）** = 塁打数 ÷ 打数 | "
+            "**OPS** = OBP + SLG（総合打撃指標） | "
+            "**K%（三振率）** = 打席あたりの三振割合 | **BB%（四球率）** = 打席あたりの四球割合"
+        ),
     },
 }
 
@@ -744,6 +760,21 @@ def main():
         for p in JAPAN_BATTERS:
             pdf = df_all[df_all["batter"] == p["mlbam_id"]]
             if pdf.empty:
+                rows.append({
+                    t["player"]: _display_name(p["name"]),
+                    "Pos": p["pos"],
+                    "Team": p["team"],
+                    "Bats": p["bats"],
+                    "PA": None,
+                    "AVG": None,
+                    "OBP": None,
+                    "SLG": None,
+                    "OPS": None,
+                    "HR": None,
+                    "K%": None,
+                    "BB%": None,
+                    "xwOBA": None,
+                })
                 continue
             s = batting_stats(pdf)
             rows.append({
@@ -769,7 +800,7 @@ def main():
                     "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                     "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
                     "xwOBA": "{:.3f}",
-                }).background_gradient(subset=["OPS"], cmap="RdYlGn")
+                }, na_rep="—").background_gradient(subset=["OPS"], cmap="RdYlGn")
                 .background_gradient(subset=["K%"], cmap="RdYlGn_r"),
                 use_container_width=True,
                 hide_index=True,
@@ -1025,6 +1056,7 @@ def main():
             use_container_width=True,
             hide_index=True,
         )
+        st.caption(t["glossary_count"])
 
 
 if __name__ == "__main__":

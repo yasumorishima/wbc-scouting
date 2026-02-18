@@ -131,15 +131,14 @@ COUNTRIES = {
         "flag": "\U0001F1E8\U0001F1E6",
         "var": "CAN",
         "batter_en": (
-            "Canada has grown significantly as a baseball nation, producing MLB-level talent. "
-            "The lineup features a mix of power hitters and table-setters, "
-            "with players like Bo Bichette and Josh Naylor providing dangerous run-producing ability "
-            "in the heart of the order."
+            "Canada has grown significantly as a baseball nation, producing MLB-level talent in recent years. "
+            "The lineup is expected to feature a mix of power hitters and table-setters, "
+            "capable of providing dangerous run-producing ability throughout the order."
         ),
         "batter_ja": (
-            "カナダは近年MLB輩出国として台頭しており、"
-            "ボー・ビシェットやジョシュ・ネイラーらが中軸を形成する可能性がある。\n\n"
-            "長打力と塁上への出塁を組み合わせた攻撃的なラインナップが特徴と考えられる。"
+            "カナダは近年MLB選手を多く輩出する野球大国として台頭しており、"
+            "長打力と出塁力を兼ね備えた選手が中軸を形成すると考えられる。\n\n"
+            "攻撃的なラインナップで、得点力の高いチームになる可能性がある。"
         ),
         "pitcher_en": (
             "Canada's pitching staff includes several active MLB arms, "
@@ -501,16 +500,16 @@ def generate_batter_app(code: str, data: dict, template: str) -> str:
     )
     # 3. EN title
     result = result.replace(
-        '"title": "Dominican Republic Scouting Report",',
-        f'"title": "{name_en} Scouting Report",',
+        '"title": "Dominican Republic Batter Scouting Report",',
+        f'"title": "{name_en} Batter Scouting Report",',
     )
     # 4+6. EN & JA strength_note (both at once)
     result = _replace_strength_notes(result, c["batter_en"], c["batter_ja"])
 
     # 5. JA title
     result = result.replace(
-        '"title": "ドミニカ共和国 スカウティングレポート",',
-        f'"title": "{name_ja} スカウティングレポート",',
+        '"title": "ドミニカ共和国 打者スカウティングレポート",',
+        f'"title": "{name_ja} 打者スカウティングレポート",',
     )
 
     # 7. DATA_PATH
