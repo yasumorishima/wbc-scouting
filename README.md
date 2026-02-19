@@ -18,6 +18,18 @@ Streamlit Community Cloud にデプロイ済み。MLB で実績のある選手�
 
 ---
 
+## 📸 スクリーンショット
+
+### 打者ダッシュボード
+![Spray Chart](https://raw.githubusercontent.com/yasumorishima/zenn-content/master/images/wbc-batter-spray-chart.png)
+![Zone Heatmap](https://raw.githubusercontent.com/yasumorishima/zenn-content/master/images/wbc-batter-zone-heatmap.png)
+
+### 投手ダッシュボード
+![Pitch Location](https://raw.githubusercontent.com/yasumorishima/zenn-content/master/images/wbc-pitcher-location.png)
+![Pitch Movement](https://raw.githubusercontent.com/yasumorishima/zenn-content/master/images/wbc-pitcher-movement.png)
+
+---
+
 ## 🌐 デプロイ済みアプリ一覧
 
 ### Pool A — San Juan
