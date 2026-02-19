@@ -4,6 +4,18 @@ WBC 2026（World Baseball Classic）参加チームの Statcast データを可�
 
 Streamlit Community Cloud にデプロイ済み。MLB で実績のある選手（`mlbam_id` あり）のデータを表示。
 
+> **アプリが開くまで少々お待ちください ⏳**
+>
+> Streamlit Community Cloud は一定時間使われないとアプリがスリープします。
+> リンクを開いた際に以下のメッセージが表示された場合は正常な動作です。
+>
+> - **「Zzzz — This app has gone to sleep. Would you like to wake it back up?」**
+>   → 「Yes, get this app back up!」ボタンをクリックしてください。
+> - **「Your app is in the oven」**
+>   → アプリ起動中です。そのまま 30〜60 秒ほどお待ちください。
+>
+> バグではありません。ボタンを押すかしばらく待つだけで、通常通り使えます。
+
 ---
 
 ## 🌐 デプロイ済みアプリ一覧

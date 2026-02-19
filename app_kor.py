@@ -107,6 +107,13 @@ TEXTS = {
             "**OPS** = OBP + SLG (overall offensive value) | "
             "**K%** = Strikeout rate | **BB%** = Walk rate"
         ),
+        "pos_glossary": (
+            "**C** = Catcher | **1B** = First Base | **2B** = Second Base | "
+            "**3B** = Third Base | **SS** = Shortstop | "
+            "**LF** = Left Field | **CF** = Center Field | **RF** = Right Field | "
+            "**DH** = Designated Hitter | **UTL** = Utility (multi-position player)"
+        ),
+        "pos_glossary_label": "Position abbreviations",
     },
     "JA": {
         "title": "韓国 打者スカウティングレポート",
@@ -197,6 +204,13 @@ TEXTS = {
             "**OPS** = OBP + SLG（総合打撃指標） | "
             "**K%（三振率）** = 打席あたりの三振割合 | **BB%（四球率）** = 打席あたりの四球割合"
         ),
+        "pos_glossary": (
+            "**C** = 捕手（キャッチャー） | **1B** = 一塁手 | **2B** = 二塁手 | "
+            "**3B** = 三塁手 | **SS** = 遊撃手（ショート） | "
+            "**LF** = 左翼手（レフト） | **CF** = 中堅手（センター） | **RF** = 右翼手（ライト） | "
+            "**DH** = 指名打者 | **UTL** = ユーティリティ（複数ポジション対応）"
+        ),
+        "pos_glossary_label": "ポジション略称の説明",
     },
 }
 
@@ -756,6 +770,9 @@ def main():
             st.markdown(t["glossary_stats"])
             st.markdown(t["glossary_pct"])
 
+        with st.expander(t["pos_glossary_label"]):
+            st.markdown(t["pos_glossary"])
+
         rows = []
         for p in KOR_BATTERS:
             pdf = df_all[df_all["batter"] == p["mlbam_id"]]
@@ -797,6 +814,7 @@ def main():
             overview = pd.DataFrame(rows)
             st.dataframe(
                 overview.style.format({
+                    "PA": "{:.0f}", "HR": "{:.0f}",
                     "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                     "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
                     "xwOBA": "{:.3f}",

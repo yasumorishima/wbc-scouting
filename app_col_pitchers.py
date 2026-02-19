@@ -748,6 +748,7 @@ def main():
             overview = pd.DataFrame(rows)
             st.dataframe(
                 overview.style.format({
+                    t["pitches"]: "{:.0f}",
                     t["k_pct"]: "{:.1f}", t["bb_pct"]: "{:.1f}",
                     t["opp_avg"]: "{:.3f}", t["opp_slg"]: "{:.3f}",
                     t["xwoba_against"]: "{:.3f}", t["avg_velo"]: "{:.1f}",
