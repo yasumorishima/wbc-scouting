@@ -4,6 +4,12 @@ WBC 2026（World Baseball Classic）参加チームの Statcast データを可�
 
 Streamlit Community Cloud にデプロイ済み。MLB で実績のある選手（`mlbam_id` あり）のデータを表示。
 
+## 🌐 ランディングページ
+
+**[https://wbc-2026-scouting-dashboard-zvg.caffeine.xyz/](https://wbc-2026-scouting-dashboard-zvg.caffeine.xyz/)**
+
+全チームのダッシュボードリンクをプール別にまとめたランディングページ（ICP / Caffeine 上でホスト、英語・日本語対応）。
+
 > **アプリが開くまで少々お待ちください ⏳**
 >
 > Streamlit Community Cloud は一定時間使われないとアプリがスリープします。
