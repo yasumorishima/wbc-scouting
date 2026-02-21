@@ -1,7 +1,7 @@
 """WBC 2026 Great Britain roster — MLB batters."""
 
 GB_BATTERS = [
-    {"name": "Jazz Chisholm Jr.",           "name_ja": "ジャズ・チザムJr.",        "mlbam_id": 0, "pos": "2B", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Jazz Chisholm Jr.",           "name_ja": "ジャズ・チザムJr.",        "mlbam_id": 665862, "pos": "2B", "team": "NYY", "bats": "L"},
     {"name": "Willis Cresswell",            "name_ja": "ウィリス・クレスウェル",   "mlbam_id": 0, "pos": "C", "team": "", "bats": "R"},  # TODO: ID not found
     {"name": "Nate Eaton",                  "name_ja": "ネイト・イートン",         "mlbam_id": 681987, "pos": "3B", "team": "", "bats": "R"},
     {"name": "Harry Ford",                  "name_ja": "ハリー・フォード",         "mlbam_id": 695670, "pos": "C", "team": "", "bats": "R"},

@@ -6,7 +6,7 @@ PAN_BATTERS = [
     {"name": "Christian Bethancourt",       "name_ja": "クリスチャン・ベタンコート","mlbam_id": 542194, "pos": "C/1B", "team": "", "bats": "R"},
     {"name": "Enrique Bradfield",           "name_ja": "エンリケ・ブラッドフィールド","mlbam_id": 0, "pos": "CF", "team": "", "bats": "R"},  # TODO: ID not found
     {"name": "José Caballero",              "name_ja": "ホセ・カバジェロ",         "mlbam_id": 676609, "pos": "IF", "team": "", "bats": "R"},
-    {"name": "Ivan Herrera",                "name_ja": "イバン・エレーラ",         "mlbam_id": 0, "pos": "C", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Ivan Herrera",                "name_ja": "イバン・エレーラ",         "mlbam_id": 671056, "pos": "C", "team": "STL", "bats": "R"},
     {"name": "Leo Jiménez",                 "name_ja": "レオ・ヒメネス",           "mlbam_id": 0, "pos": "SS", "team": "", "bats": "R"},  # TODO: ID not found
     {"name": "Jose Ramos",                  "name_ja": "ホセ・ラモス",             "mlbam_id": 0, "pos": "OF", "team": "", "bats": "R"},  # TODO: ID not found
     {"name": "Edmundo Sosa",                "name_ja": "エドムンド・ソーサ",       "mlbam_id": 624641, "pos": "2B", "team": "", "bats": "R"},

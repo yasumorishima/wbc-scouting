@@ -5,7 +5,7 @@ COL_PITCHERS = [
     {"name": "Nabil Crismatt",              "name_ja": "ナビル・クリスマット",     "mlbam_id": 622503, "team": "", "throws": "R", "role": "RP"},
     {"name": "Tayron Guerrero",             "name_ja": "タイロン・ゲレーロ",       "mlbam_id": 594027, "team": "", "throws": "R", "role": "RP"},
     {"name": "David Lorduy",                "name_ja": "ダビド・ロルドゥイ",       "mlbam_id": 0, "team": "", "throws": "R", "role": "RP"},  # TODO: ID not found
-    {"name": "Reiver Sanmartín",            "name_ja": "レイバー・サンマルティン", "mlbam_id": 0, "team": "", "throws": "L", "role": "RP"},  # TODO: ID not found
+    {"name": "Reiver Sanmartín",            "name_ja": "レイバー・サンマルティン", "mlbam_id": 665665, "team": "CIN", "throws": "L", "role": "RP"},
     {"name": "Guillo Zuñiga",               "name_ja": "ギジョ・スニガ",           "mlbam_id": 670871, "team": "", "throws": "R", "role": "RP"},
 ]
 

@@ -6,7 +6,7 @@ CAN_BATTERS = [
     {"name": "Denzel Clarke",               "name_ja": "デンゼル・クラーク",       "mlbam_id": 672016, "pos": "OF", "team": "", "bats": "R"},
     {"name": "Liam Hicks",                  "name_ja": "リアム・ヒックス",         "mlbam_id": 689414, "pos": "C", "team": "", "bats": "R"},
     {"name": "Edouard Julien",              "name_ja": "エドゥアール・ジュリアン", "mlbam_id": 666397, "pos": "2B", "team": "", "bats": "R"},
-    {"name": "Otto López",                  "name_ja": "オットー・ロペス",         "mlbam_id": 0, "pos": "SS", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Otto López",                  "name_ja": "オットー・ロペス",         "mlbam_id": 672640, "pos": "SS", "team": "TOR", "bats": "R"},
     {"name": "Josh Naylor",                 "name_ja": "ジョシュ・ネイラー",       "mlbam_id": 647304, "pos": "1B", "team": "", "bats": "R"},
     {"name": "Bo Naylor",                   "name_ja": "ボー・ネイラー",           "mlbam_id": 666310, "pos": "C", "team": "", "bats": "R"},
     {"name": "Tyler O'Neill",               "name_ja": "タイラー・オニール",       "mlbam_id": 641933, "pos": "OF", "team": "", "bats": "R"},
