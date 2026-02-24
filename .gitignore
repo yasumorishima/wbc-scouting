@@ -8,3 +8,9 @@ dist/
 build/
 .DS_Store
 Thumbs.db
+
+# Session/dev notes (local only)
+DEV_NOTE.md
+*_SESSION_NOTE.md
+*_DEV_NOTE.md
+NEXT_SESSION.md
