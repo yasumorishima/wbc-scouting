@@ -78,23 +78,23 @@ TEXTS = {
             "Even = same count (e.g. 1-1, 2-2)."
         ),
         "glossary_stats": (
-            "**AVG** = Batting Average (hits / at-bats) | "
-            "**OBP** = On-Base Percentage (how often a batter reaches base) | "
-            "**SLG** = Slugging Percentage (total bases / at-bats, measures power) | "
-            "**OPS** = OBP + SLG (overall offensive value) | "
-            "**xwOBA** = Expected Weighted On-Base Average (batted ball quality based on exit velocity & launch angle)"
+            "- **AVG** = Batting Average (hits / at-bats)\n"
+            "- **OBP** = On-Base Percentage (how often a batter reaches base)\n"
+            "- **SLG** = Slugging Percentage (total bases / at-bats, measures power)\n"
+            "- **OPS** = OBP + SLG (overall offensive value)\n"
+            "- **xwOBA** = Expected Weighted On-Base Average (batted ball quality based on exit velocity & launch angle)"
         ),
         "glossary_pct": (
-            "**K%** = Strikeout rate | **BB%** = Walk rate"
+            "- **K%** = Strikeout rate\n- **BB%** = Walk rate"
         ),
         "glossary_pitch": (
-            "**Whiff%** = Swing-and-miss rate (misses / total swings) | "
-            "**Chase%** = Rate of swinging at pitches outside the strike zone"
+            "- **Whiff%** = Swing-and-miss rate (misses / total swings)\n"
+            "- **Chase%** = Rate of swinging at pitches outside the strike zone"
         ),
         "glossary_batted": (
-            "**Pull%** = Hit to batter's pull side | "
-            "**GB%** = Ground ball rate | **LD%** = Line drive rate | **FB%** = Fly ball rate | "
-            "**Avg EV** = Average exit velocity (mph) | **Avg LA** = Average launch angle (degrees)"
+            "- **Pull%** = Hit to batter's pull side\n"
+            "- **GB%** = Ground ball rate\n- **LD%** = Line drive rate\n- **FB%** = Fly ball rate\n"
+            "- **Avg EV** = Average exit velocity (mph)\n- **Avg LA** = Average launch angle (degrees)"
         ),
         "glossary_platoon": (
             "Platoon splits show how a batter performs against left-handed pitchers (LHP) "
@@ -170,23 +170,23 @@ TEXTS = {
             "イーブン = 同数（例: 1-1, 2-2）。"
         ),
         "glossary_stats": (
-            "**AVG（打率）** = 安打数 / 打数 | "
-            "**OBP（出塁率）** = 打者が塁に出る割合 | "
-            "**SLG（長打率）** = 塁打数 / 打数（長打力の指標） | "
-            "**OPS** = OBP + SLG（総合的な打撃力） | "
-            "**xwOBA** = 打球の質（打球速度と角度から算出した期待値）"
+            "- **AVG（打率）** = 安打数 / 打数\n"
+            "- **OBP（出塁率）** = 打者が塁に出る割合\n"
+            "- **SLG（長打率）** = 塁打数 / 打数（長打力の指標）\n"
+            "- **OPS** = OBP + SLG（総合的な打撃力）\n"
+            "- **xwOBA** = 打球の質（打球速度と角度から算出した期待値）"
         ),
         "glossary_pct": (
-            "**K%（三振率）** = 打席あたりの三振割合 | **BB%（四球率）** = 打席あたりの四球割合"
+            "- **K%（三振率）** = 打席あたりの三振割合\n- **BB%（四球率）** = 打席あたりの四球割合"
         ),
         "glossary_pitch": (
-            "**空振率（Whiff%）** = スイングに対する空振りの割合 | "
-            "**チェイス率（Chase%）** = ストライクゾーン外の球に手を出す割合"
+            "- **空振率（Whiff%）** = スイングに対する空振りの割合\n"
+            "- **チェイス率（Chase%）** = ストライクゾーン外の球に手を出す割合"
         ),
         "glossary_batted": (
-            "**プル%** = 引っ張り方向への打球割合 | "
-            "**ゴロ%** = ゴロの割合 | **ライナー%** = ライナーの割合 | **フライ%** = フライの割合 | "
-            "**平均打球速度** = 打球のスピード（mph） | **平均打球角度** = 打球の打ち出し角度"
+            "- **プル%** = 引っ張り方向への打球割合\n"
+            "- **ゴロ%** = ゴロの割合\n- **ライナー%** = ライナーの割合\n- **フライ%** = フライの割合\n"
+            "- **平均打球速度** = 打球のスピード（mph）\n- **平均打球角度** = 打球の打ち出し角度"
         ),
         "glossary_platoon": (
             "左右投手別成績は、左投手（LHP）と右投手（RHP）に対する打撃成績です。"
@@ -731,7 +731,34 @@ def main():
         page_title="Venezuela Scouting — WBC 2026",
         page_icon="🇻🇪",
         layout="wide",
+        initial_sidebar_state="collapsed",
     )
+
+    # -- Responsive CSS for mobile --
+    st.markdown("""
+    <style>
+    @media (max-width: 768px) {
+        /* Shrink metric cards */
+        [data-testid="stMetric"] {
+            padding: 0.3rem 0.4rem;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 0.75rem !important;
+        }
+        [data-testid="stMetricValue"] {
+            font-size: 1.1rem !important;
+        }
+        /* Tighter column gaps */
+        [data-testid="stHorizontalBlock"] {
+            gap: 0.3rem !important;
+        }
+        /* Readable table text */
+        .stDataFrame td, .stDataFrame th {
+            font-size: 0.8rem !important;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     # Sidebar
     lang = st.sidebar.radio("Language / 言語", ["JA", "EN"], horizontal=True)
@@ -866,7 +893,7 @@ def main():
                                           ha="center", va="bottom", color="white",
                                           fontweight="bold")
                     fig_radar.tight_layout()
-                    st.pyplot(fig_radar)
+                    st.pyplot(fig_radar, use_container_width=True)
                     plt.close(fig_radar)
                     low_k_note = ("Lower K% is better for batters" if lang == "EN"
                                   else "三振率は低いほど良い（グラフでは低K%ほど外側）")
@@ -945,17 +972,32 @@ def main():
     c2.metric(t["team"], player["team"])
     c3.metric(t["bats"], player["bats"])
 
-    c4, c5, c6, c7, c8 = st.columns(5)
-    c4.metric("AVG", f"{stats['AVG']:.3f}")
-    c5.metric("OBP", f"{stats['OBP']:.3f}")
-    c6.metric("SLG", f"{stats['SLG']:.3f}")
-    c7.metric("OPS", f"{stats['OPS']:.3f}")
-    c8.metric("xwOBA", f"{stats['xwOBA']:.3f}" if stats["xwOBA"] else "—")
+    _MLB_AVG = {"AVG": .243, "OBP": .312, "SLG": .397, "OPS": .709, "xwOBA": .311}
+
+    c4, c5, c6 = st.columns(3)
+    c4.metric("AVG", f"{stats['AVG']:.3f}",
+              delta=f"{stats['AVG'] - _MLB_AVG['AVG']:+.3f} vs MLB avg")
+    c5.metric("OBP", f"{stats['OBP']:.3f}",
+              delta=f"{stats['OBP'] - _MLB_AVG['OBP']:+.3f} vs MLB avg")
+    c6.metric("SLG", f"{stats['SLG']:.3f}",
+              delta=f"{stats['SLG'] - _MLB_AVG['SLG']:+.3f} vs MLB avg")
+    c7, c8 = st.columns(2)
+    c7.metric("OPS", f"{stats['OPS']:.3f}",
+              delta=f"{stats['OPS'] - _MLB_AVG['OPS']:+.3f} vs MLB avg")
+    if stats["xwOBA"]:
+        c8.metric("xwOBA", f"{stats['xwOBA']:.3f}",
+                  delta=f"{stats['xwOBA'] - _MLB_AVG['xwOBA']:+.3f} vs MLB avg")
+    else:
+        c8.metric("xwOBA", "—")
 
     # ③ Glossary expander for stats
     with st.expander("Stats glossary" if lang == "EN" else "用語の説明を見る"):
         st.markdown(t["glossary_stats"])
         st.markdown(t["glossary_pct"])
+        _bench_text = ("MLB avg (2024): AVG .243 / OBP .312 / SLG .397 / OPS .709 / xwOBA .311"
+                       if lang == "EN" else
+                       "MLB平均 (2024): AVG .243 / OBP .312 / SLG .397 / OPS .709 / xwOBA .311")
+        st.caption(_bench_text)
 
     # ⑤ Player scouting summary
     st.subheader(t["player_summary"])
@@ -968,7 +1010,7 @@ def main():
     st.subheader(t["zone_heatmap"])
     st.caption(t["zone_caption"])
     st.caption(t["danger_zone"])
-    fig = plt.figure(figsize=(14, 5), facecolor="#0e1117")
+    fig = plt.figure(figsize=(10, 4), facecolor="#0e1117")
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.3)
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[0, 1])
@@ -984,12 +1026,12 @@ def main():
     cb = fig.colorbar(im, cax=cax)
     cb.ax.tick_params(colors="white")
     fig.tight_layout()
-    st.pyplot(fig)
+    st.pyplot(fig, use_container_width=True)
     plt.close(fig)
 
     # 3×3 Zone Chart — colorbar in dedicated column
     st.subheader(t["zone_3x3"])
-    fig3 = plt.figure(figsize=(12, 4.5), facecolor="#0e1117")
+    fig3 = plt.figure(figsize=(8, 3.5), facecolor="#0e1117")
     gs3 = fig3.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.35)
     ax3a = fig3.add_subplot(gs3[0, 0])
     ax3b = fig3.add_subplot(gs3[0, 1])
@@ -1005,7 +1047,7 @@ def main():
     cb3 = fig3.colorbar(im3, cax=cax3)
     cb3.ax.tick_params(colors="white")
     fig3.tight_layout()
-    st.pyplot(fig3)
+    st.pyplot(fig3, use_container_width=True)
     plt.close(fig3)
 
     st.divider()
@@ -1023,12 +1065,12 @@ def main():
         stadium_key = stadium_keys[stadium_idx]
         show_density = st.checkbox(t["density_map"], value=True)
 
-        fig_sp, ax_sp = plt.subplots(figsize=(6, 6), facecolor="#0e1117")
+        fig_sp, ax_sp = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
         ax_sp.set_facecolor("#0e1117")
         draw_spray_chart(pdf, player["name"], ax_sp, stadium=stadium_key,
                          density=show_density)
         fig_sp.tight_layout()
-        st.pyplot(fig_sp)
+        st.pyplot(fig_sp, use_container_width=True)
         plt.close(fig_sp)
 
     with col_bb:
@@ -1057,7 +1099,7 @@ def main():
             draw_spray_chart(split_sp, sp_title, ax_sps, stadium=stadium_key,
                              density=show_density)
             fig_sps.tight_layout()
-            st.pyplot(fig_sps)
+            st.pyplot(fig_sps, use_container_width=True)
             plt.close(fig_sps)
 
     st.divider()
@@ -1095,7 +1137,7 @@ def main():
         for spine in ax_pt.spines.values():
             spine.set_color("white")
         fig_pt.tight_layout()
-        st.pyplot(fig_pt)
+        st.pyplot(fig_pt, use_container_width=True)
         plt.close(fig_pt)
 
     st.divider()
@@ -1131,7 +1173,7 @@ def main():
             ax_z.title.set_color("white")
             draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z)
             fig_z.tight_layout()
-            st.pyplot(fig_z)
+            st.pyplot(fig_z, use_container_width=True)
             plt.close(fig_z)
 
     st.divider()
