@@ -32,8 +32,8 @@ TEXTS = {
         "pitch_type": "Pitch Type",
         "count": "Count",
         "usage_pct": "Usage%",
-        "avg_velo": "Avg Velo (mph)",
-        "max_velo": "Max Velo (mph)",
+        "avg_velo": "Avg Velo (mph / km/h)",
+        "max_velo": "Max Velo (mph / km/h)",
         "avg_spin": "Avg Spin (rpm)",
         "h_break": "H-Break (in)",
         "v_break": "V-Break (in)",
@@ -145,8 +145,8 @@ TEXTS = {
         "pitch_type": "球種",
         "count": "投球数",
         "usage_pct": "使用率",
-        "avg_velo": "平均球速 (mph)",
-        "max_velo": "最高球速 (mph)",
+        "avg_velo": "平均球速 (mph / km/h)",
+        "max_velo": "最高球速 (mph / km/h)",
         "avg_spin": "平均回転数 (rpm)",
         "h_break": "横変化 (in)",
         "v_break": "縦変化 (in)",
@@ -358,8 +358,8 @@ def generate_pitcher_summary(stats: dict, pdf: pd.DataFrame, pitcher: dict,
                          else "打球の質を抑えている（被xwOBA .290以下）")
 
     if stats["Avg Velo"] and stats["Avg Velo"] >= 95.0:
-        strengths.append(f"power arm (Avg Velo {stats['Avg Velo']:.1f} mph)" if lang == "EN"
-                         else f"パワーアーム（平均球速 {stats['Avg Velo']:.1f} mph）")
+        strengths.append(f"power arm (Avg Velo {stats['Avg Velo']:.1f} mph / {stats['Avg Velo'] * 1.609:.0f} km/h)" if lang == "EN"
+                         else f"パワーアーム（平均球速 {stats['Avg Velo']:.1f} mph / {stats['Avg Velo'] * 1.609:.0f} km/h）")
 
     if stats["BB%"] >= 10.0:
         weaknesses.append(f"high walk rate (BB% {stats['BB%']:.1f})" if lang == "EN"
@@ -651,8 +651,8 @@ def arsenal_table(df: pd.DataFrame, t) -> pd.DataFrame:
             t["pitch_type"]: label,
             t["count"]: n_pitches,
             t["usage_pct"]: f"{usage:.1f}%",
-            t["avg_velo"]: f"{avg_velo:.1f}" if avg_velo and not pd.isna(avg_velo) else "\u2014",
-            t["max_velo"]: f"{max_velo:.1f}" if max_velo and not pd.isna(max_velo) else "\u2014",
+            t["avg_velo"]: f"{avg_velo:.1f} / {avg_velo * 1.609:.0f}" if avg_velo and not pd.isna(avg_velo) else "\u2014",
+            t["max_velo"]: f"{max_velo:.1f} / {max_velo * 1.609:.0f}" if max_velo and not pd.isna(max_velo) else "\u2014",
             t["avg_spin"]: f"{avg_spin:.0f}" if avg_spin and not pd.isna(avg_spin) else "\u2014",
             t["h_break"]: f"{h_break:.1f}" if h_break is not None else "\u2014",
             t["v_break"]: f"{v_break:.1f}" if v_break is not None else "\u2014",
@@ -751,7 +751,7 @@ def main():
                 t["opp_avg"]: s["Opp AVG"],
                 t["opp_slg"]: s["Opp SLG"],
                 t["xwoba_against"]: s["xwOBA"],
-                t["avg_velo"]: s["Avg Velo"],
+                t["avg_velo"]: f"{s['Avg Velo']:.1f} / {s['Avg Velo'] * 1.609:.0f}" if s["Avg Velo"] else "\u2014",
             })
 
         if rows:
@@ -761,7 +761,7 @@ def main():
                     t["pitches"]: "{:.0f}",
                     t["k_pct"]: "{:.1f}", t["bb_pct"]: "{:.1f}",
                     t["opp_avg"]: "{:.3f}", t["opp_slg"]: "{:.3f}",
-                    t["xwoba_against"]: "{:.3f}", t["avg_velo"]: "{:.1f}",
+                    t["xwoba_against"]: "{:.3f}",
                 }).background_gradient(subset=[t["k_pct"]], cmap="RdYlGn")
                 .background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
                 use_container_width=True,

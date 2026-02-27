@@ -31,8 +31,8 @@ TEXTS = {
         "pitch_type": "Pitch Type",
         "count": "Count",
         "usage_pct": "Usage%",
-        "avg_velo": "Avg Velo (mph)",
-        "max_velo": "Max Velo (mph)",
+        "avg_velo": "Avg Velo (mph / km/h)",
+        "max_velo": "Max Velo (mph / km/h)",
         "avg_spin": "Avg Spin (rpm)",
         "h_break": "H-Break (in)",
         "v_break": "V-Break (in)",
@@ -144,8 +144,8 @@ TEXTS = {
         "pitch_type": "球種",
         "count": "投球数",
         "usage_pct": "使用率",
-        "avg_velo": "平均球速 (mph)",
-        "max_velo": "最高球速 (mph)",
+        "avg_velo": "平均球速 (mph / km/h)",
+        "max_velo": "最高球速 (mph / km/h)",
         "avg_spin": "平均回転数 (rpm)",
         "h_break": "横変化 (in)",
         "v_break": "縦変化 (in)",
@@ -659,8 +659,8 @@ def arsenal_table(df: pd.DataFrame, t) -> pd.DataFrame:
             t["pitch_type"]: label,
             t["count"]: n_pitches,
             t["usage_pct"]: f"{usage:.1f}%",
-            t["avg_velo"]: f"{avg_velo:.1f}" if avg_velo and not pd.isna(avg_velo) else "\u2014",
-            t["max_velo"]: f"{max_velo:.1f}" if max_velo and not pd.isna(max_velo) else "\u2014",
+            t["avg_velo"]: f"{avg_velo:.1f} / {avg_velo * 1.609:.0f}" if avg_velo and not pd.isna(avg_velo) else "\u2014",
+            t["max_velo"]: f"{max_velo:.1f} / {max_velo * 1.609:.0f}" if max_velo and not pd.isna(max_velo) else "\u2014",
             t["avg_spin"]: f"{avg_spin:.0f}" if avg_spin and not pd.isna(avg_spin) else "\u2014",
             t["h_break"]: f"{h_break:.1f}" if h_break is not None else "\u2014",
             t["v_break"]: f"{v_break:.1f}" if v_break is not None else "\u2014",
@@ -761,7 +761,7 @@ def main():
                 t["opp_avg"]: s["Opp AVG"],
                 t["opp_slg"]: s["Opp SLG"],
                 t["xwoba_against"]: s["xwOBA"],
-                t["avg_velo"]: s["Avg Velo"],
+                t["avg_velo"]: f"{s['Avg Velo']:.1f} / {s['Avg Velo'] * 1.609:.0f}" if s["Avg Velo"] else "\u2014",
             })
             pitcher_stats_list.append({
                 "name": _display_name(p["name"]),
@@ -784,7 +784,7 @@ def main():
                     st.caption(f"{season}" + (" season" if lang == "EN" else "\u5e74\u30b7\u30fc\u30ba\u30f3"))
                     opp_avg_label = "Opp AVG\uff08\u88ab\u6253\u7387\uff09" if lang == "JA" else t["opp_avg"]
                     bb_label = "BB%\uff08\u4e0e\u56db\u7403\u7387\uff09" if lang == "JA" else t["bb_pct"]
-                    velo_label = "Velo\uff08\u7403\u901f\uff09" if lang == "JA" else t["avg_velo"]
+                    velo_label = "\u7403\u901f (mph)" if lang == "JA" else "Velo (mph)"
                     cols = st.columns(len(top3))
                     for i, ps in enumerate(top3):
                         with cols[i]:
@@ -795,6 +795,8 @@ def main():
                             sub_cols[1].metric(bb_label, f"{ps['BB%']:.1f}%")
                             velo_str = f"{ps['Avg Velo']:.1f}" if ps["Avg Velo"] else "\u2014"
                             sub_cols[2].metric(velo_label, velo_str)
+                            if ps["Avg Velo"]:
+                                sub_cols[2].caption(f"\u2248 {ps['Avg Velo'] * 1.609:.0f} km/h")
 
                 # --- Staff Pitching Radar ---
                 valid_stats = [ps for ps in pitcher_stats_list if ps["PA"] >= 30]
@@ -825,7 +827,7 @@ def main():
                     raw_values = [f"{avg_k:.1f}%", f"{avg_whiff:.1f}%", f"{avg_bb:.1f}%",
                                  f"{avg_opp_avg:.3f}",
                                  f"{avg_xwoba:.3f}" if avg_xwoba else "\u2014",
-                                 f"{avg_velo:.1f}" if avg_velo else "\u2014"]
+                                 f"{avg_velo:.1f} mph ({avg_velo * 1.609:.0f} km/h)" if avg_velo else "\u2014"]
 
                     angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
                     values_plot = values + [values[0]]
@@ -864,7 +866,7 @@ def main():
                         t["pitches"]: "{:.0f}",
                         t["k_pct"]: "{:.1f}", t["bb_pct"]: "{:.1f}",
                         t["opp_avg"]: "{:.3f}", t["opp_slg"]: "{:.3f}",
-                        t["xwoba_against"]: "{:.3f}", t["avg_velo"]: "{:.1f}",
+                        t["xwoba_against"]: "{:.3f}",
                     }).background_gradient(subset=[t["k_pct"]], cmap="RdYlGn")
                     .background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
                     use_container_width=True,
