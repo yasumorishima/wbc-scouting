@@ -57,10 +57,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Puerto Rico is a perennial WBC contender with deep baseball tradition. "
-            "The roster features a mix of MLB-experienced veterans and emerging talent. "
-            "Scouting focus: check each hitter's zone tendencies, platoon splits, "
-            "and pitch-type vulnerabilities to identify matchup advantages."
+            "Puerto Rico has a storied WBC history, featuring elite MLB talent throughout the lineup. Key contributors may include players with elite power and on-base skills, making Puerto Rico one of the most dangerous offensive teams in the field."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -163,10 +160,7 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "プエルトリコは深い野球の伝統を持つWBC常連の強豪チーム。"
-            "MLB経験豊富なベテランと若手有望株が混在するロースター構成。\n\n"
-            "スカウティングのポイント: 各打者のゾーン傾向、左右投手別の成績、"
-            "球種別の弱点をチェックして、対戦時のマッチアップ優位を見つけること。"
+            "プエルトリコはWBCで輝かしい実績を持つ強豪で、打線にエリートMLB選手が揃うと考えられている。\n\n長打力と出塁率を兼ね備えた打者が中心となり、最も得点力の高いチームの一つになる可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
@@ -745,7 +739,34 @@ def main():
         page_title="Puerto Rico Scouting — WBC 2026",
         page_icon="\U0001F1F5\U0001F1F7",
         layout="wide",
+        initial_sidebar_state="collapsed",
     )
+
+    # -- Responsive CSS for mobile --
+    st.markdown("""
+    <style>
+    @media (max-width: 768px) {
+        /* Shrink metric cards */
+        [data-testid="stMetric"] {
+            padding: 0.3rem 0.4rem;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 0.75rem !important;
+        }
+        [data-testid="stMetricValue"] {
+            font-size: 1.1rem !important;
+        }
+        /* Tighter column gaps */
+        [data-testid="stHorizontalBlock"] {
+            gap: 0.3rem !important;
+        }
+        /* Readable table text */
+        .stDataFrame td, .stDataFrame th {
+            font-size: 0.8rem !important;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     # Sidebar
     lang = st.sidebar.radio("Language / \u8a00\u8a9e", ["JA", "EN"], horizontal=True)
@@ -882,7 +903,7 @@ def main():
                                           ha="center", va="bottom", color="white",
                                           fontweight="bold")
                     fig_radar.tight_layout()
-                    st.pyplot(fig_radar)
+                    st.pyplot(fig_radar, use_container_width=True)
                     plt.close(fig_radar)
                     low_k_note = ("Lower K% is better for batters" if lang == "EN"
                                   else "三振率は低いほど良い（グラフでは低K%ほど外側）")
@@ -963,10 +984,11 @@ def main():
     c2.metric(t["team"], player["team"])
     c3.metric(t["bats"], player["bats"])
 
-    c4, c5, c6, c7, c8 = st.columns(5)
+    c4, c5, c6 = st.columns(3)
     c4.metric("AVG", f"{stats['AVG']:.3f}")
     c5.metric("OBP", f"{stats['OBP']:.3f}")
     c6.metric("SLG", f"{stats['SLG']:.3f}")
+    c7, c8 = st.columns(2)
     c7.metric("OPS", f"{stats['OPS']:.3f}")
     c8.metric("xwOBA", f"{stats['xwOBA']:.3f}" if stats["xwOBA"] else "\u2014")
 
@@ -984,7 +1006,7 @@ def main():
     st.subheader(t["zone_heatmap"])
     st.caption(t["zone_caption"])
     st.caption(t["danger_zone"])
-    fig = plt.figure(figsize=(14, 5), facecolor="#0e1117")
+    fig = plt.figure(figsize=(10, 4), facecolor="#0e1117")
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.3)
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[0, 1])
@@ -1000,12 +1022,12 @@ def main():
     cb = fig.colorbar(im, cax=cax)
     cb.ax.tick_params(colors="white")
     fig.tight_layout()
-    st.pyplot(fig)
+    st.pyplot(fig, use_container_width=True)
     plt.close(fig)
 
     # 3x3 Zone Chart
     st.subheader(t["zone_3x3"])
-    fig3 = plt.figure(figsize=(12, 4.5), facecolor="#0e1117")
+    fig3 = plt.figure(figsize=(8, 3.5), facecolor="#0e1117")
     gs3 = fig3.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.35)
     ax3a = fig3.add_subplot(gs3[0, 0])
     ax3b = fig3.add_subplot(gs3[0, 1])
@@ -1021,7 +1043,7 @@ def main():
     cb3 = fig3.colorbar(im3, cax=cax3)
     cb3.ax.tick_params(colors="white")
     fig3.tight_layout()
-    st.pyplot(fig3)
+    st.pyplot(fig3, use_container_width=True)
     plt.close(fig3)
 
     st.divider()
@@ -1039,12 +1061,12 @@ def main():
         stadium_key = stadium_keys[stadium_idx]
         show_density = st.checkbox(t["density_map"], value=True)
 
-        fig_sp, ax_sp = plt.subplots(figsize=(6, 6), facecolor="#0e1117")
+        fig_sp, ax_sp = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
         ax_sp.set_facecolor("#0e1117")
         draw_spray_chart(pdf, player["name"], ax_sp, stadium=stadium_key,
                          density=show_density)
         fig_sp.tight_layout()
-        st.pyplot(fig_sp)
+        st.pyplot(fig_sp, use_container_width=True)
         plt.close(fig_sp)
 
     with col_bb:
@@ -1073,7 +1095,7 @@ def main():
             draw_spray_chart(split_sp, sp_title, ax_sps, stadium=stadium_key,
                              density=show_density)
             fig_sps.tight_layout()
-            st.pyplot(fig_sps)
+            st.pyplot(fig_sps, use_container_width=True)
             plt.close(fig_sps)
 
     st.divider()
@@ -1108,7 +1130,7 @@ def main():
         for spine in ax_pt.spines.values():
             spine.set_color("white")
         fig_pt.tight_layout()
-        st.pyplot(fig_pt)
+        st.pyplot(fig_pt, use_container_width=True)
         plt.close(fig_pt)
 
     st.divider()
@@ -1143,7 +1165,7 @@ def main():
             ax_z.title.set_color("white")
             draw_zone_heatmap(split_df, "ba", f"{label} \u2014 {t['ba_heatmap']}", ax_z)
             fig_z.tight_layout()
-            st.pyplot(fig_z)
+            st.pyplot(fig_z, use_container_width=True)
             plt.close(fig_z)
 
     st.divider()

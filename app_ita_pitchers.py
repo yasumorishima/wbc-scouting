@@ -705,7 +705,34 @@ def main():
         page_title="Italy Pitching \u2014 WBC 2026",
         page_icon="\U0001F1EE\U0001F1F9",
         layout="wide",
+        initial_sidebar_state="collapsed",
     )
+
+    # -- Responsive CSS for mobile --
+    st.markdown("""
+    <style>
+    @media (max-width: 768px) {
+        /* Shrink metric cards */
+        [data-testid="stMetric"] {
+            padding: 0.3rem 0.4rem;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 0.75rem !important;
+        }
+        [data-testid="stMetricValue"] {
+            font-size: 1.1rem !important;
+        }
+        /* Tighter column gaps */
+        [data-testid="stHorizontalBlock"] {
+            gap: 0.3rem !important;
+        }
+        /* Readable table text */
+        .stDataFrame td, .stDataFrame th {
+            font-size: 0.8rem !important;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     lang = st.sidebar.radio("Language / \u8a00\u8a9e", ["JA", "EN"], horizontal=True)
     t = TEXTS[lang]
@@ -849,7 +876,7 @@ def main():
                                           ha="center", va="bottom", color="white",
                                           fontweight="bold")
                     fig_radar.tight_layout()
-                    st.pyplot(fig_radar)
+                    st.pyplot(fig_radar, use_container_width=True)
                     plt.close(fig_radar)
                     radar_note = ("Outer = better. BB%, Opp AVG, and xwOBA are inverted (lower is better)." if lang == "EN"
                                   else "\u5916\u5074\u307b\u3069\u826f\u3044\u3002BB%\u30fb\u88ab\u6253\u7387\u30fbxwOBA\u306f\u4f4e\u3044\u307b\u3069\u5916\u5074\u306b\u8868\u793a\u3002")
@@ -899,10 +926,11 @@ def main():
     c2.metric(t["throws"], pitcher["throws"])
     c3.metric(t["role"], role_label)
 
-    c4, c5, c6, c7, c8 = st.columns(5)
+    c4, c5, c6 = st.columns(3)
     c4.metric(t["opp_avg"], f"{stats['Opp AVG']:.3f}")
     c5.metric(t["opp_slg"], f"{stats['Opp SLG']:.3f}")
     c6.metric(t["k_pct"], f"{stats['K%']:.1f}%")
+    c7, c8 = st.columns(2)
     c7.metric(t["bb_pct"], f"{stats['BB%']:.1f}%")
     c8.metric(t["xwoba_against"], f"{stats['xwOBA']:.3f}" if stats["xwOBA"] else "\u2014")
 
@@ -935,13 +963,13 @@ def main():
         "Density contour" if lang == "EN" else "\u5bc6\u5ea6\u7b49\u9ad8\u7dda\u3092\u8868\u793a",
         value=True, key="mvt_density",
     )
-    fig_m, ax_m = plt.subplots(figsize=(10, 5), facecolor="#0e1117")
+    fig_m, ax_m = plt.subplots(figsize=(8, 4), facecolor="#0e1117")
     ax_m.set_facecolor("#0e1117")
     for spine in ax_m.spines.values():
         spine.set_color("white")
     draw_movement_chart(pdf, pitcher["name"], ax_m, density=show_mvt_density)
     fig_m.tight_layout(rect=[0, 0, 0.82, 1])
-    st.pyplot(fig_m)
+    st.pyplot(fig_m, use_container_width=True)
     plt.close(fig_m)
 
     st.divider()
@@ -980,7 +1008,7 @@ def main():
     st.subheader(t["zone_heatmap"] + pitch_suffix)
     st.caption(t["zone_caption"])
     st.caption(t["danger_zone"])
-    fig = plt.figure(figsize=(14, 5), facecolor="#0e1117")
+    fig = plt.figure(figsize=(10, 4), facecolor="#0e1117")
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.3)
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[0, 1])
@@ -996,12 +1024,12 @@ def main():
     cb = fig.colorbar(im, cax=cax)
     cb.ax.tick_params(colors="white")
     fig.tight_layout()
-    st.pyplot(fig)
+    st.pyplot(fig, use_container_width=True)
     plt.close(fig)
 
     # 3x3 Zone Chart
     st.subheader(t["zone_3x3"] + pitch_suffix)
-    fig3 = plt.figure(figsize=(12, 4.5), facecolor="#0e1117")
+    fig3 = plt.figure(figsize=(8, 3.5), facecolor="#0e1117")
     gs3 = fig3.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.35)
     ax3a = fig3.add_subplot(gs3[0, 0])
     ax3b = fig3.add_subplot(gs3[0, 1])
@@ -1017,7 +1045,7 @@ def main():
     cb3 = fig3.colorbar(im3, cax=cax3)
     cb3.ax.tick_params(colors="white")
     fig3.tight_layout()
-    st.pyplot(fig3)
+    st.pyplot(fig3, use_container_width=True)
     plt.close(fig3)
 
     st.divider()
@@ -1052,7 +1080,7 @@ def main():
             ax_z.title.set_color("white")
             draw_zone_heatmap(split_df, "ba", f"{label} \u2014 {t['ba_heatmap']}", ax_z)
             fig_z.tight_layout()
-            st.pyplot(fig_z)
+            st.pyplot(fig_z, use_container_width=True)
             plt.close(fig_z)
 
     st.divider()
@@ -1122,7 +1150,7 @@ def main():
         mix_rows.append(row)
 
     if mix_rows:
-        fig_mix, ax_mix = plt.subplots(figsize=(10, 5), facecolor="#0e1117")
+        fig_mix, ax_mix = plt.subplots(figsize=(8, 4), facecolor="#0e1117")
         ax_mix.set_facecolor("#0e1117")
         x = np.arange(len(count_labels))
         bottoms = np.zeros(len(count_labels))
@@ -1158,7 +1186,7 @@ def main():
         for txt in leg_mix.get_texts():
             txt.set_color("white")
         fig_mix.tight_layout(rect=[0, 0, 0.82, 1])
-        st.pyplot(fig_mix)
+        st.pyplot(fig_mix, use_container_width=True)
         plt.close(fig_mix)
 
 
