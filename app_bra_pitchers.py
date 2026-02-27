@@ -327,6 +327,14 @@ def pitching_stats(df: pd.DataFrame) -> dict:
     xwoba = df["estimated_woba_using_speedangle"].dropna().mean()
     avg_velo = df["release_speed"].dropna().mean() if "release_speed" in df.columns else None
 
+    # Whiff% (swing-and-miss rate)
+    swing_events = {"hit_into_play", "foul", "swinging_strike",
+                    "swinging_strike_blocked", "foul_tip", "hit_into_play_score",
+                    "hit_into_play_no_out"}
+    swings = df[df["description"].isin(swing_events)]
+    whiffs = df[df["description"].isin({"swinging_strike", "swinging_strike_blocked", "foul_tip"})]
+    whiff_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
+
     return {
         "Pitches": total_pitches,
         "PA": n_pa, "K": n_k, "BB": n_bb, "HR": n_hr,
@@ -334,6 +342,7 @@ def pitching_stats(df: pd.DataFrame) -> dict:
         "Opp SLG": round(opp_slg, 3),
         "K%": round(k_pct, 1),
         "BB%": round(bb_pct, 1),
+        "Whiff%": round(whiff_pct, 1),
         "xwOBA": round(xwoba, 3) if not pd.isna(xwoba) else None,
         "Avg Velo": round(avg_velo, 1) if avg_velo and not pd.isna(avg_velo) else None,
     }
@@ -793,7 +802,9 @@ def main():
                     avg_k = np.mean([ps["K%"] for ps in valid_stats])
                     avg_bb = np.mean([ps["BB%"] for ps in valid_stats])
                     avg_opp_avg = np.mean([ps["Opp AVG"] for ps in valid_stats])
-                    avg_opp_slg = np.mean([ps["Opp SLG"] for ps in valid_stats])
+                    avg_whiff = np.mean([ps["Whiff%"] for ps in valid_stats])
+                    xwobas = [ps["xwOBA"] for ps in valid_stats if ps["xwOBA"] is not None]
+                    avg_xwoba = np.mean(xwobas) if xwobas else 0
                     velos = [ps["Avg Velo"] for ps in valid_stats if ps["Avg Velo"]]
                     avg_velo = np.mean(velos) if velos else 0
 
@@ -801,16 +812,19 @@ def main():
                     norm_k = min(avg_k / 35.0, 1.0)
                     norm_bb = 1.0 - min(avg_bb / 15.0, 1.0)  # lower BB% is better
                     norm_opp_avg = 1.0 - min(avg_opp_avg / 0.300, 1.0)  # lower opp AVG is better
-                    norm_opp_slg = 1.0 - min(avg_opp_slg / 0.500, 1.0)  # lower opp SLG is better
+                    norm_whiff = min(avg_whiff / 40.0, 1.0)  # higher Whiff% is better
+                    norm_xwoba = 1.0 - min(avg_xwoba / 0.400, 1.0) if avg_xwoba else 0  # lower xwOBA is better
                     norm_velo = min(avg_velo / 100.0, 1.0) if avg_velo else 0
 
-                    categories = ["K%", "BB%",
+                    categories = ["K%", "Whiff%", "BB%",
                                   "Opp AVG" if lang == "EN" else "\u88ab\u6253\u7387",
-                                  "Opp SLG" if lang == "EN" else "\u88ab\u9577\u6253\u7387",
+                                  "xwOBA",
                                   "Velo" if lang == "EN" else "\u7403\u901f"]
-                    values = [norm_k, norm_bb, norm_opp_avg, norm_opp_slg, norm_velo]
-                    raw_values = [f"{avg_k:.1f}%", f"{avg_bb:.1f}%", f"{avg_opp_avg:.3f}",
-                                 f"{avg_opp_slg:.3f}", f"{avg_velo:.1f}" if avg_velo else "\u2014"]
+                    values = [norm_k, norm_whiff, norm_bb, norm_opp_avg, norm_xwoba, norm_velo]
+                    raw_values = [f"{avg_k:.1f}%", f"{avg_whiff:.1f}%", f"{avg_bb:.1f}%",
+                                 f"{avg_opp_avg:.3f}",
+                                 f"{avg_xwoba:.3f}" if avg_xwoba else "\u2014",
+                                 f"{avg_velo:.1f}" if avg_velo else "\u2014"]
 
                     angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
                     values_plot = values + [values[0]]
@@ -834,8 +848,8 @@ def main():
                     fig_radar.tight_layout()
                     st.pyplot(fig_radar)
                     plt.close(fig_radar)
-                    radar_note = ("Outer = better. BB% and Opp AVG/SLG are inverted (lower is better)." if lang == "EN"
-                                  else "\u5916\u5074\u307b\u3069\u826f\u3044\u3002BB%\u30fb\u88ab\u6253\u7387\u30fb\u88ab\u9577\u6253\u7387\u306f\u4f4e\u3044\u307b\u3069\u5916\u5074\u306b\u8868\u793a\u3002")
+                    radar_note = ("Outer = better. BB%, Opp AVG, and xwOBA are inverted (lower is better)." if lang == "EN"
+                                  else "\u5916\u5074\u307b\u3069\u826f\u3044\u3002BB%\u30fb\u88ab\u6253\u7387\u30fbxwOBA\u306f\u4f4e\u3044\u307b\u3069\u5916\u5074\u306b\u8868\u793a\u3002")
                     st.caption(radar_note)
 
             # --- Full Stats Table (in expander) ---
