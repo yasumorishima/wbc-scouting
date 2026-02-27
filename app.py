@@ -764,7 +764,8 @@ def main():
     # Team Overview
     # -----------------------------------------------------------------------
     if selected == t["team_overview"]:
-        st.header(f"🇻🇪 {t['team_overview']}")
+        season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+        st.header(f"🇻🇪 {t['team_overview']} — {season_label}")
 
         st.info(t["overview_guide"])
 
@@ -937,7 +938,8 @@ def main():
     stats = batting_stats(pdf)
 
     # Row 1: Profile Card — 2 rows for readability
-    st.header(f"🇻🇪 {_display_name(player['name'])}")
+    season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+    st.header(f"🇻🇪 {_display_name(player['name'])} — {season_label}")
     c1, c2, c3 = st.columns(3)
     c1.metric(t["pos"], player["pos"])
     c2.metric(t["team"], player["team"])

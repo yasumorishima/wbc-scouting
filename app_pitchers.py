@@ -750,7 +750,8 @@ def main():
     # Staff Overview
     # -----------------------------------------------------------------------
     if selected == t["team_overview"]:
-        st.header(f"🇻🇪 {t['team_overview']}")
+        season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+        st.header(f"🇻🇪 {t['team_overview']} — {season_label}")
 
         st.info(t["overview_guide"])
 
@@ -901,7 +902,8 @@ def main():
     role_label = t["sp"] if pitcher["role"] == "SP" else t["rp"]
 
     # Row 1: Profile — 2 rows
-    st.header(f"🇻🇪 {_display_name(pitcher['name'])}")
+    season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+    st.header(f"🇻🇪 {_display_name(pitcher['name'])} — {season_label}")
     c1, c2, c3 = st.columns(3)
     c1.metric(t["team"], pitcher["team"])
     c2.metric(t["throws"], pitcher["throws"])
