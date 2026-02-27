@@ -115,6 +115,14 @@ TEXTS = {
         "pitch_filter": "Filter by pitch type",
         "all_pitches": "All Pitches",
         "count_pitch_mix": "Pitch Mix by Count",
+        "top3_title": "Top 3 Pitchers (by K%)",
+        "team_radar_title": "Staff Pitching Profile",
+        "full_stats_table": "Full Stats Table",
+        "zone_caption": "Shows where pitches are located and how batters perform in each zone",
+        "arsenal_caption": "Breakdown of each pitch type: velocity, movement, and swing-and-miss ability",
+        "movement_caption": "Each dot is a pitch — shows how much each pitch type moves horizontally and vertically",
+        "batted_ball_caption": "How opposing batters' batted balls behave against this pitcher",
+        "platoon_caption": "Compares pitching stats against left-handed vs right-handed batters",
         "glossary_count": (
             "**Pitches** = Total pitches thrown | "
             "**Opp AVG** = Opponents' batting average against | "
@@ -221,6 +229,14 @@ TEXTS = {
         "pitch_filter": "球種で絞り込み",
         "all_pitches": "全球種",
         "count_pitch_mix": "カウント別 球種配分",
+        "top3_title": "注目投手 TOP3（奪三振率順）",
+        "team_radar_title": "投手陣の特徴",
+        "full_stats_table": "詳細成績一覧",
+        "zone_caption": "各ゾーンへの投球分布と、ゾーンごとの被打率を表示",
+        "arsenal_caption": "球種ごとの球速・変化量・空振り率の詳細",
+        "movement_caption": "各ドットが1球 — 球種ごとの縦横の変化量を可視化",
+        "batted_ball_caption": "この投手に対する打球の傾向（ゴロ・ライナー・フライの割合）",
+        "platoon_caption": "左打者と右打者、それぞれに対する投球成績の比較",
         "glossary_count": (
             "**投球数（Pitches）** = 投じた総球数 | "
             "**被打率（Opp AVG）** = 対戦打者の打率 | "
@@ -720,10 +736,8 @@ def main():
 
         st.info(t["overview_guide"])
 
-        with st.expander("Stats glossary" if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
-            st.markdown(t["glossary_stats"])
-
         rows = []
+        pitcher_stats_list = []
         for p in MEX_PITCHERS:
             pdf = df_all[df_all["pitcher"] == p["mlbam_id"]]
             if pdf.empty:
@@ -743,20 +757,104 @@ def main():
                 t["xwoba_against"]: s["xwOBA"],
                 t["avg_velo"]: s["Avg Velo"],
             })
+            pitcher_stats_list.append({
+                "name": _display_name(p["name"]),
+                "team": p["team"],
+                "role": role_label,
+                **s,
+            })
 
         if rows:
-            overview = pd.DataFrame(rows)
-            st.dataframe(
-                overview.style.format({
-                    t["pitches"]: "{:.0f}",
-                    t["k_pct"]: "{:.1f}", t["bb_pct"]: "{:.1f}",
-                    t["opp_avg"]: "{:.3f}", t["opp_slg"]: "{:.3f}",
-                    t["xwoba_against"]: "{:.3f}", t["avg_velo"]: "{:.1f}",
-                }).background_gradient(subset=[t["k_pct"]], cmap="RdYlGn")
-                .background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
-                use_container_width=True,
-                hide_index=True,
-            )
+            # --- TOP 3 Pitchers by K% ---
+            if pitcher_stats_list:
+                sorted_by_k = sorted(
+                    [ps for ps in pitcher_stats_list if ps["PA"] >= 30],
+                    key=lambda x: x["K%"],
+                    reverse=True,
+                )
+                top3 = sorted_by_k[:3]
+                if top3:
+                    st.subheader(t["top3_title"])
+                    cols = st.columns(len(top3))
+                    for i, ps in enumerate(top3):
+                        with cols[i]:
+                            st.metric(ps["name"], f"K% {ps['K%']:.1f}%")
+                            st.caption(f"{ps['role']} / {ps['team']}")
+                            sub_cols = st.columns(3)
+                            sub_cols[0].metric(t["opp_avg"], f"{ps['Opp AVG']:.3f}")
+                            sub_cols[1].metric(t["bb_pct"], f"{ps['BB%']:.1f}%")
+                            velo_str = f"{ps['Avg Velo']:.1f}" if ps["Avg Velo"] else "\u2014"
+                            sub_cols[2].metric(t["avg_velo"], velo_str)
+
+                # --- Staff Pitching Radar ---
+                valid_stats = [ps for ps in pitcher_stats_list if ps["PA"] >= 30]
+                if valid_stats:
+                    st.subheader(t["team_radar_title"])
+                    avg_k = np.mean([ps["K%"] for ps in valid_stats])
+                    avg_bb = np.mean([ps["BB%"] for ps in valid_stats])
+                    avg_opp_avg = np.mean([ps["Opp AVG"] for ps in valid_stats])
+                    avg_opp_slg = np.mean([ps["Opp SLG"] for ps in valid_stats])
+                    velos = [ps["Avg Velo"] for ps in valid_stats if ps["Avg Velo"]]
+                    avg_velo = np.mean(velos) if velos else 0
+
+                    # Normalize to 0-1 (MLB typical ranges)
+                    norm_k = min(avg_k / 35.0, 1.0)
+                    norm_bb = 1.0 - min(avg_bb / 15.0, 1.0)  # lower BB% is better
+                    norm_opp_avg = 1.0 - min(avg_opp_avg / 0.300, 1.0)  # lower opp AVG is better
+                    norm_opp_slg = 1.0 - min(avg_opp_slg / 0.500, 1.0)  # lower opp SLG is better
+                    norm_velo = min(avg_velo / 100.0, 1.0) if avg_velo else 0
+
+                    categories = ["K%", "BB%",
+                                  "Opp AVG" if lang == "EN" else "\u88ab\u6253\u7387",
+                                  "Opp SLG" if lang == "EN" else "\u88ab\u9577\u6253\u7387",
+                                  "Velo" if lang == "EN" else "\u7403\u901f"]
+                    values = [norm_k, norm_bb, norm_opp_avg, norm_opp_slg, norm_velo]
+                    raw_values = [f"{avg_k:.1f}%", f"{avg_bb:.1f}%", f"{avg_opp_avg:.3f}",
+                                 f"{avg_opp_slg:.3f}", f"{avg_velo:.1f}" if avg_velo else "\u2014"]
+
+                    angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+                    values_plot = values + [values[0]]
+                    angles_plot = angles + [angles[0]]
+
+                    fig_radar, ax_radar = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
+                                                       facecolor="#0e1117")
+                    ax_radar.set_facecolor("#0e1117")
+                    ax_radar.plot(angles_plot, values_plot, "o-", linewidth=2, color="#ef5350")
+                    ax_radar.fill(angles_plot, values_plot, alpha=0.25, color="#ef5350")
+                    ax_radar.set_thetagrids(np.degrees(angles), categories, color="white", fontsize=11)
+                    ax_radar.set_ylim(0, 1)
+                    ax_radar.set_yticks([0.25, 0.5, 0.75, 1.0])
+                    ax_radar.set_yticklabels(["", "", "", ""], color="white")
+                    ax_radar.grid(color="gray", alpha=0.3)
+                    ax_radar.spines["polar"].set_color("gray")
+                    for angle, val, raw in zip(angles, values, raw_values):
+                        ax_radar.annotate(raw, xy=(angle, val), fontsize=9,
+                                          ha="center", va="bottom", color="white",
+                                          fontweight="bold")
+                    fig_radar.tight_layout()
+                    st.pyplot(fig_radar)
+                    plt.close(fig_radar)
+                    radar_note = ("Outer = better. BB% and Opp AVG/SLG are inverted (lower is better)." if lang == "EN"
+                                  else "\u5916\u5074\u307b\u3069\u826f\u3044\u3002BB%\u30fb\u88ab\u6253\u7387\u30fb\u88ab\u9577\u6253\u7387\u306f\u4f4e\u3044\u307b\u3069\u5916\u5074\u306b\u8868\u793a\u3002")
+                    st.caption(radar_note)
+
+            # --- Full Stats Table (in expander) ---
+            with st.expander(t["full_stats_table"], expanded=False):
+                with st.expander("Stats glossary" if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
+                    st.markdown(t["glossary_stats"])
+
+                overview = pd.DataFrame(rows)
+                st.dataframe(
+                    overview.style.format({
+                        t["pitches"]: "{:.0f}",
+                        t["k_pct"]: "{:.1f}", t["bb_pct"]: "{:.1f}",
+                        t["opp_avg"]: "{:.3f}", t["opp_slg"]: "{:.3f}",
+                        t["xwoba_against"]: "{:.3f}", t["avg_velo"]: "{:.1f}",
+                    }).background_gradient(subset=[t["k_pct"]], cmap="RdYlGn")
+                    .background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
+                    use_container_width=True,
+                    hide_index=True,
+                )
 
             st.subheader(t["team_strengths"])
             st.info(t["strength_note"])
@@ -801,6 +899,7 @@ def main():
 
     # Arsenal Table
     st.subheader(t["arsenal"])
+    st.caption(t["arsenal_caption"])
     with st.expander("What do these columns mean?" if lang == "EN" else "\u5404\u5217\u306e\u8aac\u660e\u3092\u898b\u308b"):
         st.markdown(t["glossary_arsenal"])
     at = arsenal_table(pdf, t)
@@ -811,6 +910,7 @@ def main():
 
     # Movement Chart
     st.subheader(t["movement_chart"])
+    st.caption(t["movement_caption"])
     with st.expander("How to read this chart" if lang == "EN" else "\u30c1\u30e3\u30fc\u30c8\u306e\u898b\u65b9"):
         st.markdown(t["glossary_movement"])
     show_mvt_density = st.checkbox(
@@ -830,6 +930,7 @@ def main():
 
     # Batted Ball Against
     st.subheader(t["batted_ball"])
+    st.caption(t["batted_ball_caption"])
     with st.expander("What do these mean?" if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
         st.markdown(t["glossary_batted"])
     bb_profile = batted_ball_against(pdf, t)
@@ -859,6 +960,7 @@ def main():
 
     # Zone Heatmaps
     st.subheader(t["zone_heatmap"] + pitch_suffix)
+    st.caption(t["zone_caption"])
     st.caption(t["danger_zone"])
     fig = plt.figure(figsize=(14, 5), facecolor="#0e1117")
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.3)
@@ -904,6 +1006,7 @@ def main():
 
     # Platoon Splits
     st.subheader(t["platoon"] + pitch_suffix)
+    st.caption(t["platoon_caption"])
     with st.expander("What are platoon splits?" if lang == "EN" else "\u5de6\u53f3\u6253\u8005\u5225\u6210\u7e3e\u3068\u306f\uff1f"):
         st.markdown(t["glossary_platoon"])
 

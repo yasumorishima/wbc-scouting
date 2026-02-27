@@ -99,6 +99,13 @@ TEXTS = {
         ),
         "player": "Player",
         "player_summary": "Scouting Summary",
+        "top3_title": "Top 3 Batters (by OPS)",
+        "team_radar_title": "Team Batting Profile",
+        "full_stats_table": "Full Stats Table",
+        "zone_caption": "Red zones = high batting avg (danger), Blue zones = low batting avg (attack)",
+        "spray_caption": "Shows where each batted ball landed on the field",
+        "pitch_caption": "Batting performance broken down by the type of pitch faced",
+        "platoon_caption": "Compares batting stats against left-handed vs right-handed pitchers",
         "glossary_count": (
             "**PA** = Plate Appearances (total times at bat) | "
             "**AVG** = Batting Average (hits / at-bats) | "
@@ -196,6 +203,13 @@ TEXTS = {
         ),
         "player": "選手",
         "player_summary": "スカウティング要約",
+        "top3_title": "注目打者 TOP3（OPS順）",
+        "team_radar_title": "チーム打線の特徴",
+        "full_stats_table": "詳細成績一覧",
+        "zone_caption": "赤いゾーン = よく打つ場所、青いゾーン = 打てない場所",
+        "spray_caption": "打球がフィールドのどこに飛んだかの分布図",
+        "pitch_caption": "対戦した球種ごとの打撃成績",
+        "platoon_caption": "左投手と右投手、それぞれに対する打撃成績の比較",
         "glossary_count": (
             "**PA（打席数）** = 打席に立った総回数 | "
             "**AVG（打率）** = 安打数 ÷ 打数 | "
@@ -766,14 +780,8 @@ def main():
 
         st.info(t["overview_guide"])
 
-        with st.expander(t["glossary_stats"].split("**")[1].split("**")[0] + "..." if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
-            st.markdown(t["glossary_stats"])
-            st.markdown(t["glossary_pct"])
-
-        with st.expander(t["pos_glossary_label"]):
-            st.markdown(t["pos_glossary"])
-
         rows = []
+        player_stats_list = []
         for p in CAN_BATTERS:
             pdf = df_all[df_all["batter"] == p["mlbam_id"]]
             if pdf.empty:
@@ -809,20 +817,106 @@ def main():
                 "BB%": s["BB%"],
                 "xwOBA": s["xwOBA"],
             })
+            player_stats_list.append({
+                "name": _display_name(p["name"]),
+                "pos": p["pos"],
+                "team": p["team"],
+                **s,
+            })
 
         if rows:
-            overview = pd.DataFrame(rows)
-            st.dataframe(
-                overview.style.format({
-                    "PA": "{:.0f}", "HR": "{:.0f}",
-                    "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
-                    "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-                    "xwOBA": "{:.3f}",
-                }, na_rep="—").background_gradient(subset=["OPS"], cmap="RdYlGn")
-                .background_gradient(subset=["K%"], cmap="RdYlGn_r"),
-                use_container_width=True,
-                hide_index=True,
-            )
+            # --- TOP 3 Batters by OPS ---
+            if player_stats_list:
+                sorted_by_ops = sorted(
+                    [ps for ps in player_stats_list if ps["PA"] >= 50],
+                    key=lambda x: x["OPS"],
+                    reverse=True,
+                )
+                top3 = sorted_by_ops[:3]
+                if top3:
+                    st.subheader(t["top3_title"])
+                    cols = st.columns(len(top3))
+                    for i, ps in enumerate(top3):
+                        with cols[i]:
+                            st.metric(ps["name"], f"OPS {ps['OPS']:.3f}")
+                            st.caption(f"{ps['pos']} / {ps['team']}")
+                            sub_cols = st.columns(3)
+                            sub_cols[0].metric("AVG", f"{ps['AVG']:.3f}")
+                            sub_cols[1].metric("HR", str(ps["HR"]))
+                            sub_cols[2].metric("xwOBA", f"{ps['xwOBA']:.3f}" if ps["xwOBA"] else "\u2014")
+
+                # --- Team Batting Radar ---
+                valid_stats = [ps for ps in player_stats_list if ps["PA"] >= 50]
+                if valid_stats:
+                    st.subheader(t["team_radar_title"])
+                    avg_avg = np.mean([ps["AVG"] for ps in valid_stats])
+                    avg_obp = np.mean([ps["OBP"] for ps in valid_stats])
+                    avg_slg = np.mean([ps["SLG"] for ps in valid_stats])
+                    avg_k = np.mean([ps["K%"] for ps in valid_stats])
+                    avg_bb = np.mean([ps["BB%"] for ps in valid_stats])
+
+                    # Normalize to 0-1 (MLB typical ranges)
+                    norm_avg = min(avg_avg / 0.300, 1.0)
+                    norm_obp = min(avg_obp / 0.380, 1.0)
+                    norm_slg = min(avg_slg / 0.500, 1.0)
+                    norm_k = 1.0 - min(avg_k / 35.0, 1.0)  # lower K% is better
+                    norm_bb = min(avg_bb / 15.0, 1.0)
+
+                    categories = ["AVG", "OBP", "SLG",
+                                  "K%" if lang == "EN" else "三振率",
+                                  "BB%" if lang == "EN" else "四球率"]
+                    values = [norm_avg, norm_obp, norm_slg, norm_k, norm_bb]
+                    raw_values = [f"{avg_avg:.3f}", f"{avg_obp:.3f}", f"{avg_slg:.3f}",
+                                 f"{avg_k:.1f}%", f"{avg_bb:.1f}%"]
+
+                    angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+                    values_plot = values + [values[0]]
+                    angles_plot = angles + [angles[0]]
+
+                    fig_radar, ax_radar = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
+                                                       facecolor="#0e1117")
+                    ax_radar.set_facecolor("#0e1117")
+                    ax_radar.plot(angles_plot, values_plot, "o-", linewidth=2, color="#4fc3f7")
+                    ax_radar.fill(angles_plot, values_plot, alpha=0.25, color="#4fc3f7")
+                    ax_radar.set_thetagrids(np.degrees(angles), categories, color="white", fontsize=11)
+                    ax_radar.set_ylim(0, 1)
+                    ax_radar.set_yticks([0.25, 0.5, 0.75, 1.0])
+                    ax_radar.set_yticklabels(["", "", "", ""], color="white")
+                    ax_radar.grid(color="gray", alpha=0.3)
+                    ax_radar.spines["polar"].set_color("gray")
+                    # Add raw value labels
+                    for angle, val, raw in zip(angles, values, raw_values):
+                        ax_radar.annotate(raw, xy=(angle, val), fontsize=9,
+                                          ha="center", va="bottom", color="white",
+                                          fontweight="bold")
+                    fig_radar.tight_layout()
+                    st.pyplot(fig_radar)
+                    plt.close(fig_radar)
+                    low_k_note = ("Lower K% is better for batters" if lang == "EN"
+                                  else "三振率は低いほど良い（グラフでは低K%ほど外側）")
+                    st.caption(low_k_note)
+
+            # --- Full Stats Table (in expander) ---
+            with st.expander(t["full_stats_table"], expanded=False):
+                with st.expander(t["glossary_stats"].split("**")[1].split("**")[0] + "..." if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
+                    st.markdown(t["glossary_stats"])
+                    st.markdown(t["glossary_pct"])
+
+                with st.expander(t["pos_glossary_label"]):
+                    st.markdown(t["pos_glossary"])
+
+                overview = pd.DataFrame(rows)
+                st.dataframe(
+                    overview.style.format({
+                        "PA": "{:.0f}", "HR": "{:.0f}",
+                        "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
+                        "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
+                        "xwOBA": "{:.3f}",
+                    }, na_rep="\u2014").background_gradient(subset=["OPS"], cmap="RdYlGn")
+                    .background_gradient(subset=["K%"], cmap="RdYlGn_r"),
+                    use_container_width=True,
+                    hide_index=True,
+                )
 
             st.subheader(t["team_strengths"])
             st.info(t["strength_note"])
@@ -867,6 +961,7 @@ def main():
 
     # Row 2: Zone Heatmaps
     st.subheader(t["zone_heatmap"])
+    st.caption(t["zone_caption"])
     st.caption(t["danger_zone"])
     fig = plt.figure(figsize=(14, 5), facecolor="#0e1117")
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.3)
@@ -915,6 +1010,7 @@ def main():
 
     with col_spray:
         st.subheader(t["spray_chart"])
+        st.caption(t["spray_caption"])
         stadium_keys = list(STADIUMS["EN"].keys())
         stadium_labels = [STADIUMS[lang][k] for k in stadium_keys]
         stadium_idx = st.selectbox(t["stadium"], range(len(stadium_keys)),
@@ -963,6 +1059,7 @@ def main():
 
     # Row 4: Pitch Type Performance
     st.subheader(t["pitch_type_perf"])
+    st.caption(t["pitch_caption"])
     with st.expander("What are Whiff% and Chase%?" if lang == "EN" else "\u7a7a\u632f\u7387\u30fb\u30c1\u30a7\u30a4\u30b9\u7387\u3068\u306f\uff1f"):
         st.markdown(t["glossary_pitch"])
 
@@ -997,6 +1094,7 @@ def main():
 
     # Row 5: Platoon Splits
     st.subheader(t["platoon"])
+    st.caption(t["platoon_caption"])
     with st.expander("What are platoon splits?" if lang == "EN" else "\u5de6\u53f3\u6295\u624b\u5225\u6210\u7e3e\u3068\u306f\uff1f"):
         st.markdown(t["glossary_platoon"])
 
