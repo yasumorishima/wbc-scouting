@@ -24,7 +24,6 @@ TEXTS = {
         "select_player": "Select Player",
         "team_overview": "Team Overview",
         "season": "Season",
-        "all_seasons": "All",
         "profile": "Player Profile",
         "pos": "Pos",
         "team": "Team",
@@ -128,7 +127,6 @@ TEXTS = {
         "select_player": "選手を選択",
         "team_overview": "チーム概要",
         "season": "シーズン",
-        "all_seasons": "全シーズン",
         "profile": "選手プロフィール",
         "pos": "ポジション",
         "team": "チーム",
@@ -286,8 +284,6 @@ def load_data() -> pd.DataFrame:
 
 
 def filter_season(df: pd.DataFrame, season) -> pd.DataFrame:
-    if season == "All":
-        return df
     return df[df["season"] == int(season)]
 
 
@@ -768,8 +764,8 @@ def main():
 
     df_all = load_data()
 
-    seasons = ["All"] + sorted(df_all["season"].unique().tolist())
-    season = st.sidebar.selectbox(t["season"], seasons, format_func=lambda x: t["all_seasons"] if x == "All" else str(x))
+    seasons = sorted(df_all["season"].unique().tolist())
+    season = st.sidebar.selectbox(t["season"], seasons, index=len(seasons) - 1, format_func=str)
     df_all = filter_season(df_all, season)
 
     # -----------------------------------------------------------------------
@@ -785,21 +781,6 @@ def main():
         for p in BRA_BATTERS:
             pdf = df_all[df_all["batter"] == p["mlbam_id"]]
             if pdf.empty:
-                rows.append({
-                    t["player"]: _display_name(p["name"]),
-                    "Pos": p["pos"],
-                    "Team": p["team"],
-                    "Bats": p["bats"],
-                    "PA": None,
-                    "AVG": None,
-                    "OBP": None,
-                    "SLG": None,
-                    "OPS": None,
-                    "HR": None,
-                    "K%": None,
-                    "BB%": None,
-                    "xwOBA": None,
-                })
                 continue
             s = batting_stats(pdf)
             rows.append({
@@ -835,15 +816,19 @@ def main():
                 top3 = sorted_by_ops[:3]
                 if top3:
                     st.subheader(t["top3_title"])
+                    st.caption(f"{season}" + (" season" if lang == "EN" else "\u5e74\u30b7\u30fc\u30ba\u30f3"))
                     cols = st.columns(len(top3))
+                    avg_label = "AVG\uff08\u6253\u7387\uff09" if lang == "JA" else "AVG"
+                    hr_label = "HR\uff08\u672c\u5851\u6253\uff09" if lang == "JA" else "HR"
+                    xwoba_label = "xwOBA\uff08\u671f\u5f85\u6253\u6483\u5024\uff09" if lang == "JA" else "xwOBA"
                     for i, ps in enumerate(top3):
                         with cols[i]:
                             st.metric(ps["name"], f"OPS {ps['OPS']:.3f}")
                             st.caption(f"{ps['pos']} / {ps['team']}")
                             sub_cols = st.columns(3)
-                            sub_cols[0].metric("AVG", f"{ps['AVG']:.3f}")
-                            sub_cols[1].metric("HR", str(ps["HR"]))
-                            sub_cols[2].metric("xwOBA", f"{ps['xwOBA']:.3f}" if ps["xwOBA"] else "\u2014")
+                            sub_cols[0].metric(avg_label, f"{ps['AVG']:.3f}")
+                            sub_cols[1].metric(hr_label, str(ps["HR"]))
+                            sub_cols[2].metric(xwoba_label, f"{ps['xwOBA']:.3f}" if ps["xwOBA"] else "\u2014")
 
                 # --- Team Batting Radar ---
                 valid_stats = [ps for ps in player_stats_list if ps["PA"] >= 50]
@@ -906,14 +891,42 @@ def main():
                     st.markdown(t["pos_glossary"])
 
                 overview = pd.DataFrame(rows)
-                st.dataframe(
-                    overview.style.format({
+                if lang == "JA":
+                    ja_cols = {
+                        "Pos": "Pos\uff08\u5b88\u5099\uff09",
+                        "Bats": "Bats\uff08\u6253\u5e2d\uff09",
+                        "PA": "PA\uff08\u6253\u5e2d\uff09",
+                        "AVG": "AVG\uff08\u6253\u7387\uff09",
+                        "OBP": "OBP\uff08\u51fa\u5841\u7387\uff09",
+                        "SLG": "SLG\uff08\u9577\u6253\u7387\uff09",
+                        "OPS": "OPS\uff08\u51fa\u5841+\u9577\u6253\uff09",
+                        "HR": "HR\uff08\u672c\u5851\u6253\uff09",
+                        "K%": "K%\uff08\u4e09\u632f\u7387\uff09",
+                        "BB%": "BB%\uff08\u56db\u7403\u7387\uff09",
+                        "xwOBA": "xwOBA\uff08\u671f\u5f85\u6253\u6483\u5024\uff09",
+                    }
+                    overview = overview.rename(columns=ja_cols)
+                    fmt = {ja_cols.get(k, k): v for k, v in {
                         "PA": "{:.0f}", "HR": "{:.0f}",
                         "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                         "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
                         "xwOBA": "{:.3f}",
-                    }, na_rep="\u2014").background_gradient(subset=["OPS"], cmap="RdYlGn")
-                    .background_gradient(subset=["K%"], cmap="RdYlGn_r"),
+                    }.items()}
+                    ops_col = ja_cols["OPS"]
+                    k_col = ja_cols["K%"]
+                else:
+                    fmt = {
+                        "PA": "{:.0f}", "HR": "{:.0f}",
+                        "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
+                        "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
+                        "xwOBA": "{:.3f}",
+                    }
+                    ops_col = "OPS"
+                    k_col = "K%"
+                st.dataframe(
+                    overview.style.format(fmt, na_rep="\u2014")
+                    .background_gradient(subset=[ops_col], cmap="RdYlGn")
+                    .background_gradient(subset=[k_col], cmap="RdYlGn_r"),
                     use_container_width=True,
                     hide_index=True,
                 )

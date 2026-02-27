@@ -23,7 +23,6 @@ TEXTS = {
         "select_pitcher": "Select Pitcher",
         "team_overview": "Staff Overview",
         "season": "Season",
-        "all_seasons": "All",
         "profile": "Pitcher Profile",
         "team": "Team",
         "throws": "Throws",
@@ -143,7 +142,6 @@ TEXTS = {
         "select_pitcher": "投手を選択",
         "team_overview": "投手陣概要",
         "season": "シーズン",
-        "all_seasons": "全シーズン",
         "profile": "投手プロフィール",
         "team": "チーム",
         "throws": "投",
@@ -181,12 +179,12 @@ TEXTS = {
         "rp": "リリーフ",
         "velo_spin": "球速・回転数プロフィール",
         "movement_chart": "変化量チャート",
-        "pitches": "投球数",
-        "k_pct": "奪三振率",
-        "bb_pct": "与四球率",
-        "opp_avg": "被打率",
-        "opp_slg": "被長打率",
-        "xwoba_against": "被xwOBA",
+        "pitches": "Pitches\uff08\u6295\u7403\u6570\uff09",
+        "k_pct": "K%\uff08\u596a\u4e09\u632f\u7387\uff09",
+        "bb_pct": "BB%\uff08\u4e0e\u56db\u7403\u7387\uff09",
+        "opp_avg": "Opp AVG\uff08\u88ab\u6253\u7387\uff09",
+        "opp_slg": "Opp SLG\uff08\u88ab\u9577\u6253\u7387\uff09",
+        "xwoba_against": "xwOBA\uff08\u88ab\u671f\u5f85\u5024\uff09",
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
@@ -294,8 +292,6 @@ def load_data() -> pd.DataFrame:
 
 
 def filter_season(df: pd.DataFrame, season) -> pd.DataFrame:
-    if season == "All":
-        return df
     return df[df["season"] == int(season)]
 
 
@@ -744,8 +740,8 @@ def main():
 
     df_all = load_data()
 
-    seasons = ["All"] + sorted(df_all["season"].unique().tolist())
-    season = st.sidebar.selectbox(t["season"], seasons, format_func=lambda x: t["all_seasons"] if x == "All" else str(x))
+    seasons = sorted(df_all["season"].unique().tolist())
+    season = st.sidebar.selectbox(t["season"], seasons, index=len(seasons) - 1, format_func=str)
     df_all = filter_season(df_all, season)
 
     # -----------------------------------------------------------------------
@@ -795,16 +791,20 @@ def main():
                 top3 = sorted_by_k[:3]
                 if top3:
                     st.subheader(t["top3_title"])
+                    st.caption(f"{season}" + (" season" if lang == "EN" else "\u5e74\u30b7\u30fc\u30ba\u30f3"))
+                    opp_avg_label = "Opp AVG\uff08\u88ab\u6253\u7387\uff09" if lang == "JA" else t["opp_avg"]
+                    bb_label = "BB%\uff08\u4e0e\u56db\u7403\u7387\uff09" if lang == "JA" else t["bb_pct"]
+                    velo_label = "Velo\uff08\u7403\u901f\uff09" if lang == "JA" else t["avg_velo"]
                     cols = st.columns(len(top3))
                     for i, ps in enumerate(top3):
                         with cols[i]:
                             st.metric(ps["name"], f"K% {ps['K%']:.1f}%")
                             st.caption(f"{ps['role']} / {ps['team']}")
                             sub_cols = st.columns(3)
-                            sub_cols[0].metric(t["opp_avg"], f"{ps['Opp AVG']:.3f}")
-                            sub_cols[1].metric(t["bb_pct"], f"{ps['BB%']:.1f}%")
+                            sub_cols[0].metric(opp_avg_label, f"{ps['Opp AVG']:.3f}")
+                            sub_cols[1].metric(bb_label, f"{ps['BB%']:.1f}%")
                             velo_str = f"{ps['Avg Velo']:.1f}" if ps["Avg Velo"] else "\u2014"
-                            sub_cols[2].metric(t["avg_velo"], velo_str)
+                            sub_cols[2].metric(velo_label, velo_str)
 
                 # --- Staff Pitching Radar ---
                 valid_stats = [ps for ps in pitcher_stats_list if ps["PA"] >= 30]
