@@ -89,25 +89,27 @@ TEXTS = {
             "Even = same count (e.g. 1-1, 2-2)."
         ),
         "glossary_stats": (
-            "**Opp AVG** = Opponents' batting average | "
-            "**Opp SLG** = Opponents' slugging percentage | "
-            "**K%** = Strikeout rate (strikeouts / plate appearances) | "
-            "**BB%** = Walk rate (walks / plate appearances) | "
-            "**xwOBA Against** = Expected weighted on-base average allowed (batted ball quality)"
+            "- **Opp AVG** = Opponents' batting average\n"
+            "- **Opp SLG** = Opponents' slugging percentage\n"
+            "- **K%** = Strikeout rate (strikeouts / plate appearances)\n"
+            "- **BB%** = Walk rate (walks / plate appearances)\n"
+            "- **xwOBA Against** = Expected weighted on-base average allowed (batted ball quality)"
         ),
         "glossary_arsenal": (
-            "**Usage%** = How often this pitch is thrown | "
-            "**Avg Velo** = Average velocity (mph) | "
-            "**Avg Spin** = Average spin rate (rpm) | "
-            "**H-Break** = Horizontal movement (inches, glove side positive) | "
-            "**V-Break** = Induced vertical break (inches) | "
-            "**Whiff%** = Swing-and-miss rate | "
-            "**Put Away%** = Rate of strikeouts when pitching with 2 strikes"
+            "- **Usage%** = How often this pitch is thrown\n"
+            "- **Avg Velo** = Average velocity (mph)\n"
+            "- **Avg Spin** = Average spin rate (rpm)\n"
+            "- **H-Break** = Horizontal movement (inches, glove side positive)\n"
+            "- **V-Break** = Induced vertical break (inches)\n"
+            "- **Whiff%** = Swing-and-miss rate\n"
+            "- **Put Away%** = Rate of strikeouts when pitching with 2 strikes"
         ),
         "glossary_batted": (
-            "**GB%** = Ground ball rate | **LD%** = Line drive rate | **FB%** = Fly ball rate | "
-            "**Avg EV Against** = Average exit velocity allowed (mph) | "
-            "**Avg LA Against** = Average launch angle allowed (degrees)"
+            "- **GB%** = Ground ball rate\n"
+            "- **LD%** = Line drive rate\n"
+            "- **FB%** = Fly ball rate\n"
+            "- **Avg EV Against** = Average exit velocity allowed (mph)\n"
+            "- **Avg LA Against** = Average launch angle allowed (degrees)"
         ),
         "glossary_platoon": (
             "Platoon splits show how a pitcher performs against left-handed batters (LHB) "
@@ -123,11 +125,11 @@ TEXTS = {
         "all_pitches": "All Pitches",
         "count_pitch_mix": "Pitch Mix by Count",
         "glossary_count": (
-            "**Pitches** = Total pitches thrown | "
-            "**Opp AVG** = Opponents' batting average against | "
-            "**Opp SLG** = Opponents' slugging percentage against | "
-            "**K%** = Strikeout rate (strikeouts / plate appearances) | "
-            "**BB%** = Walk rate (walks / plate appearances)"
+            "- **Pitches** = Total pitches thrown\n"
+            "- **Opp AVG** = Opponents' batting average against\n"
+            "- **Opp SLG** = Opponents' slugging percentage against\n"
+            "- **K%** = Strikeout rate (strikeouts / plate appearances)\n"
+            "- **BB%** = Walk rate (walks / plate appearances)"
         ),
     },
     "JA": {
@@ -201,25 +203,27 @@ TEXTS = {
             "イーブン = 同数（例: 1-1, 2-2）。"
         ),
         "glossary_stats": (
-            "**被打率（Opp AVG）** = 対戦打者の打率 | "
-            "**被長打率（Opp SLG）** = 対戦打者の長打率 | "
-            "**奪三振率（K%）** = 打席あたりの三振を奪う割合 | "
-            "**与四球率（BB%）** = 打席あたりの四球を与える割合 | "
-            "**被xwOBA** = 打球の質から算出した期待被出塁率（低いほど良い）"
+            "- **被打率（Opp AVG）** = 対戦打者の打率\n"
+            "- **被長打率（Opp SLG）** = 対戦打者の長打率\n"
+            "- **奪三振率（K%）** = 打席あたりの三振を奪う割合\n"
+            "- **与四球率（BB%）** = 打席あたりの四球を与える割合\n"
+            "- **被xwOBA** = 打球の質から算出した期待被出塁率（低いほど良い）"
         ),
         "glossary_arsenal": (
-            "**使用率** = その球種を投げる割合 | "
-            "**平均球速** = 平均的な球の速さ (mph) | "
-            "**平均回転数** = 球の回転の速さ (rpm) | "
-            "**横変化** = グラブ側への横の曲がり幅（インチ） | "
-            "**縦変化** = 重力に逆らう縦の変化量（インチ） | "
-            "**空振率（Whiff%）** = スイングに対する空振りの割合 | "
-            "**決め球率（Put Away%）** = 2ストライクから三振を奪う割合"
+            "- **使用率** = その球種を投げる割合\n"
+            "- **平均球速** = 平均的な球の速さ (mph)\n"
+            "- **平均回転数** = 球の回転の速さ (rpm)\n"
+            "- **横変化** = グラブ側への横の曲がり幅（インチ）\n"
+            "- **縦変化** = 重力に逆らう縦の変化量（インチ）\n"
+            "- **空振率（Whiff%）** = スイングに対する空振りの割合\n"
+            "- **決め球率（Put Away%）** = 2ストライクから三振を奪う割合"
         ),
         "glossary_batted": (
-            "**ゴロ%** = ゴロの割合 | **ライナー%** = ライナーの割合 | **フライ%** = フライの割合 | "
-            "**被平均打球速度** = 打たれた打球のスピード (mph) | "
-            "**被平均打球角度** = 打たれた打球の角度"
+            "- **ゴロ%** = ゴロの割合\n"
+            "- **ライナー%** = ライナーの割合\n"
+            "- **フライ%** = フライの割合\n"
+            "- **被平均打球速度** = 打たれた打球のスピード (mph)\n"
+            "- **被平均打球角度** = 打たれた打球の角度"
         ),
         "glossary_platoon": (
             "左右打者別成績は、左打者（LHB）と右打者（RHB）に対する投球成績です。"
@@ -235,11 +239,11 @@ TEXTS = {
         "all_pitches": "全球種",
         "count_pitch_mix": "カウント別 球種配分",
         "glossary_count": (
-            "**投球数（Pitches）** = 投じた総球数 | "
-            "**被打率（Opp AVG）** = 対戦打者の打率 | "
-            "**被長打率（Opp SLG）** = 対戦打者の長打率 | "
-            "**奪三振率（K%）** = 打席あたりの三振を奪う割合 | "
-            "**与四球率（BB%）** = 打席あたりの四球を与える割合"
+            "- **投球数（Pitches）** = 投じた総球数\n"
+            "- **被打率（Opp AVG）** = 対戦打者の打率\n"
+            "- **被長打率（Opp SLG）** = 対戦打者の長打率\n"
+            "- **奪三振率（K%）** = 打席あたりの三振を奪う割合\n"
+            "- **与四球率（BB%）** = 打席あたりの四球を与える割合"
         ),
     },
 }
@@ -820,16 +824,35 @@ def main():
     c2.metric(t["throws"], pitcher["throws"])
     c3.metric(t["role"], role_label)
 
+    # MLB average benchmarks (2024 season) — for pitchers, lower is better except K%
+    _MLB_AVG_P = {"Opp AVG": .243, "Opp SLG": .397, "K%": 22.4, "BB%": 8.3, "xwOBA": .311}
+
     c4, c5, c6 = st.columns(3)
-    c4.metric(t["opp_avg"], f"{stats['Opp AVG']:.3f}")
-    c5.metric(t["opp_slg"], f"{stats['Opp SLG']:.3f}")
-    c6.metric(t["k_pct"], f"{stats['K%']:.1f}%")
+    c4.metric(t["opp_avg"], f"{stats['Opp AVG']:.3f}",
+              delta=f"{stats['Opp AVG'] - _MLB_AVG_P['Opp AVG']:+.3f} vs MLB avg",
+              delta_color="inverse")
+    c5.metric(t["opp_slg"], f"{stats['Opp SLG']:.3f}",
+              delta=f"{stats['Opp SLG'] - _MLB_AVG_P['Opp SLG']:+.3f} vs MLB avg",
+              delta_color="inverse")
+    c6.metric(t["k_pct"], f"{stats['K%']:.1f}%",
+              delta=f"{stats['K%'] - _MLB_AVG_P['K%']:+.1f}% vs MLB avg")
     c7, c8 = st.columns(2)
-    c7.metric(t["bb_pct"], f"{stats['BB%']:.1f}%")
-    c8.metric(t["xwoba_against"], f"{stats['xwOBA']:.3f}" if stats["xwOBA"] else "\u2014")
+    c7.metric(t["bb_pct"], f"{stats['BB%']:.1f}%",
+              delta=f"{stats['BB%'] - _MLB_AVG_P['BB%']:+.1f}% vs MLB avg",
+              delta_color="inverse")
+    if stats["xwOBA"]:
+        c8.metric(t["xwoba_against"], f"{stats['xwOBA']:.3f}",
+                  delta=f"{stats['xwOBA'] - _MLB_AVG_P['xwOBA']:+.3f} vs MLB avg",
+                  delta_color="inverse")
+    else:
+        c8.metric(t["xwoba_against"], "\u2014")
 
     with st.expander("Stats glossary" if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
         st.markdown(t["glossary_stats"])
+        _bench_text_p = ("MLB avg (2024): Opp AVG .243 / Opp SLG .397 / K% 22.4% / BB% 8.3% / xwOBA .311"
+                         if lang == "EN" else
+                         "MLB平均 (2024): 被打率 .243 / 被長打率 .397 / K% 22.4% / BB% 8.3% / xwOBA .311")
+        st.caption(_bench_text_p)
 
     st.subheader(t["pitcher_summary"])
     summary = generate_pitcher_summary(stats, pdf, pitcher, lang)
