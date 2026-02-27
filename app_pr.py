@@ -57,7 +57,10 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Puerto Rico has a storied WBC history, featuring elite MLB talent throughout the lineup. Key contributors may include players with elite power and on-base skills, making Puerto Rico one of the most dangerous offensive teams in the field."
+            "Puerto Rico is a perennial WBC contender with deep baseball tradition. "
+            "The roster features a mix of MLB-experienced veterans and emerging talent. "
+            "Scouting focus: check each hitter's zone tendencies, platoon splits, "
+            "and pitch-type vulnerabilities to identify matchup advantages."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -160,7 +163,10 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "プエルトリコはWBCで輝かしい実績を持つ強豪で、打線にエリートMLB選手が揃うと考えられている。\n\n長打力と出塁率を兼ね備えた打者が中心となり、最も得点力の高いチームの一つになる可能性がある。"
+            "プエルトリコは深い野球の伝統を持つWBC常連の強豪チーム。"
+            "MLB経験豊富なベテランと若手有望株が混在するロースター構成。\n\n"
+            "スカウティングのポイント: 各打者のゾーン傾向、左右投手別の成績、"
+            "球種別の弱点をチェックして、対戦時のマッチアップ優位を見つけること。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

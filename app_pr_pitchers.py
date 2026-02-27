@@ -69,7 +69,9 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "Puerto Rico's pitching staff has historically featured elite-level arms at every level of the roster. The rotation and bullpen combination may provide dominant coverage, with high strikeout potential and strong command throughout."
+            "Puerto Rico fields a pitching staff built on MLB experience and competitive depth. "
+            "Scouting focus: analyze each pitcher's arsenal, movement profiles, "
+            "and platoon tendencies to find exploitable matchups."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -182,7 +184,9 @@ TEXTS = {
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "プエルトリコの投手陣は歴史的にエリートレベルの投手を多数擁してきた。\n\n高い奪三振能力と安定した制球力を持つ投手陣がトーナメントを通じて支配的な投球を見せる可能性がある。"
+            "プエルトリコの投手陣はMLB経験者を軸とした層の厚い構成。\n\n"
+            "スカウティングのポイント: 各投手の球種構成、変化量の特徴、"
+            "左右打者別の傾向を分析し、攻略のマッチアップを探ること。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "
