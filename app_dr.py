@@ -859,19 +859,55 @@ def main():
                     avg_label = "AVG\uff08\u6253\u7387\uff09" if lang == "JA" else "AVG"
                     hr_label = "HR\uff08\u672c\u5851\u6253\uff09" if lang == "JA" else "HR"
                     xwoba_label = "xwOBA\uff08\u671f\u5f85\u6253\u6483\u5024\uff09" if lang == "JA" else "xwOBA"
-                    _MLB_AVG_T3 = {"OPS": .709, "AVG": .243, "xwOBA": .311}
+                    _MLB_AVG_T3 = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
                     for i, ps in enumerate(top3):
                         with cols[i]:
-                            st.metric(ps["name"], f"OPS {ps['OPS']:.3f}",
-                                      delta=f"{ps['OPS'] - _MLB_AVG_T3['OPS']:+.3f} (MLB avg: .{int(_MLB_AVG_T3['OPS']*1000):03d})")
+                            st.metric(ps["name"], f"OPS {ps['OPS']:.3f}")
                             st.caption(f"{ps['pos']} / {ps['team']}")
                             sub_cols = st.columns(3)
-                            sub_cols[0].metric(avg_label, f"{ps['AVG']:.3f}",
-                                               delta=f"{ps['AVG'] - _MLB_AVG_T3['AVG']:+.3f}")
+                            sub_cols[0].metric(avg_label, f"{ps['AVG']:.3f}")
                             sub_cols[1].metric(hr_label, str(ps["HR"]))
-                            sub_cols[2].metric(xwoba_label,
-                                               f"{ps['xwOBA']:.3f}" if ps["xwOBA"] else "\u2014",
-                                               delta=f"{ps['xwOBA'] - _MLB_AVG_T3['xwOBA']:+.3f}" if ps["xwOBA"] else None)
+                            sub_cols[2].metric(xwoba_label, f"{ps['xwOBA']:.3f}" if ps["xwOBA"] else "\u2014")
+                            # Mini radar chart per player
+                            _t3_cats = ["AVG", "OBP", "SLG",
+                                        "K%" if lang == "EN" else "\u4e09\u632f\u7387",
+                                        "BB%" if lang == "EN" else "\u56db\u7403\u7387"]
+                            _t3_pvals = [
+                                min(ps["AVG"] / 0.300, 1.0),
+                                min(ps["OBP"] / 0.380, 1.0),
+                                min(ps["SLG"] / 0.500, 1.0),
+                                1.0 - min(ps["K%"] / 35.0, 1.0),
+                                min(ps["BB%"] / 15.0, 1.0),
+                            ]
+                            _t3_mvals = [
+                                min(_MLB_AVG_T3["AVG"] / 0.300, 1.0),
+                                min(_MLB_AVG_T3["OBP"] / 0.380, 1.0),
+                                min(_MLB_AVG_T3["SLG"] / 0.500, 1.0),
+                                1.0 - min(_MLB_AVG_T3["K%"] / 35.0, 1.0),
+                                min(_MLB_AVG_T3["BB%"] / 15.0, 1.0),
+                            ]
+                            _t3_ang = np.linspace(0, 2 * np.pi, 5, endpoint=False).tolist()
+                            _fig_t3, _ax_t3 = plt.subplots(figsize=(3, 3),
+                                                            subplot_kw=dict(polar=True),
+                                                            facecolor="#0e1117")
+                            _ax_t3.set_facecolor("#0e1117")
+                            _ax_t3.plot(_t3_ang + [_t3_ang[0]], _t3_mvals + [_t3_mvals[0]],
+                                        "--", linewidth=1.2, color="#888888", alpha=0.7)
+                            _ax_t3.fill(_t3_ang + [_t3_ang[0]], _t3_mvals + [_t3_mvals[0]],
+                                        alpha=0.08, color="#888888")
+                            _ax_t3.plot(_t3_ang + [_t3_ang[0]], _t3_pvals + [_t3_pvals[0]],
+                                        "o-", linewidth=2, color="#4fc3f7")
+                            _ax_t3.fill(_t3_ang + [_t3_ang[0]], _t3_pvals + [_t3_pvals[0]],
+                                        alpha=0.25, color="#4fc3f7")
+                            _ax_t3.set_thetagrids(np.degrees(_t3_ang), _t3_cats,
+                                                  color="white", fontsize=8)
+                            _ax_t3.set_ylim(0, 1)
+                            _ax_t3.set_yticks([])
+                            _ax_t3.grid(color="gray", alpha=0.3)
+                            _ax_t3.spines["polar"].set_color("gray")
+                            _fig_t3.tight_layout()
+                            st.pyplot(_fig_t3, use_container_width=True)
+                            plt.close(_fig_t3)
 
                 # --- Team Batting Radar ---
                 valid_stats = [ps for ps in player_stats_list if ps["PA"] >= 50]

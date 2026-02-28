@@ -825,6 +825,8 @@ def main():
                     opp_avg_label = "Opp AVG\uff08\u88ab\u6253\u7387\uff09" if lang == "JA" else t["opp_avg"]
                     bb_label = "BB%\uff08\u4e0e\u56db\u7403\u7387\uff09" if lang == "JA" else t["bb_pct"]
                     velo_label = "\u7403\u901f (mph)" if lang == "JA" else "Velo (mph)"
+                    _MLB_AVG_T3P = {"K%": 22.4, "Whiff%": 25.0, "BB%": 8.3,
+                                    "Opp AVG": .243, "xwOBA": .311, "Velo": 93.5}
                     cols = st.columns(len(top3))
                     for i, ps in enumerate(top3):
                         with cols[i]:
@@ -837,6 +839,55 @@ def main():
                             sub_cols[2].metric(velo_label, velo_str)
                             if ps["Avg Velo"]:
                                 sub_cols[2].caption(f"\u2248 {ps['Avg Velo'] * 1.609:.0f} km/h")
+                            # Mini radar chart per pitcher
+                            _t3_cats_p = ["K%", "Whiff%", "BB%",
+                                          "Opp AVG" if lang == "EN" else "\u88ab\u6253\u7387",
+                                          "xwOBA",
+                                          "Velo" if lang == "EN" else "\u7403\u901f"]
+                            _velo = ps["Avg Velo"] if ps["Avg Velo"] else 0
+                            _xwoba = ps["xwOBA"] if ps["xwOBA"] else 0
+                            _t3_pvals_p = [
+                                min(ps["K%"] / 35.0, 1.0),
+                                min(ps["Whiff%"] / 40.0, 1.0),
+                                1.0 - min(ps["BB%"] / 15.0, 1.0),
+                                1.0 - min(ps["Opp AVG"] / 0.300, 1.0),
+                                1.0 - min(_xwoba / 0.400, 1.0) if _xwoba else 0,
+                                min(_velo / 100.0, 1.0),
+                            ]
+                            _t3_mvals_p = [
+                                min(_MLB_AVG_T3P["K%"] / 35.0, 1.0),
+                                min(_MLB_AVG_T3P["Whiff%"] / 40.0, 1.0),
+                                1.0 - min(_MLB_AVG_T3P["BB%"] / 15.0, 1.0),
+                                1.0 - min(_MLB_AVG_T3P["Opp AVG"] / 0.300, 1.0),
+                                1.0 - min(_MLB_AVG_T3P["xwOBA"] / 0.400, 1.0),
+                                min(_MLB_AVG_T3P["Velo"] / 100.0, 1.0),
+                            ]
+                            _t3_ang_p = np.linspace(0, 2 * np.pi, 6, endpoint=False).tolist()
+                            _fig_t3p, _ax_t3p = plt.subplots(figsize=(3, 3),
+                                                              subplot_kw=dict(polar=True),
+                                                              facecolor="#0e1117")
+                            _ax_t3p.set_facecolor("#0e1117")
+                            _ax_t3p.plot(_t3_ang_p + [_t3_ang_p[0]],
+                                         _t3_mvals_p + [_t3_mvals_p[0]],
+                                         "--", linewidth=1.2, color="#888888", alpha=0.7)
+                            _ax_t3p.fill(_t3_ang_p + [_t3_ang_p[0]],
+                                         _t3_mvals_p + [_t3_mvals_p[0]],
+                                         alpha=0.08, color="#888888")
+                            _ax_t3p.plot(_t3_ang_p + [_t3_ang_p[0]],
+                                         _t3_pvals_p + [_t3_pvals_p[0]],
+                                         "o-", linewidth=2, color="#ef5350")
+                            _ax_t3p.fill(_t3_ang_p + [_t3_ang_p[0]],
+                                         _t3_pvals_p + [_t3_pvals_p[0]],
+                                         alpha=0.25, color="#ef5350")
+                            _ax_t3p.set_thetagrids(np.degrees(_t3_ang_p), _t3_cats_p,
+                                                   color="white", fontsize=8)
+                            _ax_t3p.set_ylim(0, 1)
+                            _ax_t3p.set_yticks([])
+                            _ax_t3p.grid(color="gray", alpha=0.3)
+                            _ax_t3p.spines["polar"].set_color("gray")
+                            _fig_t3p.tight_layout()
+                            st.pyplot(_fig_t3p, use_container_width=True)
+                            plt.close(_fig_t3p)
 
                 # --- Staff Pitching Radar ---
                 valid_stats = [ps for ps in pitcher_stats_list if ps["PA"] >= 30]
@@ -991,6 +1042,68 @@ def main():
     st.subheader(t["pitcher_summary"])
     summary = generate_pitcher_summary(stats, pdf, pitcher, lang)
     st.info(summary)
+
+    # Individual Pitcher Radar
+    _MLB_AVG_PR = {"K%": 22.4, "Whiff%": 25.0, "BB%": 8.3,
+                   "Opp AVG": .243, "xwOBA": .311, "Velo": 93.5}
+    _pr_cats = ["K%", "Whiff%", "BB%",
+                "Opp AVG" if lang == "EN" else "\u88ab\u6253\u7387",
+                "xwOBA",
+                "Velo" if lang == "EN" else "\u7403\u901f"]
+    _avg_velo_p = stats["Avg Velo"] or 0
+    _avg_whiff_p = stats["Whiff%"] or 0
+    _avg_xwoba_p = stats["xwOBA"] or 0
+    _pr_pvals = [
+        min(stats["K%"] / 35.0, 1.0),
+        min(_avg_whiff_p / 40.0, 1.0),
+        1.0 - min(stats["BB%"] / 15.0, 1.0),
+        1.0 - min(stats["Opp AVG"] / 0.300, 1.0),
+        1.0 - min(_avg_xwoba_p / 0.400, 1.0) if _avg_xwoba_p else 0,
+        min(_avg_velo_p / 100.0, 1.0),
+    ]
+    _pr_mvals = [
+        min(_MLB_AVG_PR["K%"] / 35.0, 1.0),
+        min(_MLB_AVG_PR["Whiff%"] / 40.0, 1.0),
+        1.0 - min(_MLB_AVG_PR["BB%"] / 15.0, 1.0),
+        1.0 - min(_MLB_AVG_PR["Opp AVG"] / 0.300, 1.0),
+        1.0 - min(_MLB_AVG_PR["xwOBA"] / 0.400, 1.0),
+        min(_MLB_AVG_PR["Velo"] / 100.0, 1.0),
+    ]
+    _pr_raw = [f"{stats['K%']:.1f}%",
+               f"{_avg_whiff_p:.1f}%",
+               f"{stats['BB%']:.1f}%",
+               f"{stats['Opp AVG']:.3f}",
+               f"{_avg_xwoba_p:.3f}" if _avg_xwoba_p else "\u2014",
+               f"{_avg_velo_p:.1f} mph" if _avg_velo_p else "\u2014"]
+    _pr_ang = np.linspace(0, 2 * np.pi, 6, endpoint=False).tolist()
+    _pr_pp = _pr_pvals + [_pr_pvals[0]]
+    _pr_mp = _pr_mvals + [_pr_mvals[0]]
+    _pr_ap = _pr_ang + [_pr_ang[0]]
+    fig_ipr, ax_ipr = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True), facecolor="#0e1117")
+    ax_ipr.set_facecolor("#0e1117")
+    ax_ipr.plot(_pr_ap, _pr_mp, "--", linewidth=1.5, color="#888888", alpha=0.7, label="MLB avg")
+    ax_ipr.fill(_pr_ap, _pr_mp, alpha=0.08, color="#888888")
+    ax_ipr.plot(_pr_ap, _pr_pp, "o-", linewidth=2, color="#ef5350",
+                label=_display_name(pitcher["name"]))
+    ax_ipr.fill(_pr_ap, _pr_pp, alpha=0.25, color="#ef5350")
+    ax_ipr.set_thetagrids(np.degrees(_pr_ang), _pr_cats, color="white", fontsize=11)
+    ax_ipr.set_ylim(0, 1)
+    ax_ipr.set_yticks([0.25, 0.5, 0.75, 1.0])
+    ax_ipr.set_yticklabels(["", "", "", ""], color="white")
+    ax_ipr.grid(color="gray", alpha=0.3)
+    ax_ipr.spines["polar"].set_color("gray")
+    for angle, val, raw in zip(_pr_ang, _pr_pvals, _pr_raw):
+        ax_ipr.annotate(raw, xy=(angle, val), fontsize=9,
+                        ha="center", va="bottom", color="white", fontweight="bold")
+    leg_ipr = ax_ipr.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
+                            fontsize=9, facecolor="#0e1117", edgecolor="gray")
+    for txt in leg_ipr.get_texts():
+        txt.set_color("white")
+    fig_ipr.tight_layout()
+    st.pyplot(fig_ipr, use_container_width=True)
+    plt.close(fig_ipr)
+    st.caption("Gray dashed = MLB avg (2024). BB%, Opp AVG, xwOBA are inverted — lower is better." if lang == "EN"
+               else "\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747(2024)\u3002BB%\u30fb\u88ab\u6253\u7387\u30fbxwOBA\u306f\u9006\u8ee2\u2014\u4f4e\u3044\u307b\u3069\u5916\u5074\u3002")
 
     st.divider()
 
