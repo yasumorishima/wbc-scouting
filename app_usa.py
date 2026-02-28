@@ -898,17 +898,17 @@ def main():
 
     c4, c5, c6 = st.columns(3)
     c4.metric("AVG", f"{stats['AVG']:.3f}",
-              delta=f"{stats['AVG'] - _MLB_AVG['AVG']:+.3f} vs MLB avg")
+              delta=f"{stats['AVG'] - _MLB_AVG['AVG']:+.3f} (MLB avg: .{int(_MLB_AVG['AVG']*1000):03d})")
     c5.metric("OBP", f"{stats['OBP']:.3f}",
-              delta=f"{stats['OBP'] - _MLB_AVG['OBP']:+.3f} vs MLB avg")
+              delta=f"{stats['OBP'] - _MLB_AVG['OBP']:+.3f} (MLB avg: .{int(_MLB_AVG['OBP']*1000):03d})")
     c6.metric("SLG", f"{stats['SLG']:.3f}",
-              delta=f"{stats['SLG'] - _MLB_AVG['SLG']:+.3f} vs MLB avg")
+              delta=f"{stats['SLG'] - _MLB_AVG['SLG']:+.3f} (MLB avg: .{int(_MLB_AVG['SLG']*1000):03d})")
     c7, c8 = st.columns(2)
     c7.metric("OPS", f"{stats['OPS']:.3f}",
-              delta=f"{stats['OPS'] - _MLB_AVG['OPS']:+.3f} vs MLB avg")
+              delta=f"{stats['OPS'] - _MLB_AVG['OPS']:+.3f} (MLB avg: .{int(_MLB_AVG['OPS']*1000):03d})")
     if stats["xwOBA"]:
         c8.metric("xwOBA", f"{stats['xwOBA']:.3f}",
-                  delta=f"{stats['xwOBA'] - _MLB_AVG['xwOBA']:+.3f} vs MLB avg")
+                  delta=f"{stats['xwOBA'] - _MLB_AVG['xwOBA']:+.3f} (MLB avg: .{int(_MLB_AVG['xwOBA']*1000):03d})")
     else:
         c8.metric("xwOBA", "\u2014")
 
@@ -926,48 +926,38 @@ def main():
 
     st.divider()
 
-    # Zone Heatmaps
+    # Zone Heatmaps (vertical layout for mobile)
     st.subheader(t["zone_heatmap"])
     st.caption(t["danger_zone"])
-    fig = plt.figure(figsize=(10, 4), facecolor="#0e1117")
-    gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.3)
-    ax1 = fig.add_subplot(gs[0, 0])
-    ax2 = fig.add_subplot(gs[0, 1])
-    cax = fig.add_subplot(gs[0, 2])
-    for ax in (ax1, ax2):
-        ax.set_facecolor("#0e1117")
-        ax.tick_params(colors="white")
-        ax.xaxis.label.set_color("white")
-        ax.yaxis.label.set_color("white")
-        ax.title.set_color("white")
-    draw_zone_heatmap(pdf, "ba", t["ba_heatmap"], ax1)
-    im = draw_zone_heatmap(pdf, "xwoba", t["xwoba_heatmap"], ax2)
-    cb = fig.colorbar(im, cax=cax)
-    cb.ax.tick_params(colors="white")
-    fig.tight_layout()
-    st.pyplot(fig, use_container_width=True)
-    plt.close(fig)
+    for hm_metric, hm_title in [("ba", t["ba_heatmap"]), ("xwoba", t["xwoba_heatmap"])]:
+        fig_hm, ax_hm = plt.subplots(figsize=(6, 5), facecolor="#0e1117")
+        ax_hm.set_facecolor("#0e1117")
+        ax_hm.tick_params(colors="white")
+        ax_hm.xaxis.label.set_color("white")
+        ax_hm.yaxis.label.set_color("white")
+        ax_hm.title.set_color("white")
+        im_hm = draw_zone_heatmap(pdf, hm_metric, hm_title, ax_hm)
+        cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
+        cb_hm.ax.tick_params(colors="white")
+        fig_hm.tight_layout()
+        st.pyplot(fig_hm, use_container_width=True)
+        plt.close(fig_hm)
 
-    # 3x3 Zone Chart
+    # 3x3 Zone Chart (vertical layout for mobile)
     st.subheader(t["zone_3x3"])
-    fig3 = plt.figure(figsize=(8, 3.5), facecolor="#0e1117")
-    gs3 = fig3.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.35)
-    ax3a = fig3.add_subplot(gs3[0, 0])
-    ax3b = fig3.add_subplot(gs3[0, 1])
-    cax3 = fig3.add_subplot(gs3[0, 2])
-    for ax in (ax3a, ax3b):
-        ax.set_facecolor("#0e1117")
-        ax.tick_params(colors="white")
-        ax.xaxis.label.set_color("white")
-        ax.yaxis.label.set_color("white")
-        ax.title.set_color("white")
-    draw_zone_3x3(pdf, "ba", t["ba_heatmap"], ax3a)
-    im3 = draw_zone_3x3(pdf, "xwoba", t["xwoba_heatmap"], ax3b)
-    cb3 = fig3.colorbar(im3, cax=cax3)
-    cb3.ax.tick_params(colors="white")
-    fig3.tight_layout()
-    st.pyplot(fig3, use_container_width=True)
-    plt.close(fig3)
+    for z3_metric, z3_title in [("ba", t["ba_heatmap"]), ("xwoba", t["xwoba_heatmap"])]:
+        fig_z3, ax_z3 = plt.subplots(figsize=(6, 5), facecolor="#0e1117")
+        ax_z3.set_facecolor("#0e1117")
+        ax_z3.tick_params(colors="white")
+        ax_z3.xaxis.label.set_color("white")
+        ax_z3.yaxis.label.set_color("white")
+        ax_z3.title.set_color("white")
+        im_z3 = draw_zone_3x3(pdf, z3_metric, z3_title, ax_z3)
+        cb_z3 = fig_z3.colorbar(im_z3, ax=ax_z3, fraction=0.046, pad=0.04)
+        cb_z3.ax.tick_params(colors="white")
+        fig_z3.tight_layout()
+        st.pyplot(fig_z3, use_container_width=True)
+        plt.close(fig_z3)
 
     st.divider()
 

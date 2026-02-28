@@ -886,20 +886,33 @@ def main():
                     norm_bb = min(avg_bb / 15.0, 1.0)
 
                     categories = ["AVG", "OBP", "SLG",
-                                  "K%" if lang == "EN" else "三振率",
-                                  "BB%" if lang == "EN" else "四球率"]
+                                  "K%" if lang == "EN" else "\u4e09\u632f\u7387",
+                                  "BB%" if lang == "EN" else "\u56db\u7403\u7387"]
                     values = [norm_avg, norm_obp, norm_slg, norm_k, norm_bb]
                     raw_values = [f"{avg_avg:.3f}", f"{avg_obp:.3f}", f"{avg_slg:.3f}",
                                  f"{avg_k:.1f}%", f"{avg_bb:.1f}%"]
 
+                    # MLB average for radar overlay
+                    mlb_avg = min(0.243 / 0.300, 1.0)
+                    mlb_obp = min(0.312 / 0.380, 1.0)
+                    mlb_slg = min(0.397 / 0.500, 1.0)
+                    mlb_k = 1.0 - min(22.4 / 35.0, 1.0)
+                    mlb_bb = min(8.3 / 15.0, 1.0)
+                    mlb_values = [mlb_avg, mlb_obp, mlb_slg, mlb_k, mlb_bb]
+
                     angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
                     values_plot = values + [values[0]]
                     angles_plot = angles + [angles[0]]
+                    mlb_plot = mlb_values + [mlb_values[0]]
 
                     fig_radar, ax_radar = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
                                                        facecolor="#0e1117")
                     ax_radar.set_facecolor("#0e1117")
-                    ax_radar.plot(angles_plot, values_plot, "o-", linewidth=2, color="#4fc3f7")
+                    ax_radar.plot(angles_plot, mlb_plot, "--", linewidth=1.5, color="#888888",
+                                  alpha=0.7, label="MLB avg")
+                    ax_radar.fill(angles_plot, mlb_plot, alpha=0.08, color="#888888")
+                    ax_radar.plot(angles_plot, values_plot, "o-", linewidth=2, color="#4fc3f7",
+                                  label="Team avg" if lang == "EN" else "\u30c1\u30fc\u30e0\u5e73\u5747")
                     ax_radar.fill(angles_plot, values_plot, alpha=0.25, color="#4fc3f7")
                     ax_radar.set_thetagrids(np.degrees(angles), categories, color="white", fontsize=11)
                     ax_radar.set_ylim(0, 1)
@@ -907,16 +920,19 @@ def main():
                     ax_radar.set_yticklabels(["", "", "", ""], color="white")
                     ax_radar.grid(color="gray", alpha=0.3)
                     ax_radar.spines["polar"].set_color("gray")
-                    # Add raw value labels
                     for angle, val, raw in zip(angles, values, raw_values):
                         ax_radar.annotate(raw, xy=(angle, val), fontsize=9,
                                           ha="center", va="bottom", color="white",
                                           fontweight="bold")
+                    leg = ax_radar.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1),
+                                          fontsize=9, facecolor="#0e1117", edgecolor="gray")
+                    for txt in leg.get_texts():
+                        txt.set_color("white")
                     fig_radar.tight_layout()
                     st.pyplot(fig_radar, use_container_width=True)
                     plt.close(fig_radar)
-                    low_k_note = ("Lower K% is better for batters" if lang == "EN"
-                                  else "三振率は低いほど良い（グラフでは低K%ほど外側）")
+                    low_k_note = ("Lower K% is better for batters. Gray dashed = MLB avg." if lang == "EN"
+                                  else "\u4e09\u632f\u7387\u306f\u4f4e\u3044\u307b\u3069\u826f\u3044\uff08\u30b0\u30e9\u30d5\u3067\u306f\u4f4eK%\u307b\u3069\u5916\u5074\uff09\u3002\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747\u3002")
                     st.caption(low_k_note)
 
             # --- Full Stats Table (in expander) ---
@@ -999,17 +1015,17 @@ def main():
 
     c4, c5, c6 = st.columns(3)
     c4.metric("AVG", f"{stats['AVG']:.3f}",
-              delta=f"{stats['AVG'] - _MLB_AVG['AVG']:+.3f} vs MLB avg")
+              delta=f"{stats['AVG'] - _MLB_AVG['AVG']:+.3f} (MLB avg: .{int(_MLB_AVG['AVG']*1000):03d})")
     c5.metric("OBP", f"{stats['OBP']:.3f}",
-              delta=f"{stats['OBP'] - _MLB_AVG['OBP']:+.3f} vs MLB avg")
+              delta=f"{stats['OBP'] - _MLB_AVG['OBP']:+.3f} (MLB avg: .{int(_MLB_AVG['OBP']*1000):03d})")
     c6.metric("SLG", f"{stats['SLG']:.3f}",
-              delta=f"{stats['SLG'] - _MLB_AVG['SLG']:+.3f} vs MLB avg")
+              delta=f"{stats['SLG'] - _MLB_AVG['SLG']:+.3f} (MLB avg: .{int(_MLB_AVG['SLG']*1000):03d})")
     c7, c8 = st.columns(2)
     c7.metric("OPS", f"{stats['OPS']:.3f}",
-              delta=f"{stats['OPS'] - _MLB_AVG['OPS']:+.3f} vs MLB avg")
+              delta=f"{stats['OPS'] - _MLB_AVG['OPS']:+.3f} (MLB avg: .{int(_MLB_AVG['OPS']*1000):03d})")
     if stats["xwOBA"]:
         c8.metric("xwOBA", f"{stats['xwOBA']:.3f}",
-                  delta=f"{stats['xwOBA'] - _MLB_AVG['xwOBA']:+.3f} vs MLB avg")
+                  delta=f"{stats['xwOBA'] - _MLB_AVG['xwOBA']:+.3f} (MLB avg: .{int(_MLB_AVG['xwOBA']*1000):03d})")
     else:
         c8.metric("xwOBA", "\u2014")
 
@@ -1027,49 +1043,39 @@ def main():
 
     st.divider()
 
-    # Row 2: Zone Heatmaps
+    # Row 2: Zone Heatmaps (vertical layout for mobile)
     st.subheader(t["zone_heatmap"])
     st.caption(t["zone_caption"])
     st.caption(t["danger_zone"])
-    fig = plt.figure(figsize=(10, 4), facecolor="#0e1117")
-    gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.3)
-    ax1 = fig.add_subplot(gs[0, 0])
-    ax2 = fig.add_subplot(gs[0, 1])
-    cax = fig.add_subplot(gs[0, 2])
-    for ax in (ax1, ax2):
-        ax.set_facecolor("#0e1117")
-        ax.tick_params(colors="white")
-        ax.xaxis.label.set_color("white")
-        ax.yaxis.label.set_color("white")
-        ax.title.set_color("white")
-    draw_zone_heatmap(pdf, "ba", t["ba_heatmap"], ax1)
-    im = draw_zone_heatmap(pdf, "xwoba", t["xwoba_heatmap"], ax2)
-    cb = fig.colorbar(im, cax=cax)
-    cb.ax.tick_params(colors="white")
-    fig.tight_layout()
-    st.pyplot(fig, use_container_width=True)
-    plt.close(fig)
+    for hm_metric, hm_title in [("ba", t["ba_heatmap"]), ("xwoba", t["xwoba_heatmap"])]:
+        fig_hm, ax_hm = plt.subplots(figsize=(6, 5), facecolor="#0e1117")
+        ax_hm.set_facecolor("#0e1117")
+        ax_hm.tick_params(colors="white")
+        ax_hm.xaxis.label.set_color("white")
+        ax_hm.yaxis.label.set_color("white")
+        ax_hm.title.set_color("white")
+        im_hm = draw_zone_heatmap(pdf, hm_metric, hm_title, ax_hm)
+        cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
+        cb_hm.ax.tick_params(colors="white")
+        fig_hm.tight_layout()
+        st.pyplot(fig_hm, use_container_width=True)
+        plt.close(fig_hm)
 
-    # 3x3 Zone Chart
+    # 3x3 Zone Chart (vertical layout for mobile)
     st.subheader(t["zone_3x3"])
-    fig3 = plt.figure(figsize=(8, 3.5), facecolor="#0e1117")
-    gs3 = fig3.add_gridspec(1, 3, width_ratios=[1, 1, 0.05], wspace=0.35)
-    ax3a = fig3.add_subplot(gs3[0, 0])
-    ax3b = fig3.add_subplot(gs3[0, 1])
-    cax3 = fig3.add_subplot(gs3[0, 2])
-    for ax in (ax3a, ax3b):
-        ax.set_facecolor("#0e1117")
-        ax.tick_params(colors="white")
-        ax.xaxis.label.set_color("white")
-        ax.yaxis.label.set_color("white")
-        ax.title.set_color("white")
-    draw_zone_3x3(pdf, "ba", t["ba_heatmap"], ax3a)
-    im3 = draw_zone_3x3(pdf, "xwoba", t["xwoba_heatmap"], ax3b)
-    cb3 = fig3.colorbar(im3, cax=cax3)
-    cb3.ax.tick_params(colors="white")
-    fig3.tight_layout()
-    st.pyplot(fig3, use_container_width=True)
-    plt.close(fig3)
+    for z3_metric, z3_title in [("ba", t["ba_heatmap"]), ("xwoba", t["xwoba_heatmap"])]:
+        fig_z3, ax_z3 = plt.subplots(figsize=(6, 5), facecolor="#0e1117")
+        ax_z3.set_facecolor("#0e1117")
+        ax_z3.tick_params(colors="white")
+        ax_z3.xaxis.label.set_color("white")
+        ax_z3.yaxis.label.set_color("white")
+        ax_z3.title.set_color("white")
+        im_z3 = draw_zone_3x3(pdf, z3_metric, z3_title, ax_z3)
+        cb_z3 = fig_z3.colorbar(im_z3, ax=ax_z3, fraction=0.046, pad=0.04)
+        cb_z3.ax.tick_params(colors="white")
+        fig_z3.tight_layout()
+        st.pyplot(fig_z3, use_container_width=True)
+        plt.close(fig_z3)
 
     st.divider()
 
