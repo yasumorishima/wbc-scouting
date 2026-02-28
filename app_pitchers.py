@@ -71,6 +71,8 @@ TEXTS = {
         "withdrawal_note": (
             "⚠️ Roster update (as of Mar 1): Pablo López (Twins) has withdrawn — Tommy John surgery, "
             "out for the 2026 season. Replaced by Jhonathan Díaz (Mariners). "
+            "José Alvarado (Phillies) is ineligible due to insurance denial (forearm strain history). "
+            "Replaced by Christian Suárez (Dodgers org, minor league). "
             "Oddanier Mosqueda (Pirates) also withdrew due to left forearm inflammation. "
             "Replaced by Luinder Ávila (Royals)."
         ),
@@ -189,6 +191,8 @@ TEXTS = {
         "withdrawal_note": (
             "⚠️ ロスター更新（3/1時点）: パブロ・ロペス（ツインズ）が辞退 — 右肘Tommy John手術、2026年全休見込み。"
             "代替: ジョナサン・ディアス（マリナーズ）。"
+            "ホセ・アルバラード（フィリーズ）は保険適用拒否（左前腕既往歴）で出場不可。"
+            "代替: クリスチャン・スアレス（ドジャース傘下・マイナー）。"
             "オダニエル・モスケダ（パイレーツ）も左前腕炎症で辞退。"
             "代替: ルインデル・アビラ（ロイヤルズ）。"
         ),

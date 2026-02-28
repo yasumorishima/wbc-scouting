@@ -17,6 +17,7 @@ VENEZUELA_BATTERS = [
 ]
 
 VENEZUELA_PITCHERS = [
+    # ★辞退（保険適用拒否・左前腕ストレイン既往）→ 代替: Christian Suárez（Dodgers傘下・マイナー、Statcastデータなし）
     {"name": "Jose Alvarado",       "name_ja": "ホセ・アルバラード",       "mlbam_id": 621237, "team": "Phillies",       "throws": "L", "role": "RP"},
     {"name": "Eduard Bazardo",      "name_ja": "エドゥアルド・バサルド",   "mlbam_id": 660825, "team": "Mariners",       "throws": "R", "role": "RP"},
     {"name": "José Buttó",          "name_ja": "ホセ・ブット",             "mlbam_id": 676130, "team": "Giants",         "throws": "R", "role": "RP"},

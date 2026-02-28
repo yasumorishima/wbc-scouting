@@ -56,6 +56,7 @@ TEXTS = {
         "ahead": "Hitter Ahead (B > S)",
         "behind": "Hitter Behind (S > B)",
         "even": "Even (B = S)",
+        "top3_title": "Top 3 Batters (by OPS)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
             "Team USA boasts one of the most dangerous lineups in the tournament. "
@@ -170,6 +171,7 @@ TEXTS = {
         "ahead": "有利カウント (B > S)",
         "behind": "不利カウント (S > B)",
         "even": "イーブン (B = S)",
+        "top3_title": "注目打者 TOP3（OPS順）",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
             "アメリカは大会屈指の強力打線を誇る。"
@@ -819,6 +821,7 @@ def main():
             st.markdown(t["pos_glossary"])
 
         rows = []
+        player_stats_list = []
         for p in USA_BATTERS:
             pdf = df_all[df_all["batter"] == p["mlbam_id"]]
             if pdf.empty:
@@ -839,6 +842,7 @@ def main():
                 })
                 continue
             s = batting_stats(pdf)
+            player_stats_list.append({"name": _display_name(p["name"]), "pos": p["pos"], "team": p["team"], **s})
             rows.append({
                 t["player"]: _display_name(p["name"]),
                 "Pos": p["pos"],
@@ -868,6 +872,70 @@ def main():
                 use_container_width=True,
                 hide_index=True,
             )
+
+            # --- TOP 3 Batters by OPS ---
+            if player_stats_list:
+                sorted_by_ops = sorted(
+                    [ps for ps in player_stats_list if ps["PA"] >= 50],
+                    key=lambda x: x["OPS"],
+                    reverse=True,
+                )
+                top3 = sorted_by_ops[:3]
+                if top3:
+                    st.subheader(t["top3_title"])
+                    st.caption(f"{season}" + (" season" if lang == "EN" else "年シーズン"))
+                    cols = st.columns(len(top3))
+                    avg_label = "AVG（打率）" if lang == "JA" else "AVG"
+                    hr_label = "HR（本塁打）" if lang == "JA" else "HR"
+                    xwoba_label = "xwOBA（期待打撃値）" if lang == "JA" else "xwOBA"
+                    _MLB_AVG_T3 = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
+                    for i, ps in enumerate(top3):
+                        with cols[i]:
+                            st.metric(ps["name"], f"OPS {ps['OPS']:.3f}")
+                            st.caption(f"{ps['pos']} / {ps['team']}")
+                            sub_cols = st.columns(3)
+                            sub_cols[0].metric(avg_label, f"{ps['AVG']:.3f}")
+                            sub_cols[1].metric(hr_label, str(ps["HR"]))
+                            sub_cols[2].metric(xwoba_label, f"{ps['xwOBA']:.3f}" if ps["xwOBA"] else "—")
+                            _t3_cats = ["AVG", "OBP", "SLG",
+                                        "K%" if lang == "EN" else "三振率",
+                                        "BB%" if lang == "EN" else "四球率"]
+                            _t3_pvals = [
+                                min(ps["AVG"] / 0.300, 1.0),
+                                min(ps["OBP"] / 0.380, 1.0),
+                                min(ps["SLG"] / 0.500, 1.0),
+                                1.0 - min(ps["K%"] / 35.0, 1.0),
+                                min(ps["BB%"] / 15.0, 1.0),
+                            ]
+                            _t3_mvals = [
+                                min(_MLB_AVG_T3["AVG"] / 0.300, 1.0),
+                                min(_MLB_AVG_T3["OBP"] / 0.380, 1.0),
+                                min(_MLB_AVG_T3["SLG"] / 0.500, 1.0),
+                                1.0 - min(_MLB_AVG_T3["K%"] / 35.0, 1.0),
+                                min(_MLB_AVG_T3["BB%"] / 15.0, 1.0),
+                            ]
+                            _t3_ang = np.linspace(0, 2 * np.pi, 5, endpoint=False).tolist()
+                            _fig_t3, _ax_t3 = plt.subplots(figsize=(3, 3),
+                                                            subplot_kw=dict(polar=True),
+                                                            facecolor="#0e1117")
+                            _ax_t3.set_facecolor("#0e1117")
+                            _ax_t3.plot(_t3_ang + [_t3_ang[0]], _t3_mvals + [_t3_mvals[0]],
+                                        "--", linewidth=1.2, color="#888888", alpha=0.7)
+                            _ax_t3.fill(_t3_ang + [_t3_ang[0]], _t3_mvals + [_t3_mvals[0]],
+                                        alpha=0.08, color="#888888")
+                            _ax_t3.plot(_t3_ang + [_t3_ang[0]], _t3_pvals + [_t3_pvals[0]],
+                                        "o-", linewidth=2, color="#4fc3f7")
+                            _ax_t3.fill(_t3_ang + [_t3_ang[0]], _t3_pvals + [_t3_pvals[0]],
+                                        alpha=0.25, color="#4fc3f7")
+                            _ax_t3.set_thetagrids(np.degrees(_t3_ang), _t3_cats,
+                                                  color="white", fontsize=8)
+                            _ax_t3.set_ylim(0, 1)
+                            _ax_t3.set_yticks([])
+                            _ax_t3.grid(color="gray", alpha=0.3)
+                            _ax_t3.spines["polar"].set_color("gray")
+                            _fig_t3.tight_layout()
+                            st.pyplot(_fig_t3, use_container_width=True)
+                            plt.close(_fig_t3)
 
             st.subheader(t["team_strengths"])
             st.info(t["strength_note"])

@@ -68,6 +68,7 @@ TEXTS = {
         "opp_slg": "Opp SLG",
         "xwoba_against": "xwOBA Against",
         "zone_3x3": "Zone Chart (3×3)",
+        "top3_title": "Top 3 Pitchers (by K%)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
             "Team USA features one of the most talented pitching staffs in the tournament. "
@@ -183,6 +184,7 @@ TEXTS = {
         "opp_slg": "被長打率",
         "xwoba_against": "被xwOBA",
         "zone_3x3": "ゾーンチャート (3×3)",
+        "top3_title": "注目投手 TOP3（奪三振率順）",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
             "アメリカは大会トップクラスの投手陣を誇る。"
@@ -765,11 +767,13 @@ def main():
             st.markdown(t["glossary_stats"])
 
         rows = []
+        pitcher_stats_list = []
         for p in USA_PITCHERS:
             pdf = df_all[df_all["pitcher"] == p["mlbam_id"]]
             if pdf.empty:
                 continue
             s = pitching_stats(pdf)
+            pitcher_stats_list.append({"name": _display_name(p["name"]), "role": p["role"], "team": p["team"], **s})
             role_label = t["sp"] if p["role"] == "SP" else t["rp"]
             rows.append({
                 t["pitcher"]: _display_name(p["name"]),
@@ -798,6 +802,83 @@ def main():
                 use_container_width=True,
                 hide_index=True,
             )
+
+            # --- TOP 3 Pitchers by K% ---
+            if pitcher_stats_list:
+                sorted_by_k = sorted(
+                    [ps for ps in pitcher_stats_list if ps["PA"] >= 30],
+                    key=lambda x: x["K%"],
+                    reverse=True,
+                )
+                top3 = sorted_by_k[:3]
+                if top3:
+                    st.subheader(t["top3_title"])
+                    st.caption(f"{season}" + (" season" if lang == "EN" else "年シーズン"))
+                    opp_avg_label = "Opp AVG（被打率）" if lang == "JA" else t["opp_avg"]
+                    bb_label = "BB%（与四球率）" if lang == "JA" else t["bb_pct"]
+                    velo_label = "球速 (mph)" if lang == "JA" else "Velo (mph)"
+                    _MLB_AVG_T3P = {"K%": 22.4, "Whiff%": 25.0, "BB%": 8.3,
+                                    "Opp AVG": .243, "xwOBA": .311, "Velo": 93.5}
+                    cols = st.columns(len(top3))
+                    for i, ps in enumerate(top3):
+                        with cols[i]:
+                            st.metric(ps["name"], f"K% {ps['K%']:.1f}%")
+                            st.caption(f"{ps['role']} / {ps['team']}")
+                            sub_cols = st.columns(3)
+                            sub_cols[0].metric(opp_avg_label, f"{ps['Opp AVG']:.3f}")
+                            sub_cols[1].metric(bb_label, f"{ps['BB%']:.1f}%")
+                            velo_str = f"{ps['Avg Velo']:.1f}" if ps["Avg Velo"] else "—"
+                            sub_cols[2].metric(velo_label, velo_str)
+                            if ps["Avg Velo"]:
+                                sub_cols[2].caption(f"≈ {ps['Avg Velo'] * 1.609:.0f} km/h")
+                            _t3_cats_p = ["K%", "Whiff%", "BB%",
+                                          "Opp AVG" if lang == "EN" else "被打率",
+                                          "xwOBA",
+                                          "Velo" if lang == "EN" else "球速"]
+                            _velo = ps["Avg Velo"] if ps["Avg Velo"] else 0
+                            _xwoba = ps["xwOBA"] if ps["xwOBA"] else 0
+                            _t3_pvals_p = [
+                                min(ps["K%"] / 35.0, 1.0),
+                                min(ps.get("Whiff%", 0) / 40.0, 1.0),
+                                1.0 - min(ps["BB%"] / 15.0, 1.0),
+                                1.0 - min(ps["Opp AVG"] / 0.300, 1.0),
+                                1.0 - min(_xwoba / 0.400, 1.0) if _xwoba else 0,
+                                min(_velo / 100.0, 1.0),
+                            ]
+                            _t3_mvals_p = [
+                                min(_MLB_AVG_T3P["K%"] / 35.0, 1.0),
+                                min(_MLB_AVG_T3P["Whiff%"] / 40.0, 1.0),
+                                1.0 - min(_MLB_AVG_T3P["BB%"] / 15.0, 1.0),
+                                1.0 - min(_MLB_AVG_T3P["Opp AVG"] / 0.300, 1.0),
+                                1.0 - min(_MLB_AVG_T3P["xwOBA"] / 0.400, 1.0),
+                                min(_MLB_AVG_T3P["Velo"] / 100.0, 1.0),
+                            ]
+                            _t3_ang_p = np.linspace(0, 2 * np.pi, 6, endpoint=False).tolist()
+                            _fig_t3p, _ax_t3p = plt.subplots(figsize=(3, 3),
+                                                              subplot_kw=dict(polar=True),
+                                                              facecolor="#0e1117")
+                            _ax_t3p.set_facecolor("#0e1117")
+                            _ax_t3p.plot(_t3_ang_p + [_t3_ang_p[0]],
+                                         _t3_mvals_p + [_t3_mvals_p[0]],
+                                         "--", linewidth=1.2, color="#888888", alpha=0.7)
+                            _ax_t3p.fill(_t3_ang_p + [_t3_ang_p[0]],
+                                         _t3_mvals_p + [_t3_mvals_p[0]],
+                                         alpha=0.08, color="#888888")
+                            _ax_t3p.plot(_t3_ang_p + [_t3_ang_p[0]],
+                                         _t3_pvals_p + [_t3_pvals_p[0]],
+                                         "o-", linewidth=2, color="#ef5350")
+                            _ax_t3p.fill(_t3_ang_p + [_t3_ang_p[0]],
+                                         _t3_pvals_p + [_t3_pvals_p[0]],
+                                         alpha=0.25, color="#ef5350")
+                            _ax_t3p.set_thetagrids(np.degrees(_t3_ang_p), _t3_cats_p,
+                                                   color="white", fontsize=8)
+                            _ax_t3p.set_ylim(0, 1)
+                            _ax_t3p.set_yticks([])
+                            _ax_t3p.grid(color="gray", alpha=0.3)
+                            _ax_t3p.spines["polar"].set_color("gray")
+                            _fig_t3p.tight_layout()
+                            st.pyplot(_fig_t3p, use_container_width=True)
+                            plt.close(_fig_t3p)
 
             st.subheader(t["team_strengths"])
             st.info(t["strength_note"])
