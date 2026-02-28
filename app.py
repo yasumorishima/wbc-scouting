@@ -840,15 +840,20 @@ def main():
                     avg_label = "AVG\uff08\u6253\u7387\uff09" if lang == "JA" else "AVG"
                     hr_label = "HR\uff08\u672c\u5851\u6253\uff09" if lang == "JA" else "HR"
                     xwoba_label = "xwOBA\uff08\u671f\u5f85\u6253\u6483\u5024\uff09" if lang == "JA" else "xwOBA"
+                    _MLB_AVG_T3 = {"OPS": .709, "AVG": .243, "xwOBA": .311}
                     cols = st.columns(len(top3))
                     for i, ps in enumerate(top3):
                         with cols[i]:
-                            st.metric(ps["name"], f"OPS {ps['OPS']:.3f}")
+                            st.metric(ps["name"], f"OPS {ps['OPS']:.3f}",
+                                      delta=f"{ps['OPS'] - _MLB_AVG_T3['OPS']:+.3f} (MLB avg: .{int(_MLB_AVG_T3['OPS']*1000):03d})")
                             st.caption(f"{ps['pos']} / {ps['team']}")
                             sub_cols = st.columns(3)
-                            sub_cols[0].metric(avg_label, f"{ps['AVG']:.3f}")
+                            sub_cols[0].metric(avg_label, f"{ps['AVG']:.3f}",
+                                               delta=f"{ps['AVG'] - _MLB_AVG_T3['AVG']:+.3f}")
                             sub_cols[1].metric(hr_label, str(ps["HR"]))
-                            sub_cols[2].metric(xwoba_label, f"{ps['xwOBA']:.3f}" if ps["xwOBA"] else "\u2014")
+                            sub_cols[2].metric(xwoba_label,
+                                               f"{ps['xwOBA']:.3f}" if ps["xwOBA"] else "\u2014",
+                                               delta=f"{ps['xwOBA'] - _MLB_AVG_T3['xwOBA']:+.3f}" if ps["xwOBA"] else None)
 
                 # --- Team Batting Radar ---
                 valid_stats = [ps for ps in player_stats_list if ps["PA"] >= 50]
@@ -1020,6 +1025,57 @@ def main():
     st.subheader(t["player_summary"])
     summary = generate_player_summary(stats, pdf, player, lang)
     st.info(summary)
+
+    # Individual Batting Radar
+    _MLB_AVG_R = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
+    radar_categories = ["AVG", "OBP", "SLG",
+                        "K%" if lang == "EN" else "\u4e09\u632f\u7387",
+                        "BB%" if lang == "EN" else "\u56db\u7403\u7387"]
+    player_vals = [
+        min(stats["AVG"] / 0.300, 1.0),
+        min(stats["OBP"] / 0.380, 1.0),
+        min(stats["SLG"] / 0.500, 1.0),
+        1.0 - min(stats["K%"] / 35.0, 1.0),
+        min(stats["BB%"] / 15.0, 1.0),
+    ]
+    mlb_vals_r = [
+        min(_MLB_AVG_R["AVG"] / 0.300, 1.0),
+        min(_MLB_AVG_R["OBP"] / 0.380, 1.0),
+        min(_MLB_AVG_R["SLG"] / 0.500, 1.0),
+        1.0 - min(_MLB_AVG_R["K%"] / 35.0, 1.0),
+        min(_MLB_AVG_R["BB%"] / 15.0, 1.0),
+    ]
+    raw_vals_r = [f"{stats['AVG']:.3f}", f"{stats['OBP']:.3f}", f"{stats['SLG']:.3f}",
+                  f"{stats['K%']:.1f}%", f"{stats['BB%']:.1f}%"]
+    angles_r = np.linspace(0, 2 * np.pi, len(radar_categories), endpoint=False).tolist()
+    p_plot = player_vals + [player_vals[0]]
+    m_plot = mlb_vals_r + [mlb_vals_r[0]]
+    a_plot = angles_r + [angles_r[0]]
+    fig_pr, ax_pr = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True), facecolor="#0e1117")
+    ax_pr.set_facecolor("#0e1117")
+    ax_pr.plot(a_plot, m_plot, "--", linewidth=1.5, color="#888888", alpha=0.7, label="MLB avg")
+    ax_pr.fill(a_plot, m_plot, alpha=0.08, color="#888888")
+    ax_pr.plot(a_plot, p_plot, "o-", linewidth=2, color="#4fc3f7",
+               label=_display_name(player["name"]))
+    ax_pr.fill(a_plot, p_plot, alpha=0.25, color="#4fc3f7")
+    ax_pr.set_thetagrids(np.degrees(angles_r), radar_categories, color="white", fontsize=11)
+    ax_pr.set_ylim(0, 1)
+    ax_pr.set_yticks([0.25, 0.5, 0.75, 1.0])
+    ax_pr.set_yticklabels(["", "", "", ""], color="white")
+    ax_pr.grid(color="gray", alpha=0.3)
+    ax_pr.spines["polar"].set_color("gray")
+    for angle, val, raw in zip(angles_r, player_vals, raw_vals_r):
+        ax_pr.annotate(raw, xy=(angle, val), fontsize=9,
+                       ha="center", va="bottom", color="white", fontweight="bold")
+    leg_pr = ax_pr.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
+                          fontsize=9, facecolor="#0e1117", edgecolor="gray")
+    for txt in leg_pr.get_texts():
+        txt.set_color("white")
+    fig_pr.tight_layout()
+    st.pyplot(fig_pr, use_container_width=True)
+    plt.close(fig_pr)
+    st.caption("Gray dashed = MLB avg (2024). K% is inverted — lower is better." if lang == "EN"
+               else "\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747(2024)\u3002K%\u306f\u9006\u8ee2\u2014\u4f4e\u3044\u307b\u3069\u5916\u5074\u3002")
 
     st.divider()
 
