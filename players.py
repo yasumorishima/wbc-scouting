@@ -23,15 +23,19 @@ VENEZUELA_PITCHERS = [
     {"name": "Enmanuel De Jesus",   "name_ja": "エンマヌエル・デ・ヘスス", "mlbam_id": 646241, "team": "Tigers",         "throws": "L", "role": "RP"},
     {"name": "Yoendrys Gómez",      "name_ja": "ヨエンドリス・ゴメス",     "mlbam_id": 672782, "team": "Rays",           "throws": "R", "role": "RP"},
     {"name": "Carlos Guzman",       "name_ja": "カルロス・グスマン",       "mlbam_id": 664346, "team": "Mets",           "throws": "R", "role": "RP"},
+    # ★辞退（右肘Tommy John手術・2026シーズン全休）→ 代替: Jhonathan Díaz（Mariners）
     {"name": "Pablo López",         "name_ja": "パブロ・ロペス",           "mlbam_id": 641154, "team": "Twins",          "throws": "R", "role": "SP"},
+    {"name": "Jhonathan Díaz",      "name_ja": "ジョナサン・ディアス",     "mlbam_id": 646242, "team": "Mariners",       "throws": "L", "role": "RP"},
     {"name": "Keider Montero",      "name_ja": "ケイダー・モンテロ",       "mlbam_id": 672456, "team": "Tigers",         "throws": "R", "role": "SP"},
     {"name": "Daniel Palencia",     "name_ja": "ダニエル・パレンシア",     "mlbam_id": 694037, "team": "Cubs",           "throws": "R", "role": "RP"},
     {"name": "Eduardo Rodríguez",   "name_ja": "エドゥアルド・ロドリゲス", "mlbam_id": 593958, "team": "Diamondbacks",   "throws": "L", "role": "SP"},
     {"name": "Antonio Senzatela",   "name_ja": "アントニオ・センサテーラ", "mlbam_id": 622608, "team": "Rockies",        "throws": "R", "role": "SP"},
     {"name": "Ranger Suárez",       "name_ja": "レンジャー・スアレス",     "mlbam_id": 624133, "team": "Red Sox",        "throws": "L", "role": "SP"},
     {"name": "Angel Zerpa",         "name_ja": "アンヘル・セルパ",         "mlbam_id": 672582, "team": "Brewers",        "throws": "L", "role": "RP"},
+    # ★辞退（左前腕炎症）→ 代替: Luinder Ávila（Royals）
+    {"name": "Luinder Ávila",       "name_ja": "ルインデル・アビラ",      "mlbam_id": 679883, "team": "Royals",         "throws": "R", "role": "RP"},
 ]
-# Note: Oddanier Mosqueda (LHP, Pirates) excluded — no Statcast data (minor league)
+# Note: Oddanier Mosqueda (LHP, Pirates) — withdrawn (left forearm inflammation); no prior Statcast data
 
 # Lookup helpers — batters
 PLAYER_BY_ID = {p["mlbam_id"]: p for p in VENEZUELA_BATTERS}

@@ -68,9 +68,17 @@ TEXTS = {
         "xwoba_against": "xwOBA Against",
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
+        "withdrawal_note": (
+            "⚠️ Roster update (as of Mar 1): Pablo López (Twins) has withdrawn — Tommy John surgery, "
+            "out for the 2026 season. Replaced by Jhonathan Díaz (Mariners). "
+            "Oddanier Mosqueda (Pirates) also withdrew due to left forearm inflammation. "
+            "Replaced by Luinder Ávila (Royals)."
+        ),
         "strength_note": (
-            "Venezuela's staff is anchored by Pablo López (ace-caliber with elite fastball command), "
-            "supported by a deep bullpen mixing power arms and swing-and-miss stuff. "
+            "Venezuela's staff has undergone late roster changes. With Pablo López unavailable, "
+            "the rotation relies on Eduardo Rodríguez and Antonio Senzatela as lead starters, "
+            "supported by a bullpen mixing power arms. "
+            "Jhonathan Díaz (Mariners) and Luinder Ávila (Royals) join as replacement arms. "
             "Left-handed depth includes Ranger Suárez (high GB%, elite contact management). "
             "Key vulnerabilities: several relievers rely heavily on fastballs and may be exposed "
             "by disciplined lineups that sit on velocity."
@@ -178,9 +186,15 @@ TEXTS = {
         "xwoba_against": "xwOBA\uff08\u88ab\u671f\u5f85\u5024\uff09",
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
+        "withdrawal_note": (
+            "⚠️ ロスター更新（3/1時点）: パブロ・ロペス（ツインズ）が辞退 — 右肘Tommy John手術、2026年全休見込み。"
+            "代替: ジョナサン・ディアス（マリナーズ）。"
+            "オダニエル・モスケダ（パイレーツ）も左前腕炎症で辞退。"
+            "代替: ルインデル・アビラ（ロイヤルズ）。"
+        ),
         "strength_note": (
-            "ベネズエラ投手陣はパブロ・ロペスがエース格（速球のコマンドが卓越）。"
-            "リリーフ陣はパワーアームと空振りを取れる球種を持つ投手が揃う。"
+            "ベネズエラ投手陣はロスター変更後、先発はエドゥアルド・ロドリゲスとアントニオ・センサテーラが軸。"
+            "代替として加わったジョナサン・ディアス（マリナーズ）、ルインデル・アビラ（ロイヤルズ）がブルペンを補強。"
             "左腕はレンジャー・スアレスが中心（高いゴロ率、優れたコンタクト管理）。\n\n"
             "弱点: リリーフの一部は速球依存の傾向があり、"
             "速球を狙い打てる規律のある打線には対応を迫られる可能性がある。"
@@ -781,6 +795,7 @@ def main():
         st.header(f"🇻🇪 {t['team_overview']} — {season_label}")
 
         st.info(t["overview_guide"])
+        st.warning(t["withdrawal_note"])
 
         rows = []
         pitcher_stats_list = []

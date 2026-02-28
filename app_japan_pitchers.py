@@ -68,6 +68,11 @@ TEXTS = {
         "xwoba_against": "xwOBA Against",
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
+        "withdrawal_note": (
+            "⚠️ Roster update (as of Mar 1): Yuki Matsui (Padres) has withdrawn due to a left inner thigh injury "
+            "(officially announced Feb 26). Replaced by Yuto Kanamaru (Dragons, NPB). "
+            "Matsui's data is retained below for reference."
+        ),
         "strength_note": (
             "Japan is expected to feature a deep and high-quality pitching staff, with starters capable of elite strikeout rates and strong command. The combination of power pitching and pitch-type variety may make Japan's rotation one of the most difficult to face in the tournament."
         ),
@@ -181,6 +186,10 @@ TEXTS = {
         "xwoba_against": "xwOBA\uff08\u88ab\u671f\u5f85\u5024\uff09",
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
+        "withdrawal_note": (
+            "⚠️ ロスター更新（3/1時点）: 松井裕樹（パドレス）が左内転筋負傷により辞退（2/26公式発表）。"
+            "代替: 金丸夢斗（中日）。松井裕樹のデータは参考として残しています。"
+        ),
         "strength_note": (
             "日本の投手陣はトーナメントでも屈指の質と深さを誇ると考えられている。\n\n高い奪三振能力と制球力を持つ先発投手を複数擁し、球種の多彩さと組み立ての巧みさが特徴とされている。"
         ),
@@ -768,6 +777,7 @@ def main():
         st.header(f"\U0001F1EF\U0001F1F5 {t['team_overview']} — {season_label}")
 
         st.info(t["overview_guide"])
+        st.warning(t["withdrawal_note"])
 
         rows = []
         pitcher_stats_list = []
