@@ -69,7 +69,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "South Korea's pitching staff is known for strong command and efficient pitch usage. The rotation may feature arms with diverse pitch mixes and the ability to limit walks and induce weak contact."
+            "South Korea's pitching staff features Woo Suk Go (RHP, Padres) and Dane Dunning (RHP), both of whom have logged significant MLB innings. The staff combines power pitching with Korea's traditional emphasis on precise command and efficient pitch counts."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -182,7 +182,7 @@ TEXTS = {
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "韓国の投手陣は高い制球力と効率的な投球が特徴とされている。\n\n多彩な球種と四球の少なさが強みと考えられ、打ち損じを誘う投球スタイルが持ち味の可能性がある。"
+            "韓国の投手陣はパドレスの高宇錫（右腕）とデイン・ダニング（右腕）のMLB経験者がエース格を担う。\n\n韓国伝統の精密な制球力と効率的な投球枚数管理を軸に、パワーピッチングも兼ね備えた投手陣を形成している。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "

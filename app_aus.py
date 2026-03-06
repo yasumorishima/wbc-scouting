@@ -57,7 +57,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Australia's baseball program continues to grow, featuring players from MLB organizations and professional leagues. The lineup may emphasize athletic hitters with the ability to make contact and take walks, backed by solid fundamental skills."
+            "Australia's lineup is headlined by Travis Bazzana (2B, Guardians), one of the most exciting young talents in professional baseball, and Curtis Mead (IF, Rays), a versatile hitter with MLB experience. With only five MLB-affiliated players, depth is limited, but the top-end talent is capable of competing against any international lineup."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -160,7 +160,7 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "オーストラリアのベースボールプログラムは着実に成長しており、MLB組織やプロリーグ出身の選手で構成される見込みである。\n\nコンタクト能力と四球を組み合わせた攻撃的な打線が特徴の可能性がある。"
+            "オーストラリアのラインアップはガーディアンズのトラビス・バザーナ（2B）が中心で、プロ野球界屈指の若手タレント。レイズのカーティス・ミード（IF）もMLB経験を持つ多才な打者として打線を支える。\n\nMLB所属は5名と少ないが、上位選手のポテンシャルは高く、国際大会でも十分な脅威となり得る。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

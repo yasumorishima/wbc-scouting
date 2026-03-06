@@ -57,7 +57,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Nicaragua is a developing baseball nation with a growing presence in international play. The lineup features players from the domestic league and professional organizations, with an emphasis on contact hitting and aggressive baserunning."
+            "Nicaragua's standout MLB name is Mark Vientos (3B, Mets), who has established himself as a regular in a major-league lineup. Ismael Munguia (CF) and Freddy Zamora (SS) add depth. The squad combines MLB talent with speed and contact-based offense."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -160,7 +160,7 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "ニカラグアは成長著しい野球新興国であり、国内リーグとプロ組織の選手で構成されている。\n\nコンタクト打撃と積極的な走塁を重視するスタイルが特徴の可能性がある。"
+            "ニカラグアで最も注目されるMLB選手はメッツのマーク・ビエントス（3B）で、メジャーのレギュラーとして地位を確立している。\n\nイスマエル・ムングイア（CF）やフレディ・サモラ（SS）も加わり、スピードとコンタクトを重視した攻撃スタイルで大会に臨む。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

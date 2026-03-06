@@ -57,7 +57,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Great Britain has developed a growing baseball program, drawing on British-heritage MLB and MiLB players. The lineup may feature underrated contact hitters and players with strong fundamental skills developed through professional organizations."
+            "Great Britain's lineup is headlined by Jazz Chisholm Jr. (2B, Yankees), one of the most dynamic players in MLB. Harry Ford (C, Blue Jays) is among baseball's top catching prospects. The roster blends high-upside MLB talent with solid fundamentals throughout the batting order."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -160,7 +160,7 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "イギリスは成長著しいベースボールプログラムを持ち、英国系のMLB・マイナー選手を中心に構成される見込みである。\n\nコンタクト能力と基礎技術を重視した打線が特徴の可能性がある。"
+            "イギリスのラインアップの目玉はヤンキースのジャズ・チズム・Jr.（2B）で、MLB屈指のダイナミックなプレーヤー。\n\nブルージェイズのハリー・フォード（C）は球界トップクラスの捕手プロスペクトであり、MLB高ポテンシャル選手と基礎技術に優れた選手が融合した打線を形成している。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

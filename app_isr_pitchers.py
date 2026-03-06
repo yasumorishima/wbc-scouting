@@ -69,7 +69,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "Israel's pitching staff includes MLB-level arms with experience in professional baseball. The rotation and bullpen may surprise opponents with diverse pitch mixes and competitive command."
+            "Israel's pitching staff combines veteran MLB arm Matt Bowman (RHP) with a core of pitchers from professional organizations. The staff prioritizes command and pitch sequencing to generate outs, relying on precision over pure velocity against international competition."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -182,7 +182,7 @@ TEXTS = {
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "イスラエルの投手陣はMLBレベルの経験を持つ投手を含んでいる。\n\n多彩な球種と安定した制球力で対戦相手を苦しめる可能性がある。"
+            "イスラエルの投手陣はMLBベテランのマット・ボウマン（右腕）を軸に、プロ組織出身の投手陣が揃っている。\n\n圧倒的な球速よりも制球力と投球組み立てを重視し、国際大会での安定したパフォーマンスを目指している。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "

@@ -57,7 +57,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "South Korea traditionally fields a disciplined, contact-oriented lineup with strong fundamentals. The team tends to emphasize high on-base percentage and situational hitting. MLB-experienced players may anchor the lineup and provide additional power threat."
+            "South Korea's lineup is anchored by Jung-Hoo Lee (CF, Giants), an elite defensive outfielder who has shown quality bat skills in MLB. Hyeseong Kim (2B) provides speed and contact, and Jahmai Jones (LF) adds athleticism. The roster maintains Korea's traditional emphasis on discipline, fundamentals, and high on-base percentage."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -160,7 +160,7 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "韓国は規律ある打撃スタイルと高い出塁率を重視するチームとして知られている。\n\nコンタクトヒッターを中心に状況判断に優れた打者が多く、MLB経験者が中軸を担うケースもある。"
+            "韓国のラインアップの核はジャイアンツのイ・ジョンフ（CF）で、MLBでも守備・打撃両面でトップクラスの実力を誇る。\n\nキム・ヘソン（2B）が走力とコンタクトで貢献し、韓国伝統の規律と高出塁率を重視した野球スタイルを継続している。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

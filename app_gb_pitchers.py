@@ -69,7 +69,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "Great Britain's pitching staff may feature arms developed through MLB organizations. The key strength may lie in command and pitch sequencing rather than raw velocity."
+            "Great Britain's pitching staff is highlighted by Brendan Beck (RHP) and Tristan Beck (RHP), brothers who both have MLB experience. The staff draws on arms across multiple MLB organizations, with an emphasis on command and pitch variety over raw velocity."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -182,7 +182,7 @@ TEXTS = {
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "イギリスの投手陣はMLB傘下で育成された投手を含む構成が見込まれる。\n\n球速よりも制球力と球種の組み立てが強みとなる可能性がある。"
+            "イギリスの投手陣はMLB経験を持つブレンダン・ベック（右腕）とトリスタン・ベック（右腕）の兄弟が柱。\n\n複数のMLB組織出身の投手が揃い、圧倒的な球速よりも制球力と球種の多彩さを武器とした投球陣を形成している。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "

@@ -57,7 +57,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Cuba has a legendary baseball tradition and fields a physically imposing lineup. The team historically emphasizes power hitting and aggressive approach at the plate. MLB-experienced Cuban players may bring elite-level talent to anchor the lineup."
+            "Cuba's lineup is anchored by Yoán Moncada (3B), a former top prospect with extensive major-league experience. The roster blends MLB-experienced Cuban-heritage players with homegrown talent, combining power potential with the aggressive, free-swinging style that is a hallmark of Cuban baseball tradition."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -160,7 +160,7 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "キューバは野球の伝統国として長い歴史を誇り、身体的に強靭な打者が揃う打線が特徴とされている。\n\n積極的な打撃スタイルと長打力が持ち味で、MLB経験を持つキューバ系選手が打線の中心となる可能性がある。"
+            "キューバのラインアップの中心は、元トッププロスペクトでメジャーリーグ豊富な経験を持つヨアン・モンカーダ（3B）。\n\nMLB経験者とキューバ国内出身選手が融合し、キューバ野球伝統の積極的な打撃スタイルと長打力を兼ね備えた打線を形成している。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",

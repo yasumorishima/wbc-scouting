@@ -57,7 +57,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Israel fields a roster composed largely of Jewish-heritage players from MLB and MiLB. The lineup may feature solid contact hitters with plate discipline, and certain batters have demonstrated the ability to reach base consistently against international competition."
+            "Israel features veteran MLB center fielder Harrison Bader (CF) alongside Spencer Horwitz (1B, Blue Jays), who has shown consistent on-base ability at the major-league level. Jake Gelof (3B, Rays) adds power potential, and Cole Carrigg (SS) provides athletic versatility throughout the lineup."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -160,7 +160,7 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "イスラエルはユダヤ系のMLB・マイナー選手で構成されており、選球眼の良さとコンタクト能力が特徴とされている。\n\n国際大会での経験を持つ選手も含まれており、出塁率を高める打撃スタイルが持ち味の可能性がある。"
+            "イスラエルはMLBベテランのハリソン・ベイダー（CF）を中心に、安定した出塁率を誇るブルージェイズのスペンサー・ホーウィッツ（1B）が打線を支える。\n\nレイズのジェイク・ゲロフ（3B）が長打力を担い、コール・キャリッグ（SS）の身体能力が打線に多様性をもたらしている。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
