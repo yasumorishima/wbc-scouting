@@ -1,0 +1,7 @@
+pitcher,player_name,game_date,pitch_type,release_speed,release_spin_rate,pfx_x,pfx_z,plate_x,plate_z,zone,description,events,type,launch_speed,launch_angle,estimated_ba_using_speedangle,estimated_woba_using_speedangle,p_throws,stand,balls,strikes,bb_type,release_extension,spin_axis,season
+678620,"Townsend, Blake",2024-03-24,,,,,,,,,hit_into_play,field_out,X,,,,,L,R,0,0,fly_ball,,,2024
+678620,"Townsend, Blake",2024-03-24,,,,,,,,,hit_into_play,double,X,,,,,L,L,0,0,fly_ball,,,2024
+678620,"Townsend, Blake",2024-03-24,,,,,,,,,swinging_strike,strikeout,S,,,,,L,L,0,2,,,,2024
+678620,"Townsend, Blake",2024-03-24,,,,,,,,,foul,,S,,,,,L,L,0,2,,,,2024
+678620,"Townsend, Blake",2024-03-24,,,,,,,,,foul,,S,,,,,L,L,0,1,,,,2024
+678620,"Townsend, Blake",2024-03-24,,,,,,,,,called_strike,,S,,,,,L,L,0,0,,,,2024
