@@ -2,7 +2,7 @@
 
 WBC 2026（World Baseball Classic）参加チームの Statcast データを可視化するスカウティングダッシュボード。
 
-Streamlit Community Cloud にデプロイ済み。**MLB で実績のある選手**（`mlbam_id`=MLBの選手固有ID）のみ表示。マイナーリーグ経験のみの選手は Statcast データが存在しないため対象外。
+Streamlit Community Cloud にデプロイ済み。Baseball Savant の Statcast データ（`mlbam_id` で紐付け）がある選手のみ表示。MLB 出場経験のない選手は Statcast データが存在しないため対象外。20か国 306選手中、97選手の MLBAM ID を 2026-03-08 に一括追加。
 
 ## 🌐 ランディングページ
 
@@ -138,8 +138,9 @@ Streamlit Community Cloud にデプロイ済み。**MLB で実績のある選手
 | 🇳🇮 Nicaragua | [Batters](https://wbc-nic-batters.streamlit.app/) | — |
 
 > **備考**
-> - Brazil / Czechia: MLB 実績選手なし（全員マイナーリーグ）のためダッシュボードなし
-> - Cuba / Nicaragua / Chinese Taipei / Australia: 投手の MLB Statcast データなしのため投手ダッシュボードなし
+> - Czechia: MLB/MiLB 組織所属選手なしのためダッシュボードなし
+> - Brazil: アプリは作成済み（`app_bra.py` / `app_bra_pitchers.py`）だが Streamlit Cloud 未デプロイ
+> - Cuba / Nicaragua / Chinese Taipei / Australia: 投手アプリ未作成（投手の Statcast データは取得済み）
 
 ---
 
