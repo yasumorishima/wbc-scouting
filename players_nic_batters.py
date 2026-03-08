@@ -1,9 +1,9 @@
 """WBC 2026 Nicaragua roster — MLB batters."""
 
 NIC_BATTERS = [
-    {"name": "Ismael Munguia",              "name_ja": "イスマエル・ムンギア",     "mlbam_id": 0, "pos": "CF", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Ismael Munguia",              "name_ja": "イスマエル・ムンギア",     "mlbam_id": 665998, "pos": "CF", "team": "", "bats": "R"},
     {"name": "Mark Vientos",                "name_ja": "マーク・ビエントス",       "mlbam_id": 668901, "pos": "3B", "team": "", "bats": "R"},
-    {"name": "Freddy Zamora",               "name_ja": "フレディ・サモラ",         "mlbam_id": 0, "pos": "SS", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Freddy Zamora",               "name_ja": "フレディ・サモラ",         "mlbam_id": 668965, "pos": "SS", "team": "", "bats": "R"},
 ]
 
 PLAYER_BY_ID   = {p['mlbam_id']: p for p in NIC_BATTERS}

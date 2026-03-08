@@ -9,7 +9,7 @@ MEX_BATTERS = [
     {"name": "Joey Meneses",                "name_ja": "ジョーイ・メネセス",       "mlbam_id": 608841, "pos": "1B", "team": "", "bats": "R"},
     {"name": "Joey Ortiz",                  "name_ja": "ジョーイ・オルティス",     "mlbam_id": 687401, "pos": "3B", "team": "", "bats": "R"},
     {"name": "Alejandro Osuna",             "name_ja": "アレハンドロ・オスーナ",   "mlbam_id": 696030, "pos": "RF", "team": "", "bats": "R"},
-    {"name": "Jared Serna",                 "name_ja": "ハレド・セルナ",           "mlbam_id": 0, "pos": "2B", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Jared Serna",                 "name_ja": "ハレド・セルナ",           "mlbam_id": 691858, "pos": "2B", "team": "", "bats": "R"},
     {"name": "Alek Thomas",                 "name_ja": "アレク・トーマス",         "mlbam_id": 677950, "pos": "CF", "team": "", "bats": "R"},
 ]
 

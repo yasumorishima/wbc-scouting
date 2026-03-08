@@ -1,10 +1,10 @@
 """WBC 2026 Colombia roster — MLB pitchers."""
 
 COL_PITCHERS = [
-    {"name": "Austin Bergner",              "name_ja": "オースティン・バーグナー", "mlbam_id": 0, "team": "", "throws": "R", "role": "RP"},  # TODO: ID not found
+    {"name": "Austin Bergner",              "name_ja": "オースティン・バーグナー", "mlbam_id": 666123, "team": "", "throws": "R", "role": "RP"},
     {"name": "Nabil Crismatt",              "name_ja": "ナビル・クリスマット",     "mlbam_id": 622503, "team": "", "throws": "R", "role": "RP"},
     {"name": "Tayron Guerrero",             "name_ja": "タイロン・ゲレーロ",       "mlbam_id": 594027, "team": "", "throws": "R", "role": "RP"},
-    {"name": "David Lorduy",                "name_ja": "ダビド・ロルドゥイ",       "mlbam_id": 0, "team": "", "throws": "R", "role": "RP"},  # TODO: ID not found
+    {"name": "David Lorduy",                "name_ja": "ダビド・ロルドゥイ",       "mlbam_id": 800124, "team": "", "throws": "R", "role": "RP"},
     {"name": "Reiver Sanmartín",            "name_ja": "レイバー・サンマルティン", "mlbam_id": 665665, "team": "CIN", "throws": "L", "role": "RP"},
     {"name": "Guillo Zuñiga",               "name_ja": "ギジョ・スニガ",           "mlbam_id": 670871, "team": "", "throws": "R", "role": "RP"},
 ]

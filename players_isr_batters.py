@@ -2,16 +2,16 @@
 
 ISR_BATTERS = [
     {"name": "Harrison Bader",              "name_ja": "ハリソン・ベイダー",       "mlbam_id": 664056, "pos": "CF", "team": "", "bats": "R"},
-    {"name": "Cole Carrigg",                "name_ja": "コール・キャリグ",         "mlbam_id": 0, "pos": "SS", "team": "", "bats": "R"},  # TODO: ID not found
-    {"name": "Jake Gelof",                  "name_ja": "ジェイク・ジェロフ",       "mlbam_id": 0, "pos": "3B", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Cole Carrigg",                "name_ja": "コール・キャリグ",         "mlbam_id": 694249, "pos": "SS", "team": "", "bats": "R"},
+    {"name": "Jake Gelof",                  "name_ja": "ジェイク・ジェロフ",       "mlbam_id": 695372, "pos": "3B", "team": "", "bats": "R"},
     {"name": "Spencer Horwitz",             "name_ja": "スペンサー・ホーウィッツ", "mlbam_id": 687462, "pos": "1B", "team": "", "bats": "R"},
     {"name": "Troy Johnston",               "name_ja": "トロイ・ジョンストン",     "mlbam_id": 687859, "pos": "LF", "team": "", "bats": "R"},
-    {"name": "Zach Levenson",               "name_ja": "ザック・レベンソン",       "mlbam_id": 0, "pos": "RF", "team": "", "bats": "R"},  # TODO: ID not found
-    {"name": "Noah Mendlinger",             "name_ja": "ノア・メンドリンガー",     "mlbam_id": 0, "pos": "3B", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Zach Levenson",               "name_ja": "ザック・レベンソン",       "mlbam_id": 804241, "pos": "RF", "team": "", "bats": "R"},
+    {"name": "Noah Mendlinger",             "name_ja": "ノア・メンドリンガー",     "mlbam_id": 702331, "pos": "3B", "team": "", "bats": "R"},
     {"name": "Matt Mervis",                 "name_ja": "マット・マービス",         "mlbam_id": 670223, "pos": "1B", "team": "", "bats": "R"},
-    {"name": "RJ Schreck",                  "name_ja": "RJ・シュレック",           "mlbam_id": 0, "pos": "LF", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "RJ Schreck",                  "name_ja": "RJ・シュレック",           "mlbam_id": 702302, "pos": "LF", "team": "", "bats": "R"},
     {"name": "Garrett Stubbs",              "name_ja": "ギャレット・スタッブス",   "mlbam_id": 596117, "pos": "C", "team": "", "bats": "R"},
-    {"name": "CJ Stubbs",                   "name_ja": "CJ・スタッブス",           "mlbam_id": 0, "pos": "C", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "CJ Stubbs",                   "name_ja": "CJ・スタッブス",           "mlbam_id": 667690, "pos": "C", "team": "", "bats": "R"},
 ]
 
 PLAYER_BY_ID   = {p['mlbam_id']: p for p in ISR_BATTERS}

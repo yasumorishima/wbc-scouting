@@ -7,9 +7,9 @@ MEX_PITCHERS = [
     {"name": "Alex Carrillo",               "name_ja": "アレックス・カリージョ",   "mlbam_id": 692024, "team": "", "throws": "R", "role": "RP"},
     {"name": "Daniel Duarte",               "name_ja": "ダニエル・ドゥアルテ",     "mlbam_id": 650960, "team": "", "throws": "R", "role": "RP"},
     {"name": "Robert Garcia",               "name_ja": "ロバート・ガルシア",       "mlbam_id": 676395, "team": "", "throws": "L", "role": "RP"},
-    {"name": "Luis Gastelum",               "name_ja": "ルイス・ガステルム",       "mlbam_id": 0, "team": "", "throws": "R", "role": "RP"},  # TODO: ID not found
+    {"name": "Luis Gastelum",               "name_ja": "ルイス・ガステルム",       "mlbam_id": 703725, "team": "", "throws": "R", "role": "RP"},
     {"name": "Andrés Muñoz",                "name_ja": "アンドレス・ムニョス",     "mlbam_id": 662253, "team": "", "throws": "R", "role": "RP"},
-    {"name": "Samy Natera Jr.",             "name_ja": "サミー・ナテラJr.",        "mlbam_id": 0, "team": "", "throws": "L", "role": "RP"},  # TODO: ID not found
+    {"name": "Samy Natera Jr.",             "name_ja": "サミー・ナテラJr.",        "mlbam_id": 696519, "team": "", "throws": "L", "role": "RP"},
     {"name": "Victor Vodnik",               "name_ja": "ビクター・ボドニック",     "mlbam_id": 680767, "team": "", "throws": "R", "role": "RP"},
     {"name": "Taijuan Walker",              "name_ja": "タイフアン・ウォーカー",   "mlbam_id": 592836, "team": "", "throws": "R", "role": "RP"},
 ]

@@ -1,9 +1,9 @@
 """WBC 2026 Cuba roster — MLB pitchers."""
 
 CUBA_PITCHERS = [
-    {"name": "Emmanuel Chapman",            "mlbam_id": 0, "team": "", "throws": "R", "role": "RP"},  # TODO: ID not found
-    {"name": "Naykel Cruz",                 "mlbam_id": 0, "team": "", "throws": "L", "role": "RP"},  # TODO: ID not found
-    {"name": "Daviel Hurtado",              "mlbam_id": 0, "team": "", "throws": "L", "role": "RP"},  # TODO: ID not found
+    {"name": "Emmanuel Chapman",            "mlbam_id": 820888, "team": "", "throws": "R", "role": "RP"},
+    {"name": "Naykel Cruz",                 "mlbam_id": 806086, "team": "", "throws": "L", "role": "RP"},
+    {"name": "Daviel Hurtado",              "mlbam_id": 808064, "team": "", "throws": "L", "role": "RP"},
     {"name": "Yariel Rodriguez",            "mlbam_id": 684320, "team": "TOR", "throws": "R", "role": "SP"},
 ]
 

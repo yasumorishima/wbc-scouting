@@ -2,13 +2,13 @@
 
 PAN_BATTERS = [
     {"name": "Miguel Amaya",                "name_ja": "ミゲル・アマヤ",           "mlbam_id": 665804, "pos": "C", "team": "", "bats": "R"},
-    {"name": "Leo Bernal",                  "name_ja": "レオ・ベルナル",           "mlbam_id": 0, "pos": "C", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Leo Bernal",                  "name_ja": "レオ・ベルナル",           "mlbam_id": 699024, "pos": "C", "team": "", "bats": "R"},
     {"name": "Christian Bethancourt",       "name_ja": "クリスチャン・ベタンコート","mlbam_id": 542194, "pos": "C/1B", "team": "", "bats": "R"},
-    {"name": "Enrique Bradfield",           "name_ja": "エンリケ・ブラッドフィールド","mlbam_id": 0, "pos": "CF", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Enrique Bradfield",           "name_ja": "エンリケ・ブラッドフィールド","mlbam_id": 690961, "pos": "CF", "team": "", "bats": "R"},
     {"name": "José Caballero",              "name_ja": "ホセ・カバジェロ",         "mlbam_id": 676609, "pos": "IF", "team": "", "bats": "R"},
     {"name": "Ivan Herrera",                "name_ja": "イバン・エレーラ",         "mlbam_id": 671056, "pos": "C", "team": "STL", "bats": "R"},
-    {"name": "Leo Jiménez",                 "name_ja": "レオ・ヒメネス",           "mlbam_id": 0, "pos": "SS", "team": "", "bats": "R"},  # TODO: ID not found
-    {"name": "Jose Ramos",                  "name_ja": "ホセ・ラモス",             "mlbam_id": 0, "pos": "OF", "team": "", "bats": "R"},  # TODO: ID not found
+    {"name": "Leo Jiménez",                 "name_ja": "レオ・ヒメネス",           "mlbam_id": 677870, "pos": "SS", "team": "", "bats": "R"},
+    {"name": "Jose Ramos",                  "name_ja": "ホセ・ラモス",             "mlbam_id": 682947, "pos": "OF", "team": "", "bats": "R"},
     {"name": "Edmundo Sosa",                "name_ja": "エドムンド・ソーサ",       "mlbam_id": 624641, "pos": "2B", "team": "", "bats": "R"},
 ]
 
