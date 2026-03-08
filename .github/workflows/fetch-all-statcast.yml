@@ -69,11 +69,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase   # 他jobのpushと競合回避
           git add data/
           if git diff --cached --quiet; then
             echo "No changes for ${{ matrix.country }}"
-          else
-            git commit -m "data: fetch ${{ matrix.country }} statcast (${{ inputs.year || '2024+2025' }})"
-            git push
+            exit 0
           fi
+          git commit -m "data: fetch ${{ matrix.country }} statcast (${{ inputs.year || '2024+2025' }})"
+          # Retry push with rebase up to 5 times (parallel jobs may conflict)
+          for i in 1 2 3 4 5; do
+            git pull --rebase --autostash && git push && break
+            echo "Push attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
