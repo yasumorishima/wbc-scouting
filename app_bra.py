@@ -275,7 +275,9 @@ DATA_PATH = pathlib.Path(__file__).parent / "data" / "bra_statcast.csv"
 
 
 @st.cache_data
-def load_data() -> pd.DataFrame:
+def load_data():
+    if not DATA_PATH.exists():
+        return None
     df = pd.read_csv(DATA_PATH, low_memory=False)
     df["game_date"] = pd.to_datetime(df["game_date"])
     if "season" not in df.columns:
@@ -790,6 +792,16 @@ def main():
     )
 
     df_all = load_data()
+
+    if df_all is None:
+        st.warning(
+            "No Statcast data available for Brazil batters yet. "
+            "Data will appear here once these players record MLB appearances."
+            if lang == "EN" else
+            "ブラジル打者のStatcastデータはまだありません。"
+            "MLB出場後にデータが表示されます。"
+        )
+        st.stop()
 
     seasons = sorted(df_all["season"].unique().tolist())
     season = st.sidebar.selectbox(t["season"], seasons, index=len(seasons) - 1, format_func=str)
