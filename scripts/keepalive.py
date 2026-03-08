@@ -7,58 +7,29 @@ and does NOT wake or keep alive the Python app process.
 
 This script uses Playwright (Chromium) to actually load each page.
 If the app shows the "Zzzz" sleep page, it clicks the wake-up button.
+
+URLs are loaded from streamlit_apps.txt (single source of truth).
 """
 
 from __future__ import annotations
 
 import asyncio
 import sys
+from pathlib import Path
 from playwright.async_api import async_playwright
 
-URLS = [
-    # NPB / MLB
-    "https://npb-prediction.streamlit.app/",
-    "https://yasumorishima-mlb-bat-tracking.streamlit.app/",
-    "https://mlb-wp-engine.streamlit.app/",
-    # WBC — Pool A (San Juan)
-    "https://wbc-pr-batters.streamlit.app/",
-    "https://wbc-pr-pitchers.streamlit.app/",
-    "https://wbc-cuba-batters.streamlit.app/",
-    "https://wbc-can-batters.streamlit.app/",
-    "https://wbc-can-pitchers.streamlit.app/",
-    "https://wbc-pan-batters.streamlit.app/",
-    "https://wbc-pan-pitchers.streamlit.app/",
-    "https://wbc-col-batters.streamlit.app/",
-    "https://wbc-col-pitchers.streamlit.app/",
-    # WBC — Pool B (Houston)
-    "https://wbc-usa-batters.streamlit.app/",
-    "https://wbc-usa-pitchers.streamlit.app/",
-    "https://wbc-mex-batters.streamlit.app/",
-    "https://wbc-mex-pitchers.streamlit.app/",
-    "https://wbc-ita-batters.streamlit.app/",
-    "https://wbc-ita-pitchers.streamlit.app/",
-    "https://wbc-gb-batters.streamlit.app/",
-    "https://wbc-gb-pitchers.streamlit.app/",
-    # WBC — Pool C (Tokyo)
-    "https://wbc-japan-batters.streamlit.app/",
-    "https://wbc-japan-pitchers.streamlit.app/",
-    "https://wbc-kor-batters.streamlit.app/",
-    "https://wbc-kor-pitchers.streamlit.app/",
-    "https://wbc-twn-batters.streamlit.app/",
-    "https://wbc-aus-batters.streamlit.app/",
-    # WBC — Pool D (Miami)
-    "https://wbc-dr-batters.streamlit.app/",
-    "https://wbc-dr-pitchers.streamlit.app/",
-    "https://wbc-venezuela-batters.streamlit.app/",
-    "https://wbc-venezuela-pitchers.streamlit.app/",
-    "https://wbc-ned-batters.streamlit.app/",
-    "https://wbc-ned-pitchers.streamlit.app/",
-    "https://wbc-isr-batters.streamlit.app/",
-    "https://wbc-isr-pitchers.streamlit.app/",
-    "https://wbc-nic-batters.streamlit.app/",
-]
-
 TIMEOUT_MS = 120_000  # 2 min per page (sleep → wake can be slow)
+
+
+def load_urls() -> list[str]:
+    """Load app URLs from streamlit_apps.txt."""
+    txt = Path(__file__).resolve().parent.parent / "streamlit_apps.txt"
+    urls = []
+    for line in txt.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            urls.append(line)
+    return urls
 
 
 async def visit(page, url: str) -> bool:
@@ -86,7 +57,8 @@ async def visit(page, url: str) -> bool:
 
 
 async def main() -> int:
-    print(f"Visiting {len(URLS)} Streamlit apps...")
+    urls = load_urls()
+    print(f"Visiting {len(urls)} Streamlit apps...")
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(
@@ -99,13 +71,13 @@ async def main() -> int:
         page = await context.new_page()
 
         ok = 0
-        for url in URLS:
+        for url in urls:
             if await visit(page, url):
                 ok += 1
 
         await browser.close()
 
-    ng = len(URLS) - ok
+    ng = len(urls) - ok
     print(f"Done: {ok} OK, {ng} NG")
     return 1 if ng > 0 else 0
 

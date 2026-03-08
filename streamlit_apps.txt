@@ -1,0 +1,52 @@
+# Streamlit Cloud app URLs — single source of truth for keepalive & health check
+# One URL per line. Lines starting with # are ignored. Blank lines are ignored.
+
+# Core apps (non-WBC)
+https://npb-prediction.streamlit.app/
+https://npb-prediction-bayes.streamlit.app/
+https://baseball-mlops.streamlit.app/
+https://yasumorishima-mlb-bat-tracking.streamlit.app/
+https://mlb-wp-engine.streamlit.app/
+
+# WBC — Pool A (San Juan)
+https://wbc-pr-batters.streamlit.app/
+https://wbc-pr-pitchers.streamlit.app/
+https://wbc-cuba-batters.streamlit.app/
+https://wbc-cuba-pitchers.streamlit.app/
+https://wbc-can-batters.streamlit.app/
+https://wbc-can-pitchers.streamlit.app/
+https://wbc-pan-batters.streamlit.app/
+https://wbc-pan-pitchers.streamlit.app/
+https://wbc-col-batters.streamlit.app/
+https://wbc-col-pitchers.streamlit.app/
+
+# WBC — Pool B (Houston)
+https://wbc-usa-batters.streamlit.app/
+https://wbc-usa-pitchers.streamlit.app/
+https://wbc-mex-batters.streamlit.app/
+https://wbc-mex-pitchers.streamlit.app/
+https://wbc-ita-batters.streamlit.app/
+https://wbc-ita-pitchers.streamlit.app/
+https://wbc-gb-batters.streamlit.app/
+https://wbc-gb-pitchers.streamlit.app/
+https://wbc-bra-batters.streamlit.app/
+https://wbc-bra-pitchers.streamlit.app/
+
+# WBC — Pool C (Tokyo)
+https://wbc-japan-batters.streamlit.app/
+https://wbc-japan-pitchers.streamlit.app/
+https://wbc-kor-batters.streamlit.app/
+https://wbc-kor-pitchers.streamlit.app/
+https://wbc-twn-batters.streamlit.app/
+https://wbc-aus-batters.streamlit.app/
+
+# WBC — Pool D (Miami)
+https://wbc-dr-batters.streamlit.app/
+https://wbc-dr-pitchers.streamlit.app/
+https://wbc-venezuela-batters.streamlit.app/
+https://wbc-venezuela-pitchers.streamlit.app/
+https://wbc-ned-batters.streamlit.app/
+https://wbc-ned-pitchers.streamlit.app/
+https://wbc-isr-batters.streamlit.app/
+https://wbc-isr-pitchers.streamlit.app/
+https://wbc-nic-batters.streamlit.app/

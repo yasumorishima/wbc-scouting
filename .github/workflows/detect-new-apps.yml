@@ -1,0 +1,83 @@
+name: Detect New Streamlit Apps
+
+on:
+  push:
+    paths:
+      - 'app_*.py'
+      - 'streamlit_apps.txt'
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for unregistered apps
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PYEOF'
+          import re, sys, subprocess, json
+          from pathlib import Path
+
+          # Load registered URL slugs
+          txt = Path("streamlit_apps.txt").read_text()
+          registered = set()
+          for line in txt.splitlines():
+              line = line.strip()
+              if line and not line.startswith("#"):
+                  m = re.match(r"https://(.+?)\.streamlit\.app", line)
+                  if m:
+                      registered.add(m.group(1))
+
+          # Find app_*.py files and derive expected slugs
+          SKIP = {"app_pitchers"}
+          missing = []
+          for f in sorted(Path(".").glob("app_*.py")):
+              if f.stem in SKIP:
+                  continue
+              parts = f.stem.replace("app_", "").split("_")
+              if parts[-1] == "pitchers":
+                  slug = f"wbc-{'-'.join(parts[:-1])}-pitchers"
+              else:
+                  slug = f"wbc-{'-'.join(parts)}-batters"
+              if slug not in registered:
+                  missing.append((f.name, f"https://{slug}.streamlit.app/"))
+
+          if not missing:
+              print(f"All app files have matching URLs in streamlit_apps.txt.")
+              sys.exit(0)
+
+          # Build issue body
+          body = "## New Streamlit apps need keepalive registration\n\n"
+          body += "| File | Expected URL |\n|---|---|\n"
+          for fname, url in missing:
+              body += f"| `{fname}` | {url} |\n"
+          body += "\nAdd these URLs to `streamlit_apps.txt` to enable automatic keepalive.\n"
+
+          print(f"Found {len(missing)} unregistered app(s):")
+          for fname, url in missing:
+              print(f"  {fname} → {url}")
+
+          # Check for existing open issue with "keepalive" label
+          result = subprocess.run(
+              ["gh", "issue", "list", "--label", "keepalive", "--state", "open", "--json", "number"],
+              capture_output=True, text=True
+          )
+          existing = json.loads(result.stdout) if result.returncode == 0 else []
+
+          if existing:
+              num = existing[0]["number"]
+              subprocess.run(["gh", "issue", "edit", str(num), "--body", body])
+              print(f"Updated existing issue #{num}")
+          else:
+              subprocess.run([
+                  "gh", "issue", "create",
+                  "--title", "New Streamlit apps missing from keepalive",
+                  "--body", body,
+                  "--label", "keepalive",
+              ])
+              print("Created new issue")
+          PYEOF
