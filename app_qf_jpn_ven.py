@@ -1673,6 +1673,61 @@ def main():
         [data-testid="stHorizontalBlock"] { gap: 0.3rem !important; }
         .stDataFrame td, .stDataFrame th { font-size: 0.8rem !important; }
     }
+    /* Player card header */
+    .player-card-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border-left: 4px solid #e94560;
+        border-radius: 8px;
+        padding: 12px 18px;
+        margin: 18px 0 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .player-card-header .order-badge {
+        background: #e94560;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 900;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .player-card-header .player-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0;
+        line-height: 1.2;
+    }
+    .player-card-header .player-meta {
+        font-size: 0.9rem;
+        color: #a0aec0;
+        margin: 2px 0 0 0;
+    }
+    /* Glossary section styling */
+    .glossary-section {
+        background: #1a1a2e;
+        border: 1px solid #2d3748;
+        border-radius: 8px;
+        padding: 10px 16px;
+        margin: 6px 0;
+    }
+    .glossary-section summary {
+        color: #a0aec0 !important;
+        font-size: 0.85rem;
+    }
+    /* Section divider */
+    .section-label {
+        background: linear-gradient(90deg, #e94560, transparent);
+        height: 2px;
+        margin: 24px 0 12px 0;
+        border-radius: 2px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -1736,21 +1791,24 @@ def main():
         lineup_df = pd.DataFrame(lineup_rows)
         st.dataframe(lineup_df, use_container_width=True, hide_index=True)
 
-        # Position abbreviation legend
-        with st.expander(
-            "Position abbreviations" if lang == "EN" else "守備ポジション略称の説明"
-        ):
-            pos_legend = POS_LABELS[lang]
-            pos_order = ["C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH"]
-            for abbr in pos_order:
-                st.markdown(f"- **{abbr}** = {pos_legend[abbr]}")
+        # Glossary — compact, visually distinct from player cards
+        _gl_col1, _gl_col2 = st.columns(2)
+        with _gl_col1:
+            with st.expander("📖 " + ("Position abbreviations" if lang == "EN" else "守備略称")):
+                pos_legend = POS_LABELS[lang]
+                pos_order = ["C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH"]
+                st.markdown(" · ".join(f"**{a}**={pos_legend[a]}" for a in pos_order))
+        with _gl_col2:
+            with st.expander("📖 " + ("Stats glossary" if lang == "EN" else "成績用語")):
+                st.markdown(t["glossary_stats"])
 
-        # Stats glossary for beginners
-        with st.expander(
-            "Stats glossary (what do AVG, OPS, etc. mean?)" if lang == "EN"
-            else "成績用語の説明（AVG・OPS等の意味）"
-        ):
-            st.markdown(t["glossary_stats"])
+        st.markdown('<div class="section-label"></div>', unsafe_allow_html=True)
+        st.subheader("🔍 " + ("選手別スカウティング" if lang == "JA" else "Individual Scouting Reports"))
+        st.caption(
+            "各選手カードを展開すると完全な分析が表示されます。"
+            if lang == "JA" else
+            "Expand each player card for the full scouting report."
+        )
 
         # --- Interactive player cards (click to expand) ---
         for p in PREDICTED_LINEUP:
@@ -1760,7 +1818,20 @@ def main():
             pdf_player = df_bat[df_bat["batter"] == player_info["mlbam_id"]]
             display_name = _name_display(p["name"], lang)
             pos_full = POS_LABELS[lang].get(p["pos"], p["pos"])
-            expander_label = f"#{p['order']} {display_name} — {p['pos']} ({pos_full}) | {player_info.get('team', '')}"
+
+            # Rich player card header
+            st.markdown(f"""<div class="player-card-header">
+                <div class="order-badge">{p['order']}</div>
+                <div>
+                    <p class="player-name">{display_name}</p>
+                    <p class="player-meta">{p['pos']} ({pos_full}) | {player_info.get('team', '')} | {
+                        '打席: ' + player_info.get('bats', '') if lang == 'JA'
+                        else 'Bats: ' + player_info.get('bats', '')
+                    }</p>
+                </div>
+            </div>""", unsafe_allow_html=True)
+
+            expander_label = ("📊 詳細分析を開く" if lang == "JA" else "📊 Open full analysis")
 
             with st.expander(expander_label):
                 if pdf_player.empty:
