@@ -254,6 +254,14 @@ TEXTS = {
         "pitching_plan_explain": "Data-driven analysis of this batter's vulnerabilities — pitch types, zones, counts, and platoon splits.",
         "hitting_plan_title": "How to Hit This Pitcher",
         "hitting_plan_explain": "Data-driven approach guide — which pitches to look for, which to lay off, and optimal count strategy.",
+        "pitching_plan_vs_lhp": "Approach with Left-Handed Pitcher",
+        "pitching_plan_vs_rhp": "Approach with Right-Handed Pitcher",
+        "hitting_plan_as_lhb": "Approach as Left-Handed Batter",
+        "hitting_plan_as_rhb": "Approach as Right-Handed Batter",
+        "defensive_positioning": "Defensive Positioning",
+        "defensive_explain": "Recommended fielder alignment based on batted ball data (spray angle, ground ball rate, pull tendency).",
+        "infield_shift": "Infield",
+        "outfield_shift": "Outfield",
     },
     "JA": {
         "page_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
@@ -403,6 +411,14 @@ TEXTS = {
         "pitching_plan_explain": "球種・ゾーン・カウント・左右の弱点をデータから分析した投手への配球プラン。",
         "hitting_plan_title": "この投手の攻略法",
         "hitting_plan_explain": "狙う球種・見逃す球・カウント戦略をデータから分析した打撃アプローチ。",
+        "pitching_plan_vs_lhp": "左投手で投げる場合の攻め方",
+        "pitching_plan_vs_rhp": "右投手で投げる場合の攻め方",
+        "hitting_plan_as_lhb": "左打者として打つ場合のアプローチ",
+        "hitting_plan_as_rhb": "右打者として打つ場合のアプローチ",
+        "defensive_positioning": "守備位置・シフト推奨",
+        "defensive_explain": "打球データ（方向・ゴロ率・引っ張り傾向）に基づく守備配置の推奨。",
+        "infield_shift": "内野",
+        "outfield_shift": "外野",
     },
 }
 
@@ -1523,6 +1539,126 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
     return "\n".join(lines)
 
 
+def generate_defensive_positioning(pdf: pd.DataFrame, player_info: dict, lang: str) -> str:
+    """Generate defensive positioning recommendation from spray chart data."""
+    bats = player_info.get("bats", "R")
+    lines = []
+
+    bip = pdf.dropna(subset=["hc_x", "hc_y"]).copy()
+    if len(bip) < 20:
+        if lang == "EN":
+            return "Insufficient batted ball data for positioning recommendation."
+        return "打球データが不足しており、守備位置の推奨はできません。"
+
+    # Spray angle analysis
+    bip["spray_angle"] = np.degrees(np.arctan2(bip["hc_x"] - 125.42, 198.27 - bip["hc_y"]))
+
+    if bats == "R":
+        pull = (bip["spray_angle"] < -15).sum()
+        oppo = (bip["spray_angle"] > 15).sum()
+        pull_side = "3B side / left field" if lang == "EN" else "三塁側・レフト方向"
+        oppo_side = "1B side / right field" if lang == "EN" else "一塁側・ライト方向"
+    else:
+        pull = (bip["spray_angle"] > 15).sum()
+        oppo = (bip["spray_angle"] < -15).sum()
+        pull_side = "1B side / right field" if lang == "EN" else "一塁側・ライト方向"
+        oppo_side = "3B side / left field" if lang == "EN" else "三塁側・レフト方向"
+
+    center = len(bip) - pull - oppo
+    pull_pct = pull / len(bip) * 100
+    oppo_pct = oppo / len(bip) * 100
+    center_pct = center / len(bip) * 100
+
+    # Batted ball type
+    bb = pdf.dropna(subset=["bb_type"])
+    gb_pct = (bb["bb_type"] == "ground_ball").sum() / len(bb) * 100 if len(bb) >= 20 else None
+    fb_pct = (bb["bb_type"] == "fly_ball").sum() / len(bb) * 100 if len(bb) >= 20 else None
+    ld_pct = (bb["bb_type"] == "line_drive").sum() / len(bb) * 100 if len(bb) >= 20 else None
+
+    # Exit velocity for depth
+    avg_ev = pdf["launch_speed"].dropna().mean() if pdf["launch_speed"].notna().any() else None
+
+    # Infield positioning
+    if lang == "EN":
+        lines.append("**Infield:**")
+        if pull_pct >= 50:
+            lines.append(f"- **Full pull shift recommended** — {pull_pct:.0f}% of batted balls go to {pull_side}")
+            if gb_pct and gb_pct >= 50:
+                lines.append(f"- SS shades toward {pull_side} (ground ball hitter, {gb_pct:.0f}% GB)")
+            else:
+                lines.append(f"- 2B/SS shift pull-heavy")
+        elif pull_pct >= 40:
+            lines.append(f"- **Shade pull-side** — {pull_pct:.0f}% pull tendency to {pull_side}")
+            lines.append(f"- Standard depth, SS shades slightly toward {pull_side}")
+        else:
+            lines.append(f"- **Standard positioning** — balanced spray (Pull {pull_pct:.0f}% / Center {center_pct:.0f}% / Oppo {oppo_pct:.0f}%)")
+
+        if gb_pct and gb_pct >= 55:
+            lines.append(f"- **Play infield in** if situation allows — high ground ball rate ({gb_pct:.0f}%)")
+        elif gb_pct and gb_pct < 35:
+            lines.append(f"- Normal/deep depth — low ground ball rate ({gb_pct:.0f}%), more fly balls")
+
+        lines.append("")
+        lines.append("**Outfield:**")
+        if pull_pct >= 45:
+            if avg_ev and avg_ev >= 90:
+                lines.append(f"- Shift all outfielders pull-heavy and deep (hard hitter, Avg EV {avg_ev:.1f} mph)")
+            else:
+                lines.append(f"- Shift outfielders pull-heavy toward {pull_side}")
+        elif oppo_pct >= 35:
+            lines.append(f"- Balanced positioning — this hitter uses the whole field ({oppo_pct:.0f}% oppo)")
+            lines.append(f"- RF/LF should not shade too far pull-side")
+        else:
+            lines.append(f"- Standard outfield alignment")
+
+        if fb_pct and fb_pct >= 45:
+            lines.append(f"- **Deep positioning** — fly ball hitter ({fb_pct:.0f}% FB)")
+            if avg_ev and avg_ev >= 90:
+                lines.append(f"- Warning: hard fly balls (Avg EV {avg_ev:.1f} mph) — extra depth needed")
+        elif fb_pct and fb_pct < 30:
+            lines.append(f"- Can play slightly shallow — low fly ball rate ({fb_pct:.0f}%)")
+    else:
+        lines.append("**内野:**")
+        if pull_pct >= 50:
+            lines.append(f"- **フルシフト推奨** — 打球の{pull_pct:.0f}%が{pull_side}方向")
+            if gb_pct and gb_pct >= 50:
+                lines.append(f"- SSは{pull_side}に寄せる（ゴロ打者、{gb_pct:.0f}%）")
+            else:
+                lines.append(f"- 二遊間をプル方向にシフト")
+        elif pull_pct >= 40:
+            lines.append(f"- **プル側にやや寄せる** — 引っ張り{pull_pct:.0f}%（{pull_side}方向）")
+            lines.append(f"- 標準深さ、SSは{pull_side}にやや寄せ")
+        else:
+            lines.append(f"- **標準配置** — バランス型（プル{pull_pct:.0f}% / センター{center_pct:.0f}% / 逆方向{oppo_pct:.0f}%）")
+
+        if gb_pct and gb_pct >= 55:
+            lines.append(f"- **前進守備も選択肢** — ゴロ率が高い（{gb_pct:.0f}%）")
+        elif gb_pct and gb_pct < 35:
+            lines.append(f"- 通常〜やや深めの守備位置 — ゴロ率が低い（{gb_pct:.0f}%）")
+
+        lines.append("")
+        lines.append("**外野:**")
+        if pull_pct >= 45:
+            if avg_ev and avg_ev >= 90:
+                lines.append(f"- 全外野手をプル側＆深めに配置（強い打球、平均EV {avg_ev:.1f} mph）")
+            else:
+                lines.append(f"- 外野手を{pull_side}にシフト")
+        elif oppo_pct >= 35:
+            lines.append(f"- バランス配置 — 広角に打つ打者（逆方向{oppo_pct:.0f}%）")
+            lines.append(f"- RF/LFをプル側に寄せすぎない")
+        else:
+            lines.append(f"- 標準的な外野配置")
+
+        if fb_pct and fb_pct >= 45:
+            lines.append(f"- **深めに守る** — フライ打者（{fb_pct:.0f}%）")
+            if avg_ev and avg_ev >= 90:
+                lines.append(f"- 注意: 強いフライが多い（平均EV {avg_ev:.1f} mph）— さらに深く")
+        elif fb_pct and fb_pct < 30:
+            lines.append(f"- やや浅めに守れる — フライ率が低い（{fb_pct:.0f}%）")
+
+    return "\n".join(lines)
+
+
 def _name_display(name: str, lang: str) -> str:
     """Get bilingual display name."""
     p = PLAYER_BY_NAME.get(name) or PITCHER_BY_NAME.get(name)
@@ -2086,6 +2222,33 @@ def main():
             pitching_plan = generate_pitching_plan(pdf, stats, player_info, lang)
             st.success(pitching_plan)
 
+            # Left-handed pitcher approach
+            pdf_vs_l = pdf[pdf["p_throws"] == "L"]
+            pdf_vs_r = pdf[pdf["p_throws"] == "R"]
+            _sl_pp, col_pp_l, col_pp_r, _sr_pp = st.columns([0.5, 2, 2, 0.5])
+            with col_pp_l:
+                st.markdown(f"**{t['pitching_plan_vs_lhp']}**")
+                if not pdf_vs_l.empty and len(pdf_vs_l) >= 30:
+                    stats_vs_l = batting_stats(pdf_vs_l)
+                    plan_vs_l = generate_pitching_plan(pdf_vs_l, stats_vs_l, player_info, lang)
+                    st.info(plan_vs_l)
+                else:
+                    st.write(t["no_data"])
+            with col_pp_r:
+                st.markdown(f"**{t['pitching_plan_vs_rhp']}**")
+                if not pdf_vs_r.empty and len(pdf_vs_r) >= 30:
+                    stats_vs_r = batting_stats(pdf_vs_r)
+                    plan_vs_r = generate_pitching_plan(pdf_vs_r, stats_vs_r, player_info, lang)
+                    st.info(plan_vs_r)
+                else:
+                    st.write(t["no_data"])
+
+            # === Defensive Positioning ===
+            st.markdown(f"### {t['defensive_positioning']}")
+            st.caption(t["defensive_explain"])
+            def_pos = generate_defensive_positioning(pdf, player_info, lang)
+            st.warning(def_pos)
+
             # --- Individual radar chart (AVG/OBP/SLG/K%/BB% vs MLB avg) ---
             _MLB_AVG_R = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
             radar_cats = ["AVG", "OBP", "SLG",
@@ -2379,6 +2542,27 @@ def main():
             hitting_plan = generate_hitting_plan(sp_data, sp_stats, sp_info, lang)
             st.success(hitting_plan)
 
+            # Split by batter handedness
+            sp_vs_lhb = sp_data[sp_data["stand"] == "L"]
+            sp_vs_rhb = sp_data[sp_data["stand"] == "R"]
+            _sl_hp, col_hp_l, col_hp_r, _sr_hp = st.columns([0.5, 2, 2, 0.5])
+            with col_hp_l:
+                st.markdown(f"**{t['hitting_plan_as_lhb']}**")
+                if not sp_vs_lhb.empty and len(sp_vs_lhb) >= 30:
+                    stats_lhb = pitching_stats(sp_vs_lhb)
+                    plan_lhb = generate_hitting_plan(sp_vs_lhb, stats_lhb, sp_info, lang)
+                    st.info(plan_lhb)
+                else:
+                    st.write(t["no_data"])
+            with col_hp_r:
+                st.markdown(f"**{t['hitting_plan_as_rhb']}**")
+                if not sp_vs_rhb.empty and len(sp_vs_rhb) >= 30:
+                    stats_rhb = pitching_stats(sp_vs_rhb)
+                    plan_rhb = generate_hitting_plan(sp_vs_rhb, stats_rhb, sp_info, lang)
+                    st.info(plan_rhb)
+                else:
+                    st.write(t["no_data"])
+
             st.divider()
 
             # Arsenal table
@@ -2586,6 +2770,27 @@ def main():
             st.caption(t["hitting_plan_explain"])
             rp_hitting_plan = generate_hitting_plan(rp_data, rp_stats, pitcher_info, lang)
             st.success(rp_hitting_plan)
+
+            # Split by batter handedness
+            rp_vs_lhb = rp_data[rp_data["stand"] == "L"]
+            rp_vs_rhb = rp_data[rp_data["stand"] == "R"]
+            _sl_rphp, col_rphp_l, col_rphp_r, _sr_rphp = st.columns([0.5, 2, 2, 0.5])
+            with col_rphp_l:
+                st.markdown(f"**{t['hitting_plan_as_lhb']}**")
+                if not rp_vs_lhb.empty and len(rp_vs_lhb) >= 30:
+                    rp_stats_lhb = pitching_stats(rp_vs_lhb)
+                    rp_plan_lhb = generate_hitting_plan(rp_vs_lhb, rp_stats_lhb, pitcher_info, lang)
+                    st.info(rp_plan_lhb)
+                else:
+                    st.write(t["no_data"])
+            with col_rphp_r:
+                st.markdown(f"**{t['hitting_plan_as_rhb']}**")
+                if not rp_vs_rhb.empty and len(rp_vs_rhb) >= 30:
+                    rp_stats_rhb = pitching_stats(rp_vs_rhb)
+                    rp_plan_rhb = generate_hitting_plan(rp_vs_rhb, rp_stats_rhb, pitcher_info, lang)
+                    st.info(rp_plan_rhb)
+                else:
+                    st.write(t["no_data"])
 
             # Arsenal summary
             rp_arsenal = arsenal_table(rp_data, t)
