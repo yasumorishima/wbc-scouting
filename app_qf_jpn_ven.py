@@ -168,7 +168,7 @@ TEXTS = {
         "vs_lhp": "vs LHP", "vs_rhp": "vs RHP",
         "vs_lhb": "vs LHB", "vs_rhb": "vs RHB",
         "no_data": "No data available for this selection.",
-        "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
+        "danger_zone": "BA = Batting Average (hits ÷ at-bats). Red = danger zone (high BA), Blue = attack zone (low BA)",
         "team_radar_title": "Team Batting Profile (Predicted Lineup)",
         "arsenal": "Pitch Arsenal",
         "usage_pct": "Usage%",
@@ -243,7 +243,7 @@ TEXTS = {
         "ahead": "Hitter Ahead (B > S)",
         "behind": "Hitter Behind (S > B)",
         "even": "Even (B = S)",
-        "danger_zone_xwoba": "Red = high xwOBA (danger), Blue = low xwOBA (attack)",
+        "danger_zone_xwoba": "xwOBA = Expected Weighted On-Base Average — estimates true hitting quality from exit velocity & launch angle, removing luck. MLB avg ≈ .311. Red = high xwOBA (danger), Blue = low xwOBA (attack)",
         "glossary_batted": (
             "- **Pull%** = Hit to batter's pull side\n"
             "- **GB%** = Ground ball rate\n- **LD%** = Line drive rate\n- **FB%** = Fly ball rate\n"
@@ -323,7 +323,7 @@ TEXTS = {
         "vs_lhp": "vs 左投手", "vs_rhp": "vs 右投手",
         "vs_lhb": "vs 左打者", "vs_rhb": "vs 右打者",
         "no_data": "データがありません。",
-        "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
+        "danger_zone": "BA = 打率（安打数÷打数）。赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
         "team_radar_title": "チーム打線の特徴（予想スタメン）",
         "arsenal": "球種構成",
         "usage_pct": "使用率",
@@ -397,7 +397,7 @@ TEXTS = {
         "ahead": "有利カウント (B > S)",
         "behind": "不利カウント (S > B)",
         "even": "イーブン (B = S)",
-        "danger_zone_xwoba": "赤 = 高xwOBA（危険）、青 = 低xwOBA（攻めるゾーン）",
+        "danger_zone_xwoba": "xwOBA（期待加重出塁率）= 打球速度と角度から算出した「運を排除した」打撃の質。MLB平均 ≈ .311。赤 = 高xwOBA（危険）、青 = 低xwOBA（攻めるゾーン）",
         "glossary_batted": (
             "- **プル%** = 引っ張り方向への打球割合\n"
             "- **ゴロ%** = ゴロの割合\n- **ライナー%** = ライナーの割合\n- **フライ%** = フライの割合\n"
