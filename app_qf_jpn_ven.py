@@ -239,6 +239,17 @@ TEXTS = {
             "- **Chase%** = Swing rate on pitches outside the zone\n"
             "- **Put Away%** = Strikeout rate on this pitch"
         ),
+        "pitch_selection_by_count": "Pitch Selection by Count",
+        "pitch_selection_explain": "Shows what pitch types the pitcher throws in different count situations. Use this to predict what pitch is coming.",
+        "count_ahead_pitcher": "Pitcher Ahead (S > B)",
+        "count_behind_pitcher": "Pitcher Behind (B > S)",
+        "count_even_pitcher": "Even Count (B = S)",
+        "count_first_pitch": "First Pitch (0-0)",
+        "count_two_strikes": "Two Strikes (x-2)",
+        "game_plan": "Game Plan: How Japan Wins",
+        "game_plan_batting": "Batting Strategy vs Venezuela Pitching",
+        "game_plan_pitching": "Pitching Strategy vs Venezuela Lineup",
+        "team_weaknesses_title": "Venezuela Team Weaknesses",
     },
     "JA": {
         "page_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
@@ -373,6 +384,17 @@ TEXTS = {
             "- **チェイス率（Chase%）** = ゾーン外の球に手を出す割合\n"
             "- **決め球率（Put Away%）** = この球種で三振を奪う割合"
         ),
+        "pitch_selection_by_count": "カウント別球種選択",
+        "pitch_selection_explain": "カウント状況ごとに投手がどの球種を投げるかの分布。打席でどの球を予測すべきかの参考に。",
+        "count_ahead_pitcher": "投手有利 (S > B)",
+        "count_behind_pitcher": "投手不利 (B > S)",
+        "count_even_pitcher": "イーブン (B = S)",
+        "count_first_pitch": "初球 (0-0)",
+        "count_two_strikes": "2ストライク (x-2)",
+        "game_plan": "ゲームプラン: 日本の勝ち方",
+        "game_plan_batting": "打撃戦略 — ベネズエラ投手陣攻略",
+        "game_plan_pitching": "投手戦略 — ベネズエラ打線対策",
+        "team_weaknesses_title": "ベネズエラ打線の弱点",
     },
 }
 
@@ -1054,6 +1076,42 @@ def count_category(balls: int, strikes: int) -> str:
     return "even"
 
 
+def pitch_selection_by_count(df: pd.DataFrame, t, lang: str):
+    """Show pitch type distribution for different count situations."""
+    valid = df.dropna(subset=["pitch_type", "balls", "strikes"]).copy()
+    valid["balls"] = valid["balls"].astype(int)
+    valid["strikes"] = valid["strikes"].astype(int)
+
+    situations = {
+        t["count_first_pitch"]: valid[(valid["balls"] == 0) & (valid["strikes"] == 0)],
+        t["count_ahead_pitcher"]: valid[valid["strikes"] > valid["balls"]],
+        t["count_behind_pitcher"]: valid[valid["balls"] > valid["strikes"]],
+        t["count_even_pitcher"]: valid[(valid["balls"] == valid["strikes"]) & (valid["balls"] > 0)],
+        t["count_two_strikes"]: valid[valid["strikes"] == 2],
+    }
+
+    rows = []
+    for sit_name, sit_df in situations.items():
+        if sit_df.empty:
+            continue
+        total = len(sit_df)
+        top_types = sit_df["pitch_type"].value_counts().head(6)
+        pitch_parts = []
+        for pt, cnt in top_types.items():
+            label = PITCH_LABELS.get(pt, pt)
+            pct = cnt / total * 100
+            pitch_parts.append(f"{label} {pct:.0f}%")
+        rows.append({
+            ("Situation" if lang == "EN" else "\u72b6\u6cc1"): sit_name,
+            ("Pitches" if lang == "EN" else "\u7403\u6570"): total,
+            ("Distribution" if lang == "EN" else "\u7403\u7a2e\u5206\u5e03"): " | ".join(pitch_parts),
+        })
+
+    if rows:
+        return pd.DataFrame(rows)
+    return pd.DataFrame()
+
+
 def _name_display(name: str, lang: str) -> str:
     """Get bilingual display name."""
     p = PLAYER_BY_NAME.get(name) or PITCHER_BY_NAME.get(name)
@@ -1353,6 +1411,123 @@ def main():
         # Key tendencies
         st.subheader(t["key_tendencies"])
         st.info(t["tendency_text"])
+
+        st.divider()
+
+        # ===== GAME PLAN =====
+        st.header(t["game_plan"])
+
+        # Team weakness analysis (auto-generated from data)
+        st.subheader(t["team_weaknesses_title"])
+        weakness_points = []
+        high_k_batters = []
+        platoon_weak_batters = []
+        low_bb_batters = []
+
+        for p in PREDICTED_LINEUP:
+            player_info = PLAYER_BY_NAME.get(p["name"])
+            if not player_info:
+                continue
+            pdf_gp = df_bat[df_bat["batter"] == player_info["mlbam_id"]]
+            if pdf_gp.empty:
+                continue
+            s_gp = batting_stats(pdf_gp)
+            display = _name_display(p["name"], lang)
+
+            if s_gp["K%"] >= 22.0:
+                high_k_batters.append(f"{display} ({s_gp['K%']:.1f}%)")
+            if s_gp["BB%"] < 7.0:
+                low_bb_batters.append(f"{display} ({s_gp['BB%']:.1f}%)")
+
+            # Check platoon split
+            vs_l_gp = pdf_gp[pdf_gp["p_throws"] == "L"]
+            vs_r_gp = pdf_gp[pdf_gp["p_throws"] == "R"]
+            if not vs_l_gp.empty and not vs_r_gp.empty:
+                sl_gp = batting_stats(vs_l_gp)
+                sr_gp = batting_stats(vs_r_gp)
+                if sl_gp["PA"] >= 30 and sr_gp["PA"] >= 30:
+                    if sl_gp["OPS"] < sr_gp["OPS"] - 0.080:
+                        if lang == "EN":
+                            platoon_weak_batters.append(f"{display} (OPS .{int(sl_gp['OPS']*1000):03d} vs LHP)")
+                        else:
+                            platoon_weak_batters.append(f"{display}\uff08\u5de6\u6295\u624bOPS .{int(sl_gp['OPS']*1000):03d}\uff09")
+                    elif sr_gp["OPS"] < sl_gp["OPS"] - 0.080:
+                        if lang == "EN":
+                            platoon_weak_batters.append(f"{display} (OPS .{int(sr_gp['OPS']*1000):03d} vs RHP)")
+                        else:
+                            platoon_weak_batters.append(f"{display}\uff08\u53f3\u6295\u624bOPS .{int(sr_gp['OPS']*1000):03d}\uff09")
+
+        if high_k_batters:
+            if lang == "EN":
+                st.markdown(f"**High K% batters (target with strikeout pitching):** {', '.join(high_k_batters)}")
+            else:
+                st.markdown(f"**\u4e09\u632f\u7387\u306e\u9ad8\u3044\u6253\u8005\uff08\u4e09\u632f\u3092\u72d9\u3048\u308b\uff09:** {', '.join(high_k_batters)}")
+
+        if low_bb_batters:
+            if lang == "EN":
+                st.markdown(f"**Aggressive batters (low BB%, expand the zone):** {', '.join(low_bb_batters)}")
+            else:
+                st.markdown(f"**\u7a4d\u6975\u7684\u306a\u6253\u8005\uff08\u56db\u7403\u7387\u304c\u4f4e\u3044\uff1d\u30be\u30fc\u30f3\u5916\u3092\u632f\u308a\u3084\u3059\u3044\uff09:** {', '.join(low_bb_batters)}")
+
+        if platoon_weak_batters:
+            if lang == "EN":
+                st.markdown(f"**Platoon vulnerabilities (exploit with matchups):** {', '.join(platoon_weak_batters)}")
+            else:
+                st.markdown(f"**\u5de6\u53f3\u5dee\u304c\u5927\u304d\u3044\u6253\u8005\uff08\u30de\u30c3\u30c1\u30a2\u30c3\u30d7\u3067\u653b\u3081\u308b\uff09:** {', '.join(platoon_weak_batters)}")
+
+        # Batting strategy
+        st.subheader(t["game_plan_batting"])
+        if lang == "EN":
+            st.success(
+                "**vs Ranger Su\u00e1rez (LHP starter):**\n"
+                "- Be patient early \u2014 he is a pitch-to-contact pitcher (low K%). "
+                "Force him to throw strikes and wait for the pitch to drive.\n"
+                "- Against RHB: the changeup down and away generates whiffs but hangs when elevated. Lay off the low change, punish mistakes up.\n"
+                "- Against LHB: his sinker runs arm-side. Look for pitches over the inner half.\n\n"
+                "**vs Bullpen:**\n"
+                "- Jos\u00e9 Butt\u00f3 appeared in ALL 4 Pool D games \u2014 potential fatigue. If he enters, "
+                "look for diminished velocity and hanging offspeed.\n"
+                "- Bazardo is a multi-inning bridge \u2014 be aggressive early in his outings before he settles."
+            )
+        else:
+            st.success(
+                "**vs \u30ec\u30f3\u30b8\u30e3\u30fc\u30fb\u30b9\u30a2\u30ec\u30b9\uff08\u5de6\u8155\u5148\u767a\uff09:**\n"
+                "- \u65e9\u3044\u30ab\u30a6\u30f3\u30c8\u3067\u7121\u7406\u306b\u4ed5\u639b\u3051\u306a\u3044\u3002\u596a\u4e09\u632f\u7387\u304c\u4f4e\u3044\u6295\u624b\u306a\u306e\u3067\u3001\u7518\u3044\u7403\u3092\u5f85\u3064\u3002\n"
+                "- \u53f3\u6253\u8005: \u5916\u89d2\u4f4e\u3081\u306e\u30c1\u30a7\u30f3\u30b8\u30a2\u30c3\u30d7\u306f\u7a7a\u632f\u308a\u3092\u53d6\u308c\u308b\u304c\u3001\u9ad8\u3081\u306b\u6d6e\u304f\u3068\u6253\u3066\u308b\u3002\u4f4e\u3081\u306f\u898b\u9003\u3057\u3001\u9ad8\u3081\u3092\u72d9\u3046\u3002\n"
+                "- \u5de6\u6253\u8005: \u30b7\u30f3\u30ab\u30fc\u304c\u30a2\u30fc\u30e0\u5074\u306b\u9003\u3052\u308b\u3002\u30a4\u30f3\u30b3\u30fc\u30b9\u306e\u7403\u306b\u72d9\u3044\u3092\u7d5e\u308b\u3002\n\n"
+                "**vs \u30d6\u30eb\u30da\u30f3:**\n"
+                "- \u30db\u30bb\u30fb\u30d6\u30c3\u30c8\u306f\u30d7\u30fc\u30ebD\u51684\u8a66\u5408\u306b\u767b\u677f \u2014 \u75b2\u52b4\u306e\u53ef\u80fd\u6027\u5927\u3002"
+                "\u767b\u677f\u6642\u306f\u7403\u901f\u4f4e\u4e0b\u3084\u5909\u5316\u7403\u306e\u629c\u3051\u3092\u898b\u9003\u3055\u306a\u3044\u3002\n"
+                "- \u30d0\u30b5\u30eb\u30c9\u306f\u30a4\u30cb\u30f3\u30b0\u8de8\u304e\u306e\u4e2d\u7d99\u304e\u3002\u767b\u677f\u5e8f\u76e4\u306b\u7a4d\u6975\u7684\u306b\u4ed5\u639b\u3051\u308b\u3002"
+            )
+
+        # Pitching strategy
+        st.subheader(t["game_plan_pitching"])
+        if lang == "EN":
+            st.success(
+                "**Top of Order (1-4):**\n"
+                "- Acu\u00f1a Jr.: Elite talent. Don't let him beat you \u2014 pitch carefully, "
+                "use offspeed away. If he's struggling, still don't give in.\n"
+                "- Arr\u00e1ez: Best contact hitter in MLB. Do NOT give him anything in the zone "
+                "early in counts. Live with walks if necessary.\n"
+                "- Contreras (W.): Power threat. Attack with elevated fastballs and breaking balls down.\n\n"
+                "**Middle/Bottom (5-9):**\n"
+                "- Torres, Tovar: Can expand the zone \u2014 use slider/sweeper glove-side.\n"
+                "- S. Perez: Aggressive swinger, low BB%. Throw strikes early, expand late.\n"
+                "- Abreu: Solid but not elite \u2014 compete in the zone with good stuff."
+            )
+        else:
+            st.success(
+                "**\u4e0a\u4f4d\u6253\u7dda (1\u301c4\u756a):**\n"
+                "- \u30a2\u30af\u30fc\u30cb\u30e3Jr.: \u30a8\u30ea\u30fc\u30c8\u3002\u30b9\u30c8\u30ec\u30fc\u30c8\u52dd\u8ca0\u3092\u907f\u3051\u3001\u5909\u5316\u7403\u3067\u5916\u3059\u3002\u6253\u305f\u308c\u3066\u3082\u5358\u6253\u306b\u6291\u3048\u308b\u3002\n"
+                "- \u30a2\u30e9\u30a8\u30b9: MLB\u6700\u9ad8\u306e\u30b3\u30f3\u30bf\u30af\u30c8\u30d2\u30c3\u30bf\u30fc\u3002\u5e8f\u76e4\u306b\u30be\u30fc\u30f3\u5185\u3092\u6295\u3052\u306a\u3044\u3002"
+                "\u56db\u7403\u3092\u6050\u308c\u305a\u3001\u6253\u305f\u305b\u3066\u53d6\u308b\u7403\u3092\u5fb9\u5e95\u3002\n"
+                "- W.\u30b3\u30f3\u30c8\u30ec\u30e9\u30b9: \u30d1\u30ef\u30fc\u30d2\u30c3\u30bf\u30fc\u3002\u9ad8\u3081\u306e\u901f\u7403\u3068\u4f4e\u3081\u306e\u5909\u5316\u7403\u3067\u653b\u3081\u308b\u3002\n\n"
+                "**\u4e2d\u8ef8\u301c\u4e0b\u4f4d (5\u301c9\u756a):**\n"
+                "- \u30c8\u30fc\u30ec\u30b9\u3001\u30c8\u30d0\u30fc: \u30be\u30fc\u30f3\u5916\u3092\u632f\u308b\u50be\u5411\u3002\u30b9\u30e9\u30a4\u30c0\u30fc\u30fb\u30b9\u30a6\u30a3\u30fc\u30d1\u30fc\u3067\u30b0\u30e9\u30d6\u5074\u306b\u653b\u3081\u308b\u3002\n"
+                "- S.\u30da\u30ec\u30b9: \u7a4d\u6975\u7684\u6253\u8005\uff08\u56db\u7403\u7387\u4f4e\u3044\uff09\u3002\u5e8f\u76e4\u30b9\u30c8\u30e9\u30a4\u30af\u5148\u884c\u3001\u8ffd\u3044\u8fbc\u3093\u3067\u304b\u3089\u5916\u3059\u3002\n"
+                "- \u30a2\u30d6\u30ec\u30a6: \u5b89\u5b9a\u578b\u3060\u304c\u30a8\u30ea\u30fc\u30c8\u3067\u306f\u306a\u3044\u3002\u7403\u5a01\u3067\u52dd\u8ca0\u3057\u3066\u69cb\u308f\u306a\u3044\u3002"
+            )
 
     # ===================================================================
     # TAB 2: Venezuela Lineup Scouting
@@ -1855,6 +2030,61 @@ def main():
 
             st.divider()
 
+            # Pitch Selection by Count
+            st.subheader(t["pitch_selection_by_count"])
+            st.caption(t["pitch_selection_explain"])
+            ps_table = pitch_selection_by_count(sp_data, t, lang)
+            if not ps_table.empty:
+                st.dataframe(ps_table, use_container_width=True, hide_index=True)
+
+            # Count-by-count pitcher performance
+            st.markdown(f"**{t['count_perf']}**")
+            st.caption(t["count_explain"])
+
+            pit_count_df = sp_data.dropna(subset=["balls", "strikes"]).copy()
+            pit_count_df["balls"] = pit_count_df["balls"].astype(int)
+            pit_count_df["strikes"] = pit_count_df["strikes"].astype(int)
+
+            all_counts_pit = [
+                (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
+                (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
+            ]
+
+            pit_count_rows = []
+            for b, s in all_counts_pit:
+                cat = count_category(b, s)
+                tag = {"ahead": t["behind"], "behind": t["ahead"], "even": t["even"]}[cat]  # inverted for pitcher perspective
+                cdf = pit_count_df[(pit_count_df["balls"] == b) & (pit_count_df["strikes"] == s)]
+                if cdf.empty:
+                    continue
+                ps = pitching_stats(cdf)
+                if ps["PA"] < 3:
+                    continue
+                pit_count_rows.append({
+                    ("Count" if lang == "EN" else "\u30ab\u30a6\u30f3\u30c8"): f"{b}-{s}",
+                    ("Type" if lang == "EN" else "\u5206\u985e"): tag,
+                    "PA": ps["PA"],
+                    t["opp_avg"]: ps["Opp AVG"],
+                    t["k_pct"]: ps["K%"],
+                    t["bb_pct"]: ps["BB%"],
+                    t["whiff_pct"]: ps["Whiff%"],
+                })
+
+            if pit_count_rows:
+                pit_count_table = pd.DataFrame(pit_count_rows)
+                st.dataframe(
+                    pit_count_table.style.format({
+                        t["opp_avg"]: "{:.3f}",
+                        t["k_pct"]: "{:.1f}",
+                        t["bb_pct"]: "{:.1f}",
+                        t["whiff_pct"]: "{:.1f}",
+                    }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            st.divider()
+
             # Where to attack
             st.subheader(t["where_to_attack"])
             st.success(t["attack_text_suarez"])
@@ -1935,10 +2165,42 @@ def main():
                 st.caption(t["arsenal_explain"])
                 st.dataframe(rp_arsenal, use_container_width=True, hide_index=True)
 
-            # Platoon splits
+            # Movement chart
+            st.markdown(f"**{t['movement_chart']}**")
+            st.caption(t["movement_note"])
+            fig_rp_m, ax_rp_m = plt.subplots(figsize=(8, 5), facecolor="#0e1117")
+            ax_rp_m.set_facecolor("#1a1a2e")
+            for spine in ax_rp_m.spines.values():
+                spine.set_color("white")
+            draw_movement_chart(rp_data, _name_display(reliever_name, lang), ax_rp_m, density=True)
+            fig_rp_m.tight_layout(rect=[0, 0, 0.82, 1])
+            _sl_rp_mv, _cc_rp_mv, _sr_rp_mv = st.columns([1, 4, 1])
+            with _cc_rp_mv:
+                st.pyplot(fig_rp_m, use_container_width=True)
+            plt.close(fig_rp_m)
+
+            # Zone heatmaps (usage + opp BA)
+            st.markdown(f"**{t['zone_heatmap_pitch']}**")
+            for _rp_hm_idx, (rp_hm_metric, rp_hm_title) in enumerate([("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]):
+                fig_rp_hm, ax_rp_hm = _dark_fig(figsize=(6, 5))
+                im_rp_hm = draw_zone_heatmap(rp_data, rp_hm_metric, rp_hm_title, ax_rp_hm, lang=lang)
+                cb_rp_hm = fig_rp_hm.colorbar(im_rp_hm, ax=ax_rp_hm, fraction=0.046, pad=0.04)
+                cb_rp_hm.ax.tick_params(colors="white")
+                fig_rp_hm.tight_layout()
+                _sl_rp_hm, _cc_rp_hm, _sr_rp_hm = st.columns([1, 4, 1])
+                with _cc_rp_hm:
+                    st.pyplot(fig_rp_hm, use_container_width=True)
+                    if rp_hm_metric == "usage":
+                        st.caption(t["zone_usage_explain"])
+                    else:
+                        st.caption(t["zone_opp_ba_explain"])
+                plt.close(fig_rp_hm)
+
+            # Platoon splits with zone heatmaps
             st.markdown(f"**{t['platoon']}**")
-            rp_col_l, rp_col_r = st.columns(2)
-            for col, stand, label in [(rp_col_l, "L", t["vs_lhb"]), (rp_col_r, "R", t["vs_rhb"])]:
+            st.caption(t["platoon_pitcher_explain"])
+            _sl_rp_pl, _cl_rp_pl, _cr_rp_pl, _sr_rp_pl = st.columns([0.5, 2, 2, 0.5])
+            for col, stand, label in [(_cl_rp_pl, "L", t["vs_lhb"]), (_cr_rp_pl, "R", t["vs_rhb"])]:
                 with col:
                     st.markdown(f"**{label}**")
                     split_df = rp_data[rp_data["stand"] == stand]
@@ -1951,6 +2213,13 @@ def main():
                     sm2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}")
                     sm3.metric(t["k_pct"], f"{ss['K%']:.1f}%")
                     sm4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%")
+
+                    # Zone heatmap per platoon side
+                    fig_rp_z, ax_rp_z = _dark_fig(figsize=(5, 4))
+                    draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_rp_z, lang=lang)
+                    fig_rp_z.tight_layout()
+                    st.pyplot(fig_rp_z, use_container_width=True)
+                    plt.close(fig_rp_z)
 
 
 if __name__ == "__main__":
