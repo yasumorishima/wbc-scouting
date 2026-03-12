@@ -8,6 +8,7 @@ Pool D. All analysis is based on Venezuela players' MLB Statcast data.
 import pathlib
 
 import matplotlib.patches as patches
+import matplotlib.path as mpath
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import matplotlib_fontja  # noqa: F401 — enables Japanese font
@@ -178,6 +179,35 @@ TEXTS = {
         "zone_heatmap_pitch": "Pitch Location Heatmap",
         "usage_heatmap": "Usage by Zone",
         "ba_heatmap": "Batting Avg by Zone",
+        "xwoba_heatmap": "xwOBA by Zone",
+        "zone_5x5": "Zone Heatmap (5x5)",
+        "spray_chart": "Spray Chart",
+        "spray_caption": "Shows where each batted ball landed on the field",
+        "batted_ball": "Batted Ball Profile",
+        "density_map": "Hit Density Map",
+        "pull_pct": "Pull%",
+        "cent_pct": "Center%",
+        "oppo_pct": "Oppo%",
+        "gb_pct": "GB%",
+        "ld_pct": "LD%",
+        "fb_pct": "FB%",
+        "avg_ev": "Avg EV (mph)",
+        "avg_la": "Avg LA (deg)",
+        "count_perf": "Performance by Count",
+        "count_explain": (
+            "Ahead = ball count > strike count (e.g. 2-1, 3-0). "
+            "Behind = strike count > ball count (e.g. 0-2, 1-2). "
+            "Even = same count (e.g. 1-1, 2-2)."
+        ),
+        "ahead": "Hitter Ahead (B > S)",
+        "behind": "Hitter Behind (S > B)",
+        "even": "Even (B = S)",
+        "danger_zone_xwoba": "Red = high xwOBA (danger), Blue = low xwOBA (attack)",
+        "glossary_batted": (
+            "- **Pull%** = Hit to batter's pull side\n"
+            "- **GB%** = Ground ball rate\n- **LD%** = Line drive rate\n- **FB%** = Fly ball rate\n"
+            "- **Avg EV** = Average exit velocity (mph)\n- **Avg LA** = Average launch angle (degrees)"
+        ),
     },
     "JA": {
         "page_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
@@ -267,6 +297,35 @@ TEXTS = {
         "zone_heatmap_pitch": "配球ヒートマップ",
         "usage_heatmap": "ゾーン別投球分布",
         "ba_heatmap": "ゾーン別 打率",
+        "xwoba_heatmap": "ゾーン別 xwOBA",
+        "zone_5x5": "ゾーンヒートマップ (5x5)",
+        "spray_chart": "スプレーチャート（打球方向図）",
+        "spray_caption": "打球がフィールドのどこに飛んだかの分布図",
+        "batted_ball": "打球傾向",
+        "density_map": "打球密度マップ",
+        "pull_pct": "プル%（引っ張り）",
+        "cent_pct": "センター%",
+        "oppo_pct": "逆方向%（流し打ち）",
+        "gb_pct": "ゴロ%",
+        "ld_pct": "ライナー%",
+        "fb_pct": "フライ%",
+        "avg_ev": "平均打球速度 (mph)",
+        "avg_la": "平均打球角度 (度)",
+        "count_perf": "カウント別パフォーマンス",
+        "count_explain": (
+            "有利カウント = ボール数 > ストライク数（例: 2-1, 3-0）。"
+            "不利カウント = ストライク数 > ボール数（例: 0-2, 1-2）。"
+            "イーブン = 同数（例: 1-1, 2-2）。"
+        ),
+        "ahead": "有利カウント (B > S)",
+        "behind": "不利カウント (S > B)",
+        "even": "イーブン (B = S)",
+        "danger_zone_xwoba": "赤 = 高xwOBA（危険）、青 = 低xwOBA（攻めるゾーン）",
+        "glossary_batted": (
+            "- **プル%** = 引っ張り方向への打球割合\n"
+            "- **ゴロ%** = ゴロの割合\n- **ライナー%** = ライナーの割合\n- **フライ%** = フライの割合\n"
+            "- **平均打球速度** = 打球のスピード（mph）\n- **平均打球角度** = 打球の打ち出し角度"
+        ),
     },
 }
 
@@ -568,6 +627,19 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
                     grid[i, j] = cell_count / total * 100
         vmin, vmax = 0, 10
         cmap = plt.cm.YlOrRd.copy()
+    elif metric == "xwoba":
+        valid = valid.dropna(subset=["estimated_woba_using_speedangle"])
+        value_col = "estimated_woba_using_speedangle"
+        grid = np.full((5, 5), np.nan)
+        for i in range(5):
+            for j in range(5):
+                mask = ((valid["plate_x"] >= x_bins[j]) & (valid["plate_x"] < x_bins[j + 1])
+                        & (valid["plate_z"] >= z_bins[i]) & (valid["plate_z"] < z_bins[i + 1]))
+                cell = valid.loc[mask, value_col]
+                if len(cell) >= 5:
+                    grid[i, j] = cell.mean()
+        vmin, vmax = 0.150, 0.500
+        cmap = plt.cm.RdYlGn.copy()
     else:  # ba
         valid = valid[valid["events"].isin(_AB_EVENTS)]
         valid["is_hit"] = valid["events"].isin(_HIT_EVENTS).astype(int)
@@ -626,14 +698,23 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
         4: (1, 0), 5: (1, 1), 6: (1, 2),
         7: (0, 0), 8: (0, 1), 9: (0, 2),
     }
-    vmin, vmax = 0, 0.450
+
+    if metric == "ba":
+        vmin, vmax = 0, 0.450
+    else:  # xwoba
+        vmin, vmax = 0.150, 0.500
 
     for zone_num, (row, col) in zone_map.items():
         zdf = valid[valid["zone"] == zone_num]
-        ab = zdf[zdf["events"].isin(_AB_EVENTS)]
-        hits = zdf[zdf["events"].isin(_HIT_EVENTS)]
-        if len(ab) >= 5:
-            grid[row, col] = len(hits) / len(ab)
+        if metric == "ba":
+            ab = zdf[zdf["events"].isin(_AB_EVENTS)]
+            hits = zdf[zdf["events"].isin(_HIT_EVENTS)]
+            if len(ab) >= 5:
+                grid[row, col] = len(hits) / len(ab)
+        else:  # xwoba
+            vals = zdf["estimated_woba_using_speedangle"].dropna()
+            if len(vals) >= 5:
+                grid[row, col] = vals.mean()
 
     cmap = plt.cm.RdYlGn.copy()
     cmap.set_bad(color="#222222")
@@ -663,6 +744,65 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
     ax.set_xlabel("plate_x (ft)", fontsize=14)
     ax.set_ylabel("plate_z (ft)", fontsize=14)
     return im
+
+
+def draw_spray_chart(df: pd.DataFrame, title: str, ax, stadium: str = "marlins",
+                     density: bool = False):
+    """Draw spray chart on LoanDepot Park outline."""
+    stadium_df = load_stadium_coords()
+    coords = stadium_df[stadium_df["team"] == stadium]
+
+    if coords.empty:
+        theta = np.linspace(-np.pi / 4, np.pi / 4, 100)
+        fence_r = 250
+        ax.plot(fence_r * np.sin(theta) + 125.42,
+                198.27 - fence_r * np.cos(theta),
+                color="white", linewidth=1.5)
+    else:
+        for segment in coords["segment"].unique():
+            seg = coords[coords["segment"] == segment]
+            path = mpath.Path(seg[["x", "y"]].values)
+            patch = patches.PathPatch(path, facecolor="none", edgecolor="white",
+                                      lw=1.5, zorder=1)
+            ax.add_patch(patch)
+
+    valid = df.dropna(subset=["hc_x", "hc_y", "events"]).copy()
+    color_map = {
+        "home_run": "#e53935",
+        "triple": "#ff9800",
+        "double": "#ff9800",
+        "single": "#4caf50",
+    }
+    valid["color"] = valid["events"].map(color_map).fillna("#888888")
+    valid["zorder"] = valid["events"].apply(
+        lambda x: 5 if x == "home_run" else (4 if x in ("double", "triple") else 3)
+    )
+
+    if density and len(valid) >= 10:
+        try:
+            xy = np.vstack([valid["hc_x"].values, valid["hc_y"].values])
+            kde = gaussian_kde(xy, bw_method=0.15)
+            xg = np.linspace(0, 250, 200)
+            yg = np.linspace(-20, 220, 200)
+            xx, yy = np.meshgrid(xg, yg)
+            zz = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
+            ax.contourf(xx, yy, zz, levels=10, cmap="YlOrRd", alpha=0.35, zorder=2)
+        except np.linalg.LinAlgError:
+            pass
+
+    for _, row in valid.iterrows():
+        ax.scatter(row["hc_x"], row["hc_y"], c=row["color"], s=18, alpha=0.7,
+                   edgecolors="none", zorder=row["zorder"])
+
+    ax.set_xlim(0, 250)
+    ax.set_ylim(220, -20)
+    ax.set_aspect("equal")
+    ax.set_title(title, fontsize=16, fontweight="bold", color="white")
+    ax.axis("off")
+
+    for label, color in [("HR", "#e53935"), ("XBH", "#ff9800"), ("1B", "#4caf50"), ("Out", "#888888")]:
+        ax.scatter([], [], c=color, s=30, label=label)
+    ax.legend(loc="upper right", fontsize=12, framealpha=0.6)
 
 
 def draw_movement_chart(df: pd.DataFrame, title: str, ax, density: bool = True):
@@ -816,6 +956,51 @@ def arsenal_table(df: pd.DataFrame, t) -> pd.DataFrame:
     if not result.empty:
         result = result.sort_values(t["count"], ascending=False).reset_index(drop=True)
     return result
+
+
+def batted_ball_profile(df: pd.DataFrame, t) -> dict:
+    """Pull/Center/Oppo, GB/LD/FB, avg EV/LA."""
+    bip = df.dropna(subset=["hc_x", "hc_y"]).copy()
+    n = len(bip)
+    if n == 0:
+        return {}
+
+    # Spray angle: 0 = center, negative = pull for RHB, positive = pull for LHB
+    bip["spray_angle"] = np.degrees(
+        np.arctan2(bip["hc_x"] - 125.42, 198.27 - bip["hc_y"])
+    )
+    stand = bip["stand"].mode().iloc[0] if len(bip["stand"].mode()) > 0 else "R"
+
+    if stand == "R":
+        pull = bip["spray_angle"] < -15
+        oppo = bip["spray_angle"] > 15
+    else:
+        pull = bip["spray_angle"] > 15
+        oppo = bip["spray_angle"] < -15
+    center = ~pull & ~oppo
+
+    bb = df.dropna(subset=["bb_type"])
+    n_bb = len(bb)
+
+    return {
+        t["pull_pct"]: f"{pull.sum() / n * 100:.1f}%",
+        t["cent_pct"]: f"{center.sum() / n * 100:.1f}%",
+        t["oppo_pct"]: f"{oppo.sum() / n * 100:.1f}%",
+        t["gb_pct"]: f"{(bb['bb_type'] == 'ground_ball').sum() / n_bb * 100:.1f}%" if n_bb else "—",
+        t["ld_pct"]: f"{(bb['bb_type'] == 'line_drive').sum() / n_bb * 100:.1f}%" if n_bb else "—",
+        t["fb_pct"]: f"{(bb['bb_type'] == 'fly_ball').sum() / n_bb * 100:.1f}%" if n_bb else "—",
+        t["avg_ev"]: f"{df['launch_speed'].dropna().mean():.1f}" if df["launch_speed"].notna().any() else "—",
+        t["avg_la"]: f"{df['launch_angle'].dropna().mean():.1f}" if df["launch_angle"].notna().any() else "—",
+    }
+
+
+def count_category(balls: int, strikes: int) -> str:
+    """Classify count as ahead/behind/even for the hitter."""
+    if balls > strikes:
+        return "ahead"
+    elif strikes > balls:
+        return "behind"
+    return "even"
 
 
 def _name_display(name: str, lang: str) -> str:
@@ -1071,7 +1256,61 @@ def main():
             summary = generate_player_summary(stats, pdf, player_info, lang)
             st.info(summary)
 
-            # 3x3 Zone heatmap (BA)
+            # --- Individual radar chart (AVG/OBP/SLG/K%/BB% vs MLB avg) ---
+            _MLB_AVG_R = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
+            radar_cats = ["AVG", "OBP", "SLG",
+                          "K%" if lang == "EN" else "\u4e09\u632f\u7387",
+                          "BB%" if lang == "EN" else "\u56db\u7403\u7387"]
+            player_vals = [
+                min(stats["AVG"] / 0.300, 1.0),
+                min(stats["OBP"] / 0.380, 1.0),
+                min(stats["SLG"] / 0.500, 1.0),
+                1.0 - min(stats["K%"] / 35.0, 1.0),
+                min(stats["BB%"] / 15.0, 1.0),
+            ]
+            mlb_vals_r = [
+                min(_MLB_AVG_R["AVG"] / 0.300, 1.0),
+                min(_MLB_AVG_R["OBP"] / 0.380, 1.0),
+                min(_MLB_AVG_R["SLG"] / 0.500, 1.0),
+                1.0 - min(_MLB_AVG_R["K%"] / 35.0, 1.0),
+                min(_MLB_AVG_R["BB%"] / 15.0, 1.0),
+            ]
+            raw_vals_r = [f"{stats['AVG']:.3f}", f"{stats['OBP']:.3f}", f"{stats['SLG']:.3f}",
+                          f"{stats['K%']:.1f}%", f"{stats['BB%']:.1f}%"]
+            angles_r = np.linspace(0, 2 * np.pi, len(radar_cats), endpoint=False).tolist()
+            p_plot = player_vals + [player_vals[0]]
+            m_plot = mlb_vals_r + [mlb_vals_r[0]]
+            a_plot = angles_r + [angles_r[0]]
+            fig_pr, ax_pr = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
+                                          facecolor="#0e1117")
+            ax_pr.set_facecolor("#0e1117")
+            ax_pr.plot(a_plot, m_plot, "--", linewidth=1.5, color="#888888",
+                       alpha=0.7, label="MLB avg")
+            ax_pr.fill(a_plot, m_plot, alpha=0.08, color="#888888")
+            ax_pr.plot(a_plot, p_plot, "o-", linewidth=2, color="#4fc3f7",
+                       label=display_name)
+            ax_pr.fill(a_plot, p_plot, alpha=0.25, color="#4fc3f7")
+            ax_pr.set_thetagrids(np.degrees(angles_r), radar_cats, color="white", fontsize=12)
+            ax_pr.set_ylim(0, 1)
+            ax_pr.set_yticks([0.25, 0.5, 0.75, 1.0])
+            ax_pr.set_yticklabels(["", "", "", ""], color="white")
+            ax_pr.grid(color="gray", alpha=0.3)
+            ax_pr.spines["polar"].set_color("gray")
+            for angle, val, raw in zip(angles_r, player_vals, raw_vals_r):
+                ax_pr.annotate(raw, xy=(angle, val), fontsize=12,
+                               ha="center", va="bottom", color="white", fontweight="bold")
+            leg_pr = ax_pr.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
+                                   fontsize=12, facecolor="#0e1117", edgecolor="gray")
+            for txt in leg_pr.get_texts():
+                txt.set_color("white")
+            fig_pr.tight_layout()
+            st.pyplot(fig_pr, use_container_width=True)
+            plt.close(fig_pr)
+            st.caption("Gray dashed = MLB avg (2024). K% is inverted — lower is better."
+                       if lang == "EN" else
+                       "\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747(2024)\u3002K%\u306f\u9006\u8ee2\u2014\u4f4e\u3044\u307b\u3069\u5916\u5074\u3002")
+
+            # --- 3x3 Zone heatmap (BA) — already existed ---
             st.markdown(f"**{t['zone_3x3']}**")
             st.caption(t["danger_zone"])
             fig_z3, ax_z3 = _dark_fig(figsize=(6, 5))
@@ -1082,15 +1321,93 @@ def main():
             st.pyplot(fig_z3, use_container_width=True)
             plt.close(fig_z3)
 
-            # Pitch type performance table
+            # --- 5x5 Zone heatmaps (BA + xwOBA) ---
+            st.markdown(f"**{t['zone_5x5']}**")
+            for hm_metric, hm_title, hm_caption in [
+                ("ba", t["ba_heatmap"], t["danger_zone"]),
+                ("xwoba", t["xwoba_heatmap"], t.get("danger_zone_xwoba", t["danger_zone"])),
+            ]:
+                st.caption(hm_caption)
+                fig_hm, ax_hm = _dark_fig(figsize=(6, 5))
+                im_hm = draw_zone_heatmap(pdf, hm_metric, hm_title, ax_hm)
+                cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
+                cb_hm.ax.tick_params(colors="white")
+                fig_hm.tight_layout()
+                st.pyplot(fig_hm, use_container_width=True)
+                plt.close(fig_hm)
+
+            # --- Spray chart (all hits, LoanDepot Park) ---
+            st.markdown(f"**{t['spray_chart']}**")
+            st.caption(t["spray_caption"])
+            fig_sp, ax_sp = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
+            ax_sp.set_facecolor("#0e1117")
+            draw_spray_chart(pdf, display_name, ax_sp, stadium="marlins", density=True)
+            fig_sp.tight_layout()
+            st.pyplot(fig_sp, use_container_width=True)
+            plt.close(fig_sp)
+
+            # --- Spray chart vs LHP / vs RHP ---
+            spray_lhp = "Spray Chart — vs LHP" if lang == "EN" else "\u6253\u7403\u65b9\u5411\u56f3 — vs \u5de6\u6295\u624b"
+            spray_rhp = "Spray Chart — vs RHP" if lang == "EN" else "\u6253\u7403\u65b9\u5411\u56f3 — vs \u53f3\u6295\u624b"
+            col_sp_l, col_sp_r = st.columns(2)
+            for col_sp, throws_sp, sp_title in [(col_sp_l, "L", spray_lhp), (col_sp_r, "R", spray_rhp)]:
+                with col_sp:
+                    split_sp = pdf[pdf["p_throws"] == throws_sp]
+                    if split_sp.empty:
+                        st.write(t["no_data"])
+                        continue
+                    fig_sps, ax_sps = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
+                    ax_sps.set_facecolor("#0e1117")
+                    draw_spray_chart(split_sp, sp_title, ax_sps, stadium="marlins", density=True)
+                    fig_sps.tight_layout()
+                    st.pyplot(fig_sps, use_container_width=True)
+                    plt.close(fig_sps)
+
+            # --- Batted Ball Profile ---
+            st.markdown(f"**{t['batted_ball']}**")
+            with st.expander("What do these mean?" if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
+                st.markdown(t["glossary_batted"])
+            profile = batted_ball_profile(pdf, t)
+            if profile:
+                bb_cols = st.columns(4)
+                bb_items = list(profile.items())
+                for idx, (k, v) in enumerate(bb_items):
+                    bb_cols[idx % 4].metric(k, v)
+            else:
+                st.write(t["no_data"])
+
+            # --- Pitch type performance table ---
             st.markdown(f"**{t['pitch_type_perf']}**")
-            with st.expander(t["glossary_pitch"] if lang == "EN" else "空振率・チェイス率とは？"):
+            with st.expander(t["glossary_pitch"] if lang == "EN" else "\u7a7a\u632f\u7387\u30fb\u30c1\u30a7\u30a4\u30b9\u7387\u3068\u306f\uff1f"):
                 st.markdown(t["glossary_pitch"])
             pt_tbl = pitch_type_table(pdf, t)
             if not pt_tbl.empty:
                 st.dataframe(pt_tbl, use_container_width=True, hide_index=True)
 
-            # Platoon splits (vs LHP / vs RHP)
+                # --- Whiff% horizontal bar chart ---
+                chart_data = pt_tbl[[t["pitch_type"], t["whiff_pct"]]].copy()
+                chart_data["whiff_val"] = chart_data[t["whiff_pct"]].str.rstrip("%").astype(float)
+                chart_data = chart_data.sort_values("whiff_val", ascending=True)
+
+                fig_pt, ax_pt = _dark_fig(figsize=(8, max(3, len(chart_data) * 0.5)))
+                colors_bar = plt.cm.RdYlGn_r(chart_data["whiff_val"] / max(chart_data["whiff_val"].max(), 1))
+                bars = ax_pt.barh(chart_data[t["pitch_type"]], chart_data["whiff_val"], color=colors_bar)
+                for bar, val in zip(bars, chart_data["whiff_val"]):
+                    ax_pt.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height() / 2,
+                               f"{val:.1f}%", va="center", ha="left", color="white",
+                               fontsize=12, fontweight="bold")
+                ax_pt.set_xlabel(t["whiff_pct"], color="white", fontsize=14)
+                ax_pt.tick_params(colors="white", labelsize=12)
+                ax_pt.set_title(t["whiff_pct"], color="white", fontsize=16, fontweight="bold")
+                x_max = chart_data["whiff_val"].max()
+                ax_pt.set_xlim(0, x_max * 1.25 if x_max > 0 else 10)
+                for spine in ax_pt.spines.values():
+                    spine.set_color("white")
+                fig_pt.tight_layout()
+                st.pyplot(fig_pt, use_container_width=True)
+                plt.close(fig_pt)
+
+            # --- Platoon splits (vs LHP / vs RHP) ---
             st.markdown(f"**{t['platoon']}**")
             col_l, col_r = st.columns(2)
 
@@ -1106,6 +1423,54 @@ def main():
                     m1.metric("AVG", f"{ss['AVG']:.3f}")
                     m2.metric("OPS", f"{ss['OPS']:.3f}")
                     m3.metric("K%", f"{ss['K%']:.1f}%")
+
+            # --- Count-by-count performance table ---
+            st.markdown(f"**{t['count_perf']}**")
+            st.caption(t["count_explain"])
+
+            count_df = pdf.dropna(subset=["balls", "strikes"]).copy()
+            count_df["balls"] = count_df["balls"].astype(int)
+            count_df["strikes"] = count_df["strikes"].astype(int)
+
+            all_counts = [
+                (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
+                (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
+            ]
+
+            count_rows = []
+            for b, s in all_counts:
+                cat = count_category(b, s)
+                tag = {"ahead": t["ahead"], "behind": t["behind"], "even": t["even"]}[cat]
+                cdf = count_df[(count_df["balls"] == b) & (count_df["strikes"] == s)]
+                if cdf.empty:
+                    continue
+                cs = batting_stats(cdf)
+                if cs["PA"] < 5:
+                    continue
+                count_rows.append({
+                    ("Count" if lang == "EN" else "\u30ab\u30a6\u30f3\u30c8"): f"{b}-{s}",
+                    ("Type" if lang == "EN" else "\u5206\u985e"): tag,
+                    "PA": cs["PA"],
+                    "AVG": cs["AVG"],
+                    "OBP": cs["OBP"],
+                    "SLG": cs["SLG"],
+                    "OPS": cs["OPS"],
+                    "K%": cs["K%"],
+                    "BB%": cs["BB%"],
+                })
+
+            if count_rows:
+                count_table = pd.DataFrame(count_rows)
+                st.dataframe(
+                    count_table.style.format({
+                        "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
+                        "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
+                    }).background_gradient(subset=["OPS"], cmap="RdYlGn"),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            st.divider()
 
     # ===================================================================
     # TAB 3: Ranger Suarez Analysis
