@@ -55,15 +55,16 @@ PITCH_COLORS = {
 
 PREDICTED_LINEUP = [
     {"order": 1, "name": "Ronald Acuña Jr.", "pos": "RF", "note_en": "Elite speed + power, leadoff threat", "note_ja": "俊足強打のリードオフ"},
-    {"order": 2, "name": "Luis Arráez", "pos": "1B", "note_en": "Best contact hitter in MLB, batting title contender", "note_ja": "MLB最高のコンタクトヒッター、首位打者候補"},
-    {"order": 3, "name": "William Contreras", "pos": "C", "note_en": "Switch hitter with power, lineup anchor", "note_ja": "スイッチヒッターの強打の捕手"},
-    {"order": 4, "name": "Salvador Perez", "pos": "DH", "note_en": "Veteran power bat, 200+ career HR", "note_ja": "通算200本塁打超のベテラン強打者"},
-    {"order": 5, "name": "Jackson Chourio", "pos": "CF", "note_en": "Young star, 5-tool talent", "note_ja": "若き5ツールプレイヤー"},
-    {"order": 6, "name": "Andrés Giménez", "pos": "2B", "note_en": "Gold Glove 2B, LHB with speed", "note_ja": "ゴールドグラブ二塁手、俊足左打者"},
-    {"order": 7, "name": "Gleyber Torres", "pos": "SS", "note_en": "Power from middle infield", "note_ja": "中距離パワーの内野手"},
-    {"order": 8, "name": "Maikel Garcia", "pos": "3B", "note_en": "Speed + contact, versatile defender", "note_ja": "俊足コンタクト、守備範囲広い"},
-    {"order": 9, "name": "Wilyer Abreu", "pos": "LF", "note_en": "Solid LHB, strong defense", "note_ja": "堅実な左打者、好守備"},
+    {"order": 2, "name": "Jackson Chourio", "pos": "CF", "note_en": "Young star, 5-tool talent", "note_ja": "若き5ツールプレイヤー"},
+    {"order": 3, "name": "Luis Arráez", "pos": "1B", "note_en": "Best contact hitter in MLB, batting title contender", "note_ja": "MLB最高のコンタクトヒッター、首位打者候補"},
+    {"order": 4, "name": "Willson Contreras", "pos": "DH", "note_en": "Power bat, veteran catcher as DH", "note_ja": "パワー打者、ベテラン捕手のDH起用"},
+    {"order": 5, "name": "Eugenio Suárez", "pos": "3B", "note_en": "Corner infield utility (3B/1B)", "note_ja": "コーナー内野ユーティリティ（三塁/一塁）"},
+    {"order": 6, "name": "Wilyer Abreu", "pos": "LF", "note_en": "Solid LHB, strong defense", "note_ja": "堅実な左打者、好守備"},
+    {"order": 7, "name": "William Contreras", "pos": "C", "note_en": "Switch hitter, starting catcher", "note_ja": "スイッチヒッター、正捕手"},
+    {"order": 8, "name": "Gleyber Torres", "pos": "2B", "note_en": "Power from middle infield", "note_ja": "中距離パワーの内野手"},
+    {"order": 9, "name": "Andrés Giménez", "pos": "SS", "note_en": "Elite defensive SS, switch hitter", "note_ja": "守備の名手、スイッチヒッター"},
 ]
+# Maikel Garcia — 途中出場（括弧なし＝スタメン外）
 
 PREDICTED_SP = "Ranger Suárez"
 
@@ -2138,23 +2139,78 @@ def main():
 
         st.divider()
 
-        # Individual batter reports in lineup order
-        for lineup_entry in PREDICTED_LINEUP:
-            player_info = PLAYER_BY_NAME.get(lineup_entry["name"])
-            if not player_info:
+        # ---------------------------------------------------------------
+        # All-batters summary table + selectbox for individual report
+        # ---------------------------------------------------------------
+        st.subheader("🇻🇪 " + ("打者一覧（全ロースター）" if lang == "JA" else "All Batters (Full Roster)"))
+
+        # Build lineup lookup for quick order retrieval
+        _lineup_order = {le["name"]: le["order"] for le in PREDICTED_LINEUP}
+        _lineup_pos = {le["name"]: le["pos"] for le in PREDICTED_LINEUP}
+
+        batter_rows = []
+        for p in VENEZUELA_BATTERS:
+            pi = PLAYER_BY_NAME.get(p["name"])
+            if not pi:
                 continue
-            pdf = df_bat[df_bat["batter"] == player_info["mlbam_id"]]
+            bdf = df_bat[df_bat["batter"] == pi["mlbam_id"]]
+            order = _lineup_order.get(p["name"])
+            role = f"#{order}" if order else ("控え" if lang == "JA" else "Bench")
+            pos = _lineup_pos.get(p["name"], pi["pos"])
+            if bdf.empty:
+                batter_rows.append({"_sort": (0 if order else 1, order or 99), "_key": p["name"],
+                                    "role": role, "name": _name_display(p["name"], lang),
+                                    "pos": pos, "team": pi["team"], "bats": pi["bats"],
+                                    "PA": 0, "AVG": .0, "OBP": .0, "SLG": .0, "OPS": .0})
+            else:
+                s = batting_stats(bdf)
+                batter_rows.append({"_sort": (0 if order else 1, order or 99), "_key": p["name"],
+                                    "role": role, "name": _name_display(p["name"], lang),
+                                    "pos": pos, "team": pi["team"], "bats": pi["bats"],
+                                    "PA": s["PA"], "AVG": s["AVG"], "OBP": s["OBP"],
+                                    "SLG": s["SLG"], "OPS": s["OPS"]})
 
-            st.markdown("---")
-            order_label = f"#{lineup_entry['order']}"
-            display_name = _name_display(lineup_entry["name"], lang)
-            pos_full_t2 = POS_LABELS[lang].get(lineup_entry["pos"], lineup_entry["pos"])
-            st.subheader(f"{order_label} {display_name} — {lineup_entry['pos']} ({pos_full_t2})")
+        batter_rows.sort(key=lambda x: x["_sort"])
 
-            if pdf.empty:
-                st.warning(t["no_data"])
-                continue
+        # Display summary table
+        sum_df = pd.DataFrame(batter_rows)
+        col_map = {"role": "打順" if lang == "JA" else "#",
+                   "name": "選手名" if lang == "JA" else "Name",
+                   "pos": "守備" if lang == "JA" else "Pos",
+                   "team": "所属" if lang == "JA" else "Team",
+                   "bats": "打席" if lang == "JA" else "Bats",
+                   "PA": "PA", "AVG": "AVG", "OBP": "OBP", "SLG": "SLG", "OPS": "OPS"}
+        disp_cols = ["role", "name", "pos", "team", "bats", "PA", "AVG", "OBP", "SLG", "OPS"]
+        disp_df = sum_df[disp_cols].rename(columns=col_map)
+        st.dataframe(
+            disp_df.style.format({"AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}", "OPS": "{:.3f}"}
+                                 ).background_gradient(subset=["OPS"], cmap="RdYlGn", vmin=0.500, vmax=0.900),
+            use_container_width=True, hide_index=True, height=min(520, 38 + 35 * len(batter_rows)),
+        )
 
+        # Player selector
+        sel_options = [f"{r['role']}  {r['name']}（{r['pos']}）" for r in batter_rows]
+        sel_idx = st.selectbox(
+            "👇 " + ("詳細を見たい選手を選択" if lang == "JA" else "Select a batter for detailed analysis"),
+            range(len(sel_options)), format_func=lambda i: sel_options[i],
+            key="tab2_batter_select",
+        )
+
+        sel_batter_key = batter_rows[sel_idx]["_key"]
+        player_info = PLAYER_BY_NAME[sel_batter_key]
+        pdf = df_bat[df_bat["batter"] == player_info["mlbam_id"]]
+        lineup_entry_match = next((le for le in PREDICTED_LINEUP if le["name"] == sel_batter_key), None)
+        order_label = f"#{lineup_entry_match['order']}" if lineup_entry_match else ("控え" if lang == "JA" else "Bench")
+        display_name = _name_display(sel_batter_key, lang)
+        pos_str = _lineup_pos.get(sel_batter_key, player_info["pos"])
+        pos_full_t2 = POS_LABELS[lang].get(pos_str, pos_str)
+
+        st.markdown("---")
+        st.subheader(f"{order_label} {display_name} — {pos_str} ({pos_full_t2})")
+
+        if pdf.empty:
+            st.warning(t["no_data"])
+        else:
             stats = batting_stats(pdf)
 
             # Profile metrics
@@ -2168,7 +2224,6 @@ def main():
             c5.metric("OBP", f"{stats['OBP']:.3f}", delta=f"{stats['OBP'] - 0.312:+.3f}")
             c6.metric("SLG", f"{stats['SLG']:.3f}", delta=f"{stats['SLG'] - 0.397:+.3f}")
             c7.metric("OPS", f"{stats['OPS']:.3f}", delta=f"{stats['OPS'] - 0.709:+.3f}")
-            # Calculate xwOBA from data
             xwoba_vals = pdf[pdf["estimated_woba_using_speedangle"].notna()]["estimated_woba_using_speedangle"]
             xwoba = xwoba_vals.mean() if len(xwoba_vals) > 0 else 0
             c8.metric("xwOBA", f"{xwoba:.3f}", delta=f"{xwoba - 0.311:+.3f}")
@@ -2177,7 +2232,6 @@ def main():
             kc1.metric("K%", f"{stats['K%']:.1f}%")
             kc2.metric("BB%", f"{stats['BB%']:.1f}%")
 
-            # Stats glossary
             with st.expander(t.get("glossary_stats_title", "What do these stats mean?")):
                 st.markdown(t["glossary_stats"])
                 st.markdown(t["glossary_pct"])
@@ -2193,7 +2247,6 @@ def main():
             pitching_plan = generate_pitching_plan(pdf, stats, player_info, lang)
             st.success(pitching_plan)
 
-            # Left-handed pitcher approach
             pdf_vs_l = pdf[pdf["p_throws"] == "L"]
             pdf_vs_r = pdf[pdf["p_throws"] == "R"]
             _sl_pp, col_pp_l, col_pp_r, _sr_pp = st.columns([0.5, 2, 2, 0.5])
@@ -2220,23 +2273,19 @@ def main():
             def_pos = generate_defensive_positioning(pdf, player_info, lang)
             st.warning(def_pos)
 
-            # --- Individual radar chart (AVG/OBP/SLG/K%/BB% vs MLB avg) ---
+            # --- Individual radar chart ---
             _MLB_AVG_R = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
             radar_cats = ["AVG", "OBP", "SLG",
-                          "K%" if lang == "EN" else "\u4e09\u632f\u7387",
-                          "BB%" if lang == "EN" else "\u56db\u7403\u7387"]
+                          "K%" if lang == "EN" else "三振率",
+                          "BB%" if lang == "EN" else "四球率"]
             player_vals = [
-                min(stats["AVG"] / 0.300, 1.0),
-                min(stats["OBP"] / 0.380, 1.0),
-                min(stats["SLG"] / 0.500, 1.0),
-                1.0 - min(stats["K%"] / 35.0, 1.0),
+                min(stats["AVG"] / 0.300, 1.0), min(stats["OBP"] / 0.380, 1.0),
+                min(stats["SLG"] / 0.500, 1.0), 1.0 - min(stats["K%"] / 35.0, 1.0),
                 min(stats["BB%"] / 15.0, 1.0),
             ]
             mlb_vals_r = [
-                min(_MLB_AVG_R["AVG"] / 0.300, 1.0),
-                min(_MLB_AVG_R["OBP"] / 0.380, 1.0),
-                min(_MLB_AVG_R["SLG"] / 0.500, 1.0),
-                1.0 - min(_MLB_AVG_R["K%"] / 35.0, 1.0),
+                min(_MLB_AVG_R["AVG"] / 0.300, 1.0), min(_MLB_AVG_R["OBP"] / 0.380, 1.0),
+                min(_MLB_AVG_R["SLG"] / 0.500, 1.0), 1.0 - min(_MLB_AVG_R["K%"] / 35.0, 1.0),
                 min(_MLB_AVG_R["BB%"] / 15.0, 1.0),
             ]
             raw_vals_r = [f"{stats['AVG']:.3f}", f"{stats['OBP']:.3f}", f"{stats['SLG']:.3f}",
@@ -2247,14 +2296,11 @@ def main():
             a_plot = angles_r + [angles_r[0]]
             _sl_ir, _cc_ir, _sr_ir = st.columns([1, 4, 1])
             with _cc_ir:
-                fig_pr, ax_pr = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
-                                              facecolor="#0e1117")
+                fig_pr, ax_pr = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True), facecolor="#0e1117")
                 ax_pr.set_facecolor("#0e1117")
-                ax_pr.plot(a_plot, m_plot, "--", linewidth=1.5, color="#888888",
-                           alpha=0.7, label="MLB avg")
+                ax_pr.plot(a_plot, m_plot, "--", linewidth=1.5, color="#888888", alpha=0.7, label="MLB avg")
                 ax_pr.fill(a_plot, m_plot, alpha=0.08, color="#888888")
-                ax_pr.plot(a_plot, p_plot, "o-", linewidth=2, color="#4fc3f7",
-                           label=display_name)
+                ax_pr.plot(a_plot, p_plot, "o-", linewidth=2, color="#4fc3f7", label=display_name)
                 ax_pr.fill(a_plot, p_plot, alpha=0.25, color="#4fc3f7")
                 ax_pr.set_thetagrids(np.degrees(angles_r), radar_cats, color="white", fontsize=12)
                 ax_pr.set_ylim(0, 1.2)
@@ -2265,10 +2311,8 @@ def main():
                 for angle, val, raw in zip(angles_r, player_vals, raw_vals_r):
                     dx = np.cos(angle - np.pi / 2) * 20
                     dy = np.sin(angle - np.pi / 2) * 20
-                    ax_pr.annotate(raw, xy=(angle, val),
-                                   xytext=(dx, dy), textcoords="offset points",
-                                   fontsize=12, ha="center", va="center",
-                                   color="white", fontweight="bold")
+                    ax_pr.annotate(raw, xy=(angle, val), xytext=(dx, dy), textcoords="offset points",
+                                   fontsize=12, ha="center", va="center", color="white", fontweight="bold")
                 leg_pr = ax_pr.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
                                        fontsize=12, facecolor="#0e1117", edgecolor="gray")
                 for txt in leg_pr.get_texts():
@@ -2295,7 +2339,7 @@ def main():
                     st.pyplot(fig_z3, use_container_width=True)
                     plt.close(fig_z3)
 
-            # --- 5x5 Zone heatmaps (BA + xwOBA) ---
+            # --- 5x5 Zone heatmaps ---
             st.markdown(f"**{t['zone_5x5']}**")
             for hm_metric, hm_title, hm_caption in [
                 ("ba", t["ba_heatmap"], t["danger_zone"]),
@@ -2312,7 +2356,7 @@ def main():
                     st.pyplot(fig_hm, use_container_width=True)
                     plt.close(fig_hm)
 
-            # --- Spray chart (all hits, LoanDepot Park) ---
+            # --- Spray chart ---
             st.markdown(f"**{t['spray_chart']}**")
             st.caption(t["spray_caption"])
             _sl_sp, _cc_sp, _sr_sp = st.columns([1, 4, 1])
@@ -2324,9 +2368,9 @@ def main():
                 st.pyplot(fig_sp, use_container_width=True)
                 plt.close(fig_sp)
 
-            # --- Spray chart vs LHP / vs RHP ---
-            spray_lhp = "Spray Chart — vs LHP" if lang == "EN" else "\u6253\u7403\u65b9\u5411\u56f3 — vs \u5de6\u6295\u624b"
-            spray_rhp = "Spray Chart — vs RHP" if lang == "EN" else "\u6253\u7403\u65b9\u5411\u56f3 — vs \u53f3\u6295\u624b"
+            # Spray chart vs LHP / vs RHP
+            spray_lhp = "Spray Chart — vs LHP" if lang == "EN" else "打球方向図 — vs 左投手"
+            spray_rhp = "Spray Chart — vs RHP" if lang == "EN" else "打球方向図 — vs 右投手"
             _sl_slr, col_sp_l, col_sp_r, _sr_slr = st.columns([0.5, 2, 2, 0.5])
             for col_sp, throws_sp, sp_title in [(col_sp_l, "L", spray_lhp), (col_sp_r, "R", spray_rhp)]:
                 with col_sp:
@@ -2343,7 +2387,7 @@ def main():
 
             # --- Batted Ball Profile ---
             st.markdown(f"**{t['batted_ball']}**")
-            with st.expander("What do these mean?" if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
+            with st.expander("What do these mean?" if lang == "EN" else "用語の説明を見る"):
                 st.markdown(t["glossary_batted"])
             profile = batted_ball_profile(pdf, t)
             if profile:
@@ -2356,13 +2400,12 @@ def main():
 
             # --- Pitch type performance table ---
             st.markdown(f"**{t['pitch_type_perf']}**")
-            with st.expander(t["glossary_pitch"] if lang == "EN" else "\u7a7a\u632f\u7387\u30fb\u30c1\u30a7\u30a4\u30b9\u7387\u3068\u306f\uff1f"):
+            with st.expander(t["glossary_pitch"] if lang == "EN" else "空振率・チェイス率とは？"):
                 st.markdown(t["glossary_pitch"])
             pt_tbl = pitch_type_table(pdf, t)
             if not pt_tbl.empty:
                 st.dataframe(pt_tbl, use_container_width=True, hide_index=True)
 
-                # --- Whiff% horizontal bar chart ---
                 chart_data = pt_tbl[[t["pitch_type"], t["whiff_pct"]]].copy()
                 chart_data["whiff_val"] = chart_data[t["whiff_pct"]].str.rstrip("%").astype(float)
                 chart_data = chart_data.sort_values("whiff_val", ascending=True)
@@ -2387,7 +2430,7 @@ def main():
                     st.pyplot(fig_pt, use_container_width=True)
                     plt.close(fig_pt)
 
-            # --- Platoon splits (vs LHP / vs RHP) ---
+            # --- Platoon splits ---
             st.markdown(f"**{t['platoon']}**")
             with st.expander("What are platoon splits?" if lang == "EN" else "左右投手別成績とは？"):
                 st.markdown(t["glossary_platoon"])
@@ -2407,14 +2450,13 @@ def main():
                     m3.metric("SLG", f"{ss['SLG']:.3f}")
                     m4.metric("OPS", f"{ss['OPS']:.3f}")
 
-                    # Zone heatmap per platoon side
                     fig_z_pl, ax_z_pl = _dark_fig(figsize=(5, 4))
                     draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z_pl, lang=lang)
                     fig_z_pl.tight_layout()
                     st.pyplot(fig_z_pl, use_container_width=True)
                     plt.close(fig_z_pl)
 
-            # --- Count-by-count performance table ---
+            # --- Count-by-count performance ---
             st.markdown(f"**{t['count_perf']}**")
             st.caption(t["count_explain"])
 
@@ -2438,15 +2480,10 @@ def main():
                 if cs["PA"] < 5:
                     continue
                 count_rows.append({
-                    ("Count" if lang == "EN" else "\u30ab\u30a6\u30f3\u30c8"): f"{b}-{s}",
-                    ("Type" if lang == "EN" else "\u5206\u985e"): tag,
-                    "PA": cs["PA"],
-                    "AVG": cs["AVG"],
-                    "OBP": cs["OBP"],
-                    "SLG": cs["SLG"],
-                    "OPS": cs["OPS"],
-                    "K%": cs["K%"],
-                    "BB%": cs["BB%"],
+                    ("Count" if lang == "EN" else "カウント"): f"{b}-{s}",
+                    ("Type" if lang == "EN" else "分類"): tag,
+                    "PA": cs["PA"], "AVG": cs["AVG"], "OBP": cs["OBP"],
+                    "SLG": cs["SLG"], "OPS": cs["OPS"], "K%": cs["K%"], "BB%": cs["BB%"],
                 })
 
             if count_rows:
@@ -2456,11 +2493,8 @@ def main():
                         "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                         "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
                     }).background_gradient(subset=["OPS"], cmap="RdYlGn"),
-                    use_container_width=True,
-                    hide_index=True,
+                    use_container_width=True, hide_index=True,
                 )
-
-            st.divider()
 
     # ===================================================================
     # TAB 3: Ranger Suarez Analysis
@@ -2683,29 +2717,79 @@ def main():
             st.markdown(t["glossary_stats"])
             st.markdown(t.get("glossary_arsenal_pct", ""))
 
-        # Individual reliever profiles
-        for reliever_name in KEY_RELIEVERS:
-            pitcher_info = PITCHER_BY_NAME.get(reliever_name)
-            if not pitcher_info:
+        # ---------------------------------------------------------------
+        # All relievers summary table + selectbox for individual report
+        # ---------------------------------------------------------------
+        all_relievers = [p for p in VENEZUELA_PITCHERS if p["name"] != PREDICTED_SP]
+
+        # Build summary table
+        rp_rows = []
+        for p in all_relievers:
+            pi = PITCHER_BY_NAME.get(p["name"])
+            if not pi:
                 continue
+            rpd = df_pit[df_pit["pitcher"] == pi["mlbam_id"]]
+            is_key = p["name"] in KEY_RELIEVERS
+            tag = ("主力" if lang == "JA" else "Key") if is_key else (p.get("role", "RP"))
+            if rpd.empty:
+                rp_rows.append({"_key": p["name"], "tag": tag,
+                                "name": _name_display(p["name"], lang),
+                                "throws": pi.get("throws", "—"), "team": pi["team"],
+                                "Opp AVG": 0, "K%": 0, "BB%": 0, "Whiff%": 0,
+                                "_is_key": is_key})
+            else:
+                rs = pitching_stats(rpd)
+                rp_rows.append({"_key": p["name"], "tag": tag,
+                                "name": _name_display(p["name"], lang),
+                                "throws": pi.get("throws", "—"), "team": pi["team"],
+                                "Opp AVG": rs["Opp AVG"], "K%": rs["K%"],
+                                "BB%": rs["BB%"], "Whiff%": rs["Whiff%"],
+                                "_is_key": is_key})
 
-            rp_data = df_pit[df_pit["pitcher"] == pitcher_info["mlbam_id"]]
+        # Key relievers first, then others
+        rp_rows.sort(key=lambda x: (0 if x["_is_key"] else 1, x["name"]))
 
-            st.markdown("---")
-            st.subheader(f"{t['reliever_profile']}: {_name_display(reliever_name, lang)}")
+        st.subheader("🇻🇪 " + ("投手一覧（先発除く）" if lang == "JA" else "All Pitchers (excl. Starter)"))
+        rp_sum_df = pd.DataFrame(rp_rows)
+        rp_col_map = {"tag": "役割" if lang == "JA" else "Role",
+                      "name": "選手名" if lang == "JA" else "Name",
+                      "throws": "投" if lang == "JA" else "Throws",
+                      "team": "所属" if lang == "JA" else "Team",
+                      "Opp AVG": t["opp_avg"], "K%": t["k_pct"],
+                      "BB%": t["bb_pct"], "Whiff%": t["whiff_pct"]}
+        rp_disp_cols = ["tag", "name", "throws", "team", "Opp AVG", "K%", "BB%", "Whiff%"]
+        rp_disp_df = rp_sum_df[rp_disp_cols].rename(columns=rp_col_map)
+        st.dataframe(
+            rp_disp_df.style.format({t["opp_avg"]: "{:.3f}", t["k_pct"]: "{:.1f}",
+                                      t["bb_pct"]: "{:.1f}", t["whiff_pct"]: "{:.1f}"}),
+            use_container_width=True, hide_index=True, height=min(520, 38 + 35 * len(rp_rows)),
+        )
 
-            rpc1, rpc2, rpc3 = st.columns(3)
-            rpc1.metric(t["team"], pitcher_info.get("team", "—"))
-            rpc2.metric(t["throws"], pitcher_info.get("throws", "—"))
-            rpc3.metric(t["role"], t["rp_label"])
+        # Player selector
+        rp_sel_options = [f"{r['tag']}  {r['name']}（{r['throws']}）" for r in rp_rows]
+        rp_sel_idx = st.selectbox(
+            "👇 " + ("詳細を見たい投手を選択" if lang == "JA" else "Select a reliever for detailed analysis"),
+            range(len(rp_sel_options)), format_func=lambda i: rp_sel_options[i],
+            key="tab4_reliever_select",
+        )
 
-            if rp_data.empty:
-                st.warning(t["no_data"])
-                continue
+        reliever_name = rp_rows[rp_sel_idx]["_key"]
+        pitcher_info = PITCHER_BY_NAME[reliever_name]
+        rp_data = df_pit[df_pit["pitcher"] == pitcher_info["mlbam_id"]]
 
+        st.markdown("---")
+        st.subheader(f"{t['reliever_profile']}: {_name_display(reliever_name, lang)}")
+
+        rpc1, rpc2, rpc3 = st.columns(3)
+        rpc1.metric(t["team"], pitcher_info.get("team", "—"))
+        rpc2.metric(t["throws"], pitcher_info.get("throws", "—"))
+        rpc3.metric(t["role"], pitcher_info.get("role", "RP"))
+
+        if rp_data.empty:
+            st.warning(t["no_data"])
+        else:
             rp_stats = pitching_stats(rp_data)
 
-            # Key metrics
             rm1, rm2, rm3, rm4 = st.columns(4)
             rm1.metric(t["opp_avg"], f"{rp_stats['Opp AVG']:.3f}")
             rm2.metric(t["k_pct"], f"{rp_stats['K%']:.1f}%")
@@ -2715,7 +2799,6 @@ def main():
                 velo_label = "平均球速" if lang == "JA" else "Avg Velo"
                 st.caption(f"{velo_label}: {rp_stats['Avg Velo']:.1f} mph ({rp_stats['Avg Velo'] * 1.609:.0f} km/h)")
 
-            # Scouting summary
             rp_summary = generate_pitcher_summary(rp_stats, rp_data, pitcher_info, lang)
             st.info(rp_summary)
 
@@ -2725,7 +2808,6 @@ def main():
             rp_hitting_plan = generate_hitting_plan(rp_data, rp_stats, pitcher_info, lang)
             st.success(rp_hitting_plan)
 
-            # Split by batter handedness
             rp_vs_lhb = rp_data[rp_data["stand"] == "L"]
             rp_vs_rhb = rp_data[rp_data["stand"] == "R"]
             _sl_rphp, col_rphp_l, col_rphp_r, _sr_rphp = st.columns([0.5, 2, 2, 0.5])
@@ -2746,7 +2828,7 @@ def main():
                 else:
                     st.write(t["no_data"])
 
-            # Arsenal summary
+            # Arsenal
             rp_arsenal = arsenal_table(rp_data, t)
             if not rp_arsenal.empty:
                 st.markdown(f"**{t['arsenal']}**")
@@ -2767,7 +2849,7 @@ def main():
                 st.pyplot(fig_rp_m, use_container_width=True)
             plt.close(fig_rp_m)
 
-            # Zone heatmaps (usage + opp BA)
+            # Zone heatmaps
             st.markdown(f"**{t['zone_heatmap_pitch']}**")
             for _rp_hm_idx, (rp_hm_metric, rp_hm_title) in enumerate([("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]):
                 fig_rp_hm, ax_rp_hm = _dark_fig(figsize=(6, 5))
@@ -2791,7 +2873,7 @@ def main():
             if not rp_ps_table.empty:
                 st.dataframe(rp_ps_table, use_container_width=True, hide_index=True)
 
-            # Platoon splits with zone heatmaps
+            # Platoon splits
             st.markdown(f"**{t['platoon']}**")
             st.caption(t["platoon_pitcher_explain"])
             _sl_rp_pl, _cl_rp_pl, _cr_rp_pl, _sr_rp_pl = st.columns([0.5, 2, 2, 0.5])
@@ -2809,7 +2891,6 @@ def main():
                     sm3.metric(t["k_pct"], f"{ss['K%']:.1f}%")
                     sm4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%")
 
-                    # Zone heatmap per platoon side
                     fig_rp_z, ax_rp_z = _dark_fig(figsize=(5, 4))
                     draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_rp_z, lang=lang)
                     fig_rp_z.tight_layout()
