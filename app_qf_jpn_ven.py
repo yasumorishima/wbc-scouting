@@ -74,6 +74,46 @@ KEY_RELIEVERS = ["José Buttó", "Eduard Bazardo", "Daniel Palencia", "Luinder �
 _MLB_AVG_BAT = {"AVG": .243, "OBP": .312, "SLG": .397, "OPS": .709, "K%": 22.4, "BB%": 8.3, "xwOBA": .311}
 _MLB_AVG_PIT = {"Opp AVG": .243, "Opp SLG": .397, "K%": 22.4, "BB%": 8.3, "xwOBA": .311, "Whiff%": 25.0, "Velo": 93.5}
 
+# Stat help tooltips (bilingual) — shown as ? icon on st.metric
+_STAT_HELP = {
+    "EN": {
+        "AVG": "Batting average — hits ÷ at-bats. MLB avg ≈ .243",
+        "OBP": "On-base percentage — how often the batter reaches base. MLB avg ≈ .312",
+        "SLG": "Slugging percentage — total bases ÷ at-bats. Measures power. MLB avg ≈ .397",
+        "OPS": "OBP + SLG combined. Above .800 = strong hitter. MLB avg ≈ .709",
+        "K%": "Strikeout rate — % of plate appearances ending in a strikeout. MLB avg ≈ 22.4%",
+        "BB%": "Walk rate — % of plate appearances ending in a walk. MLB avg ≈ 8.3%",
+        "xwOBA": "Expected weighted on-base average — combines exit velocity & launch angle to estimate true hitting quality. Removes luck. MLB avg ≈ .311",
+        "Whiff%": "Whiff rate — swinging strikes ÷ total swings. Higher = harder to make contact. MLB avg ≈ 25%",
+        "Chase%": "Chase rate — swings at pitches outside the strike zone ÷ pitches outside zone",
+        "Opp AVG": "Opponent batting average — batting average allowed by the pitcher. MLB avg ≈ .243",
+        "Opp SLG": "Opponent slugging — slugging percentage allowed. MLB avg ≈ .397",
+        "Avg Velo": "Average fastball velocity in mph (km/h)",
+        "Put Away%": "Put-away rate — strikeouts on 2-strike counts ÷ total 2-strike pitches",
+    },
+    "JA": {
+        "AVG": "打率 — 安打数÷打数。MLB平均 ≈ .243",
+        "OBP": "出塁率 — 打席で塁に出る割合。MLB平均 ≈ .312",
+        "SLG": "長打率 — 塁打数÷打数。長打力の指標。MLB平均 ≈ .397",
+        "OPS": "出塁率+長打率。.800以上で強打者。MLB平均 ≈ .709",
+        "K%": "三振率 — 打席に占める三振の割合。MLB平均 ≈ 22.4%",
+        "BB%": "四球率 — 打席に占める四球の割合。MLB平均 ≈ 8.3%",
+        "xwOBA": "期待加重出塁率 — 打球速度と角度から算出した「運を排除した」真の打撃力。MLB平均 ≈ .311",
+        "Whiff%": "空振率 — スイング中の空振りの割合。高いほどコンタクトが難しい。MLB平均 ≈ 25%",
+        "Chase%": "チェイス率 — ストライクゾーン外の球を振る割合",
+        "Opp AVG": "被打率 — 投手が打たれた打率。MLB平均 ≈ .243",
+        "Opp SLG": "被長打率 — 投手が許した長打率。MLB平均 ≈ .397",
+        "Avg Velo": "平均球速（mph / km/h）",
+        "Put Away%": "決め球成功率 — 2ストライク後に三振を取った割合",
+    },
+}
+
+
+def _help(stat_key: str, lang: str) -> str:
+    """Return tooltip help text for a stat."""
+    return _STAT_HELP.get(lang, _STAT_HELP["EN"]).get(stat_key, "")
+
+
 # ---------------------------------------------------------------------------
 # Stadium data
 # ---------------------------------------------------------------------------
@@ -2092,12 +2132,12 @@ def main():
 
                 # Key metrics row
                 mc1, mc2, mc3, mc4, mc5, mc6 = st.columns(6)
-                mc1.metric("AVG", f"{stats['AVG']:.3f}")
-                mc2.metric("OBP", f"{stats['OBP']:.3f}")
-                mc3.metric("SLG", f"{stats['SLG']:.3f}")
-                mc4.metric("OPS", f"{stats['OPS']:.3f}")
-                mc5.metric("K%", f"{stats['K%']:.1f}%")
-                mc6.metric("BB%", f"{stats['BB%']:.1f}%")
+                mc1.metric("AVG", f"{stats['AVG']:.3f}", help=_help("AVG", lang))
+                mc2.metric("OBP", f"{stats['OBP']:.3f}", help=_help("OBP", lang))
+                mc3.metric("SLG", f"{stats['SLG']:.3f}", help=_help("SLG", lang))
+                mc4.metric("OPS", f"{stats['OPS']:.3f}", help=_help("OPS", lang))
+                mc5.metric("K%", f"{stats['K%']:.1f}%", help=_help("K%", lang))
+                mc6.metric("BB%", f"{stats['BB%']:.1f}%", help=_help("BB%", lang))
 
                 # Metrics glossary expander
                 with st.expander(
@@ -2211,9 +2251,9 @@ def main():
                         ss_ps = batting_stats(split_ps)
                         st.markdown(f"#### {ps_label}")
                         pm1, pm2, pm3 = st.columns(3)
-                        pm1.metric("AVG", f"{ss_ps['AVG']:.3f}")
-                        pm2.metric("OPS", f"{ss_ps['OPS']:.3f}")
-                        pm3.metric("K%", f"{ss_ps['K%']:.1f}%")
+                        pm1.metric("AVG", f"{ss_ps['AVG']:.3f}", help=_help("AVG", lang))
+                        pm2.metric("OPS", f"{ss_ps['OPS']:.3f}", help=_help("OPS", lang))
+                        pm3.metric("K%", f"{ss_ps['K%']:.1f}%", help=_help("K%", lang))
                     st.caption(t["platoon_explain"])
 
                 # === Pitching Plan (How to get this batter out) ===
@@ -2334,10 +2374,10 @@ def main():
                             continue
                         _t1_ss = batting_stats(_t1_sdf)
                         _t1_m1, _t1_m2, _t1_m3, _t1_m4 = st.columns(4)
-                        _t1_m1.metric("AVG", f"{_t1_ss['AVG']:.3f}")
-                        _t1_m2.metric("OBP", f"{_t1_ss['OBP']:.3f}")
-                        _t1_m3.metric("SLG", f"{_t1_ss['SLG']:.3f}")
-                        _t1_m4.metric("OPS", f"{_t1_ss['OPS']:.3f}")
+                        _t1_m1.metric("AVG", f"{_t1_ss['AVG']:.3f}", help=_help("AVG", lang))
+                        _t1_m2.metric("OBP", f"{_t1_ss['OBP']:.3f}", help=_help("OBP", lang))
+                        _t1_m3.metric("SLG", f"{_t1_ss['SLG']:.3f}", help=_help("SLG", lang))
+                        _t1_m4.metric("OPS", f"{_t1_ss['OPS']:.3f}", help=_help("OPS", lang))
                         _t1_fz, _t1_az = _dark_fig(figsize=(5, 4))
                         draw_zone_heatmap(_t1_sdf, "ba", f"{_t1_plbl} — {t['ba_heatmap']}", _t1_az, lang=lang)
                         _t1_fz.tight_layout()
@@ -2409,10 +2449,10 @@ def main():
         if not sp_data.empty:
             sp_stats = pitching_stats(sp_data)
             sc1, sc2, sc3, sc4 = st.columns(4)
-            sc1.metric(t["opp_avg"], f"{sp_stats['Opp AVG']:.3f}")
-            sc2.metric(t["k_pct"], f"{sp_stats['K%']:.1f}%")
-            sc3.metric(t["bb_pct"], f"{sp_stats['BB%']:.1f}%")
-            sc4.metric(t["whiff_pct"], f"{sp_stats['Whiff%']:.1f}%")
+            sc1.metric(t["opp_avg"], f"{sp_stats['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
+            sc2.metric(t["k_pct"], f"{sp_stats['K%']:.1f}%", help=_help("K%", lang))
+            sc3.metric(t["bb_pct"], f"{sp_stats['BB%']:.1f}%", help=_help("BB%", lang))
+            sc4.metric(t["whiff_pct"], f"{sp_stats['Whiff%']:.1f}%", help=_help("Whiff%", lang))
             if sp_stats["Avg Velo"]:
                 velo_label = "平均球速" if lang == "JA" else "Avg Velo"
                 st.caption(f"{velo_label}: {sp_stats['Avg Velo']:.1f} mph ({sp_stats['Avg Velo'] * 1.609:.0f} km/h)")
@@ -2502,10 +2542,10 @@ def main():
                         continue
                     _t1_ss = pitching_stats(_t1_split_df)
                     _t1_m1, _t1_m2, _t1_m3, _t1_m4 = st.columns(4)
-                    _t1_m1.metric(t["opp_avg"], f"{_t1_ss['Opp AVG']:.3f}")
-                    _t1_m2.metric(t["opp_slg"], f"{_t1_ss['Opp SLG']:.3f}")
-                    _t1_m3.metric(t["k_pct"], f"{_t1_ss['K%']:.1f}%")
-                    _t1_m4.metric(t["bb_pct"], f"{_t1_ss['BB%']:.1f}%")
+                    _t1_m1.metric(t["opp_avg"], f"{_t1_ss['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
+                    _t1_m2.metric(t["opp_slg"], f"{_t1_ss['Opp SLG']:.3f}", help=_help("Opp SLG", lang))
+                    _t1_m3.metric(t["k_pct"], f"{_t1_ss['K%']:.1f}%", help=_help("K%", lang))
+                    _t1_m4.metric(t["bb_pct"], f"{_t1_ss['BB%']:.1f}%", help=_help("BB%", lang))
                     # Zone heatmap per platoon side
                     _t1_fig_z, _t1_ax_z = _dark_fig(figsize=(5, 4))
                     draw_zone_heatmap(_t1_split_df, "ba", f"{_t1_pl_label} — {t['ba_heatmap']}", _t1_ax_z, lang=lang)
@@ -2872,17 +2912,17 @@ def main():
             c3.metric(t["bats"], player_info["bats"])
 
             c4, c5, c6, c7, c8 = st.columns(5)
-            c4.metric("AVG", f"{stats['AVG']:.3f}", delta=f"{stats['AVG'] - 0.243:+.3f}")
-            c5.metric("OBP", f"{stats['OBP']:.3f}", delta=f"{stats['OBP'] - 0.312:+.3f}")
-            c6.metric("SLG", f"{stats['SLG']:.3f}", delta=f"{stats['SLG'] - 0.397:+.3f}")
-            c7.metric("OPS", f"{stats['OPS']:.3f}", delta=f"{stats['OPS'] - 0.709:+.3f}")
+            c4.metric("AVG", f"{stats['AVG']:.3f}", delta=f"{stats['AVG'] - 0.243:+.3f}", help=_help("AVG", lang))
+            c5.metric("OBP", f"{stats['OBP']:.3f}", delta=f"{stats['OBP'] - 0.312:+.3f}", help=_help("OBP", lang))
+            c6.metric("SLG", f"{stats['SLG']:.3f}", delta=f"{stats['SLG'] - 0.397:+.3f}", help=_help("SLG", lang))
+            c7.metric("OPS", f"{stats['OPS']:.3f}", delta=f"{stats['OPS'] - 0.709:+.3f}", help=_help("OPS", lang))
             xwoba_vals = pdf[pdf["estimated_woba_using_speedangle"].notna()]["estimated_woba_using_speedangle"]
             xwoba = xwoba_vals.mean() if len(xwoba_vals) > 0 else 0
-            c8.metric("xwOBA", f"{xwoba:.3f}", delta=f"{xwoba - 0.311:+.3f}")
+            c8.metric("xwOBA", f"{xwoba:.3f}", delta=f"{xwoba - 0.311:+.3f}", help=_help("xwOBA", lang))
 
             kc1, kc2 = st.columns(2)
-            kc1.metric("K%", f"{stats['K%']:.1f}%")
-            kc2.metric("BB%", f"{stats['BB%']:.1f}%")
+            kc1.metric("K%", f"{stats['K%']:.1f}%", help=_help("K%", lang))
+            kc2.metric("BB%", f"{stats['BB%']:.1f}%", help=_help("BB%", lang))
 
             with st.expander(t.get("glossary_stats_title", "What do these stats mean?")):
                 st.markdown(t["glossary_stats"])
@@ -3097,10 +3137,10 @@ def main():
                         continue
                     ss = batting_stats(split_df)
                     m1, m2, m3, m4 = st.columns(4)
-                    m1.metric("AVG", f"{ss['AVG']:.3f}")
-                    m2.metric("OBP", f"{ss['OBP']:.3f}")
-                    m3.metric("SLG", f"{ss['SLG']:.3f}")
-                    m4.metric("OPS", f"{ss['OPS']:.3f}")
+                    m1.metric("AVG", f"{ss['AVG']:.3f}", help=_help("AVG", lang))
+                    m2.metric("OBP", f"{ss['OBP']:.3f}", help=_help("OBP", lang))
+                    m3.metric("SLG", f"{ss['SLG']:.3f}", help=_help("SLG", lang))
+                    m4.metric("OPS", f"{ss['OPS']:.3f}", help=_help("OPS", lang))
 
                     fig_z_pl, ax_z_pl = _dark_fig(figsize=(5, 4))
                     draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z_pl, lang=lang)
@@ -3188,18 +3228,19 @@ def main():
             sc1, sc2, sc3 = st.columns(3)
             sc1.metric(t["opp_avg"], f"{sp_stats['Opp AVG']:.3f}",
                        delta=f"{sp_stats['Opp AVG'] - _MLB_AVG_PIT['Opp AVG']:+.3f} vs MLB avg",
-                       delta_color="inverse")
+                       delta_color="inverse", help=_help("Opp AVG", lang))
             sc2.metric(t["k_pct"], f"{sp_stats['K%']:.1f}%",
-                       delta=f"{sp_stats['K%'] - _MLB_AVG_PIT['K%']:+.1f}% vs MLB avg")
+                       delta=f"{sp_stats['K%'] - _MLB_AVG_PIT['K%']:+.1f}% vs MLB avg",
+                       help=_help("K%", lang))
             sc3.metric(t["bb_pct"], f"{sp_stats['BB%']:.1f}%",
                        delta=f"{sp_stats['BB%'] - _MLB_AVG_PIT['BB%']:+.1f}% vs MLB avg",
-                       delta_color="inverse")
+                       delta_color="inverse", help=_help("BB%", lang))
             sc4, sc5 = st.columns(2)
-            sc4.metric(t["whiff_pct"], f"{sp_stats['Whiff%']:.1f}%")
+            sc4.metric(t["whiff_pct"], f"{sp_stats['Whiff%']:.1f}%", help=_help("Whiff%", lang))
             if sp_stats["xwOBA"]:
                 sc5.metric(t["xwoba"], f"{sp_stats['xwOBA']:.3f}",
                            delta=f"{sp_stats['xwOBA'] - _MLB_AVG_PIT['xwOBA']:+.3f} vs MLB avg",
-                           delta_color="inverse")
+                           delta_color="inverse", help=_help("xwOBA", lang))
 
             # Scouting summary
             st.subheader(t["scouting_summary"])
@@ -3293,10 +3334,10 @@ def main():
                         continue
                     ss = pitching_stats(split_df)
                     m1, m2, m3, m4 = st.columns(4)
-                    m1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}")
-                    m2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}")
-                    m3.metric(t["k_pct"], f"{ss['K%']:.1f}%")
-                    m4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%")
+                    m1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
+                    m2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}", help=_help("Opp SLG", lang))
+                    m3.metric(t["k_pct"], f"{ss['K%']:.1f}%", help=_help("K%", lang))
+                    m4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%", help=_help("BB%", lang))
 
                     # Zone heatmap per platoon side
                     fig_z, ax_z = _dark_fig(figsize=(5, 4))
@@ -3470,10 +3511,10 @@ def main():
             rp_stats = pitching_stats(rp_data)
 
             rm1, rm2, rm3, rm4 = st.columns(4)
-            rm1.metric(t["opp_avg"], f"{rp_stats['Opp AVG']:.3f}")
-            rm2.metric(t["k_pct"], f"{rp_stats['K%']:.1f}%")
-            rm3.metric(t["bb_pct"], f"{rp_stats['BB%']:.1f}%")
-            rm4.metric(t["whiff_pct"], f"{rp_stats['Whiff%']:.1f}%")
+            rm1.metric(t["opp_avg"], f"{rp_stats['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
+            rm2.metric(t["k_pct"], f"{rp_stats['K%']:.1f}%", help=_help("K%", lang))
+            rm3.metric(t["bb_pct"], f"{rp_stats['BB%']:.1f}%", help=_help("BB%", lang))
+            rm4.metric(t["whiff_pct"], f"{rp_stats['Whiff%']:.1f}%", help=_help("Whiff%", lang))
             if rp_stats["Avg Velo"]:
                 velo_label = "平均球速" if lang == "JA" else "Avg Velo"
                 st.caption(f"{velo_label}: {rp_stats['Avg Velo']:.1f} mph ({rp_stats['Avg Velo'] * 1.609:.0f} km/h)")
@@ -3565,10 +3606,10 @@ def main():
                         continue
                     ss = pitching_stats(split_df)
                     sm1, sm2, sm3, sm4 = st.columns(4)
-                    sm1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}")
-                    sm2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}")
-                    sm3.metric(t["k_pct"], f"{ss['K%']:.1f}%")
-                    sm4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%")
+                    sm1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
+                    sm2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}", help=_help("Opp SLG", lang))
+                    sm3.metric(t["k_pct"], f"{ss['K%']:.1f}%", help=_help("K%", lang))
+                    sm4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%", help=_help("BB%", lang))
 
                     fig_rp_z, ax_rp_z = _dark_fig(figsize=(5, 4))
                     draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_rp_z, lang=lang)
