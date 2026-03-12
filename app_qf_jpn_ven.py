@@ -756,7 +756,7 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax, lang: str =
     ax.set_aspect("equal")
     ax.set_title(title, fontsize=16, fontweight="bold", color="white")
     ax.set_xlabel("Horizontal Position (ft)" if lang == "EN" else "横位置 (ft)", fontsize=14, color="white")
-    ax.set_ylabel("Height (ft)" if lang == "EN" else "高さ (ft)", fontsize=14, color="white")
+    ax.set_ylabel("Height (ft)" if lang == "EN" else "高さ (ft)", fontsize=14, color="white", labelpad=10)
     return im
 
 
@@ -818,7 +818,7 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax, lang: str = "EN
     ax.set_aspect("equal")
     ax.set_title(title, fontsize=16, fontweight="bold", color="white")
     ax.set_xlabel("Horizontal Position (ft)" if lang == "EN" else "横位置 (ft)", fontsize=14, color="white")
-    ax.set_ylabel("Height (ft)" if lang == "EN" else "高さ (ft)", fontsize=14, color="white")
+    ax.set_ylabel("Height (ft)" if lang == "EN" else "高さ (ft)", fontsize=14, color="white", labelpad=10)
     return im
 
 
@@ -2101,14 +2101,14 @@ def main():
                     ax_ex.spines["polar"].set_color("gray")
                     for angle_ex, val_ex, raw_ex in zip(angles_ex, player_vals_ex, raw_vals_ex):
                         # Calculate offset direction based on angle to push text outward
-                        dx = np.cos(angle_ex - np.pi / 2) * 20
-                        dy = np.sin(angle_ex - np.pi / 2) * 20
+                        dx = np.cos(angle_ex - np.pi / 2) * 35
+                        dy = np.sin(angle_ex - np.pi / 2) * 35
                         ax_ex.annotate(raw_ex, xy=(angle_ex, val_ex),
                                        xytext=(dx, dy),
                                        textcoords="offset points",
                                        fontsize=11, ha="center", va="center",
                                        color="white", fontweight="bold")
-                    leg_ex = ax_ex.legend(loc="lower right", bbox_to_anchor=(1.25, -0.05),
+                    leg_ex = ax_ex.legend(loc="upper right", bbox_to_anchor=(1.35, 1.15),
                                            fontsize=10, facecolor="#0e1117", edgecolor="gray",
                                            framealpha=0.9)
                     for txt_ex in leg_ex.get_texts():
@@ -2125,7 +2125,7 @@ def main():
                     im_z3_ex = draw_zone_3x3(pdf_player, "ba", t["ba_heatmap"], ax_z3_ex, lang=lang)
                     cb_z3_ex = fig_z3_ex.colorbar(im_z3_ex, ax=ax_z3_ex, fraction=0.046, pad=0.04)
                     cb_z3_ex.ax.tick_params(colors="white", labelsize=10)
-                    fig_z3_ex.tight_layout()
+                    fig_z3_ex.tight_layout(pad=2.0)
                     st.pyplot(fig_z3_ex, use_container_width=True)
                     plt.close(fig_z3_ex)
                     st.caption(t["zone_explain"])
@@ -2358,6 +2358,151 @@ def main():
                 velo_label = "平均球速" if lang == "JA" else "Avg Velo"
                 st.caption(f"{velo_label}: {sp_stats['Avg Velo']:.1f} mph ({sp_stats['Avg Velo'] * 1.609:.0f} km/h)")
 
+            # --- SP Detailed Analysis in Tab 1 ---
+            # Scouting summary
+            st.markdown(f"### {t['scouting_summary']}")
+            _t1_sp_summary = generate_pitcher_summary(sp_stats, sp_data, sp_info, lang)
+            st.info(_t1_sp_summary)
+
+            # Hitting plan (how to attack this pitcher)
+            st.markdown(f"### {t['hitting_plan_title']}")
+            st.caption(t["hitting_plan_explain"])
+            _t1_hit_plan = generate_hitting_plan(sp_data, sp_stats, sp_info, lang)
+            st.success(_t1_hit_plan)
+
+            # Left/Right hitting plans
+            _t1_sp_vs_lhb = sp_data[sp_data["stand"] == "L"]
+            _t1_sp_vs_rhb = sp_data[sp_data["stand"] == "R"]
+            _t1_sl_hp, _t1_col_hp_l, _t1_col_hp_r, _t1_sr_hp = st.columns([0.5, 2, 2, 0.5])
+            with _t1_col_hp_l:
+                st.markdown(f"**{t['hitting_plan_as_lhb']}**")
+                if not _t1_sp_vs_lhb.empty and len(_t1_sp_vs_lhb) >= 30:
+                    _t1_stats_lhb = pitching_stats(_t1_sp_vs_lhb)
+                    _t1_plan_lhb = generate_hitting_plan(_t1_sp_vs_lhb, _t1_stats_lhb, sp_info, lang)
+                    st.info(_t1_plan_lhb)
+                else:
+                    st.write(t["no_data"])
+            with _t1_col_hp_r:
+                st.markdown(f"**{t['hitting_plan_as_rhb']}**")
+                if not _t1_sp_vs_rhb.empty and len(_t1_sp_vs_rhb) >= 30:
+                    _t1_stats_rhb = pitching_stats(_t1_sp_vs_rhb)
+                    _t1_plan_rhb = generate_hitting_plan(_t1_sp_vs_rhb, _t1_stats_rhb, sp_info, lang)
+                    st.info(_t1_plan_rhb)
+                else:
+                    st.write(t["no_data"])
+
+            # Arsenal table
+            st.markdown(f"### {t['arsenal']}")
+            _t1_at = arsenal_table(sp_data, t)
+            if not _t1_at.empty:
+                st.dataframe(_t1_at, use_container_width=True, hide_index=True)
+            with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
+                st.markdown(t["arsenal_explain"])
+
+            # Movement chart
+            st.markdown(f"### {t['movement_chart']}")
+            st.caption(t["movement_note"])
+            _t1_fig_m, _t1_ax_m = plt.subplots(figsize=(8, 5), facecolor="#0e1117")
+            _t1_ax_m.set_facecolor("#1a1a2e")
+            for _sp_spine in _t1_ax_m.spines.values():
+                _sp_spine.set_color("white")
+            draw_movement_chart(sp_data, _name_display(PREDICTED_SP, lang), _t1_ax_m, density=True)
+            _t1_fig_m.tight_layout(rect=[0, 0, 0.82, 1])
+            _t1_sl_mv, _t1_cc_mv, _t1_sr_mv = st.columns([1, 4, 1])
+            with _t1_cc_mv:
+                st.pyplot(_t1_fig_m, use_container_width=True)
+            plt.close(_t1_fig_m)
+
+            # Zone heatmap (usage + opp BA)
+            st.markdown(f"### {t['zone_heatmap_pitch']}")
+            for _t1_hm_metric, _t1_hm_title in [("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]:
+                _t1_fig_hm, _t1_ax_hm = _dark_fig(figsize=(6, 5))
+                _t1_im_hm = draw_zone_heatmap(sp_data, _t1_hm_metric, _t1_hm_title, _t1_ax_hm, lang=lang)
+                _t1_cb_hm = _t1_fig_hm.colorbar(_t1_im_hm, ax=_t1_ax_hm, fraction=0.046, pad=0.04)
+                _t1_cb_hm.ax.tick_params(colors="white")
+                _t1_fig_hm.tight_layout(pad=2.0)
+                _t1_sl_hm, _t1_cc_hm, _t1_sr_hm = st.columns([1, 4, 1])
+                with _t1_cc_hm:
+                    st.pyplot(_t1_fig_hm, use_container_width=True)
+                    if _t1_hm_metric == "usage":
+                        st.caption(t["zone_usage_explain"])
+                    else:
+                        st.caption(t["zone_opp_ba_explain"])
+                plt.close(_t1_fig_hm)
+
+            # Platoon splits
+            st.markdown(f"### {t['platoon']}")
+            st.caption(t["platoon_pitcher_explain"])
+            _t1_sl_pl, _t1_cl_pl, _t1_cr_pl, _t1_sr_pl = st.columns([0.5, 2, 2, 0.5])
+            for _t1_pl_col, _t1_stand, _t1_pl_label in [(_t1_cl_pl, "L", t["vs_lhb"]), (_t1_cr_pl, "R", t["vs_rhb"])]:
+                with _t1_pl_col:
+                    st.markdown(f"**{_t1_pl_label}**")
+                    _t1_split_df = sp_data[sp_data["stand"] == _t1_stand]
+                    if _t1_split_df.empty:
+                        st.write(t["no_data"])
+                        continue
+                    _t1_ss = pitching_stats(_t1_split_df)
+                    _t1_m1, _t1_m2, _t1_m3, _t1_m4 = st.columns(4)
+                    _t1_m1.metric(t["opp_avg"], f"{_t1_ss['Opp AVG']:.3f}")
+                    _t1_m2.metric(t["opp_slg"], f"{_t1_ss['Opp SLG']:.3f}")
+                    _t1_m3.metric(t["k_pct"], f"{_t1_ss['K%']:.1f}%")
+                    _t1_m4.metric(t["bb_pct"], f"{_t1_ss['BB%']:.1f}%")
+                    # Zone heatmap per platoon side
+                    _t1_fig_z, _t1_ax_z = _dark_fig(figsize=(5, 4))
+                    draw_zone_heatmap(_t1_split_df, "ba", f"{_t1_pl_label} — {t['ba_heatmap']}", _t1_ax_z, lang=lang)
+                    _t1_fig_z.tight_layout(pad=2.0)
+                    st.pyplot(_t1_fig_z, use_container_width=True)
+                    plt.close(_t1_fig_z)
+
+            # Pitch selection by count
+            st.markdown(f"### {t['pitch_selection_by_count']}")
+            st.caption(t["pitch_selection_explain"])
+            _t1_ps_table = pitch_selection_by_count(sp_data, t, lang)
+            if not _t1_ps_table.empty:
+                st.dataframe(_t1_ps_table, use_container_width=True, hide_index=True)
+
+            # Count-by-count performance
+            st.markdown(f"**{t['count_perf']}**")
+            st.caption(t["count_explain"])
+            _t1_pit_count_df = sp_data.dropna(subset=["balls", "strikes"]).copy()
+            _t1_pit_count_df["balls"] = _t1_pit_count_df["balls"].astype(int)
+            _t1_pit_count_df["strikes"] = _t1_pit_count_df["strikes"].astype(int)
+            _t1_all_counts = [
+                (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
+                (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
+            ]
+            _t1_pit_count_rows = []
+            for _t1_b, _t1_s in _t1_all_counts:
+                _t1_cat = count_category(_t1_b, _t1_s)
+                _t1_tag = {"ahead": t["behind"], "behind": t["ahead"], "even": t["even"]}[_t1_cat]
+                _t1_cdf = _t1_pit_count_df[(_t1_pit_count_df["balls"] == _t1_b) & (_t1_pit_count_df["strikes"] == _t1_s)]
+                if _t1_cdf.empty:
+                    continue
+                _t1_ps2 = pitching_stats(_t1_cdf)
+                if _t1_ps2["PA"] < 3:
+                    continue
+                _t1_pit_count_rows.append({
+                    ("Count" if lang == "EN" else "カウント"): f"{_t1_b}-{_t1_s}",
+                    ("Type" if lang == "EN" else "分類"): _t1_tag,
+                    "PA": _t1_ps2["PA"],
+                    t["opp_avg"]: _t1_ps2["Opp AVG"],
+                    t["k_pct"]: _t1_ps2["K%"],
+                    t["bb_pct"]: _t1_ps2["BB%"],
+                    t["whiff_pct"]: _t1_ps2["Whiff%"],
+                })
+            if _t1_pit_count_rows:
+                _t1_pit_count_table = pd.DataFrame(_t1_pit_count_rows)
+                st.dataframe(
+                    _t1_pit_count_table.style.format({
+                        t["opp_avg"]: "{:.3f}",
+                        t["k_pct"]: "{:.1f}",
+                        t["bb_pct"]: "{:.1f}",
+                        t["whiff_pct"]: "{:.1f}",
+                    }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
         st.divider()
 
         # Key tendencies
@@ -2557,13 +2702,13 @@ def main():
                 ax_radar.grid(color="gray", alpha=0.3)
                 ax_radar.spines["polar"].set_color("gray")
                 for angle, val, raw in zip(angles, values, raw_values):
-                    dx = np.cos(angle - np.pi / 2) * 20
-                    dy = np.sin(angle - np.pi / 2) * 20
+                    dx = np.cos(angle - np.pi / 2) * 35
+                    dy = np.sin(angle - np.pi / 2) * 35
                     ax_radar.annotate(raw, xy=(angle, val),
                                       xytext=(dx, dy), textcoords="offset points",
                                       fontsize=12, ha="center", va="center",
                                       color="white", fontweight="bold")
-                leg = ax_radar.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1),
+                leg = ax_radar.legend(loc="upper right", bbox_to_anchor=(1.35, 1.15),
                                       fontsize=12, facecolor="#0e1117", edgecolor="gray")
                 for txt in leg.get_texts():
                     txt.set_color("white")
@@ -2755,11 +2900,11 @@ def main():
                 ax_pr.grid(color="gray", alpha=0.3)
                 ax_pr.spines["polar"].set_color("gray")
                 for angle, val, raw in zip(angles_r, player_vals, raw_vals_r):
-                    dx = np.cos(angle - np.pi / 2) * 20
-                    dy = np.sin(angle - np.pi / 2) * 20
+                    dx = np.cos(angle - np.pi / 2) * 35
+                    dy = np.sin(angle - np.pi / 2) * 35
                     ax_pr.annotate(raw, xy=(angle, val), xytext=(dx, dy), textcoords="offset points",
                                    fontsize=12, ha="center", va="center", color="white", fontweight="bold")
-                leg_pr = ax_pr.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
+                leg_pr = ax_pr.legend(loc="upper right", bbox_to_anchor=(1.35, 1.15),
                                        fontsize=12, facecolor="#0e1117", edgecolor="gray")
                 for txt in leg_pr.get_texts():
                     txt.set_color("white")
@@ -2781,7 +2926,7 @@ def main():
                     im_z3 = draw_zone_3x3(pdf, z3_metric, z3_title, ax_z3, lang=lang)
                     cb_z3 = fig_z3.colorbar(im_z3, ax=ax_z3, fraction=0.046, pad=0.04)
                     cb_z3.ax.tick_params(colors="white")
-                    fig_z3.tight_layout()
+                    fig_z3.tight_layout(pad=2.0)
                     st.pyplot(fig_z3, use_container_width=True)
                     plt.close(fig_z3)
 
