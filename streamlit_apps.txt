@@ -50,3 +50,6 @@ https://wbc-ned-pitchers.streamlit.app/
 https://wbc-isr-batters.streamlit.app/
 https://wbc-isr-pitchers.streamlit.app/
 https://wbc-nic-batters.streamlit.app/
+
+# WBC — Quarterfinals
+https://wbc-qf-jpn-ven.streamlit.app/
