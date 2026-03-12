@@ -91,7 +91,7 @@ TEXTS = {
     "EN": {
         "page_title": "WBC 2026 QF: Japan vs Venezuela",
         "main_title": "WBC 2026 Quarterfinal: Japan vs Venezuela",
-        "subtitle": "Venezuela Scouting Report for Japan",
+        "subtitle": "Mar 15 (Sun) 10:00 JST — LoanDepot Park, Miami",
         "tab1": "Matchup Overview",
         "tab2": "Lineup Scouting",
         "tab3": "Starting Pitcher",
@@ -182,7 +182,7 @@ TEXTS = {
     "JA": {
         "page_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
         "main_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
-        "subtitle": "ベネズエラ スカウティングレポート（日本代表向け）",
+        "subtitle": "3月15日(日) 10:00 JST — ローンデポ・パーク（マイアミ）",
         "tab1": "対戦プレビュー",
         "tab2": "打線スカウティング",
         "tab3": "先発投手分析",
