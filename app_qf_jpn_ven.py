@@ -1170,6 +1170,81 @@ def pitch_selection_by_count(df: pd.DataFrame, t, lang: str):
     return pd.DataFrame()
 
 
+def draw_pitch_selection_pies(df: pd.DataFrame, t, lang: str, st_container=None):
+    """Draw pie charts for pitch selection by count situation.
+
+    Uses a 3-column then 2-column grid for 5 situations.
+    """
+    import streamlit as _st
+    container = st_container or _st
+
+    valid = df.dropna(subset=["pitch_type", "balls", "strikes"]).copy()
+    if valid.empty:
+        return
+    valid["balls"] = valid["balls"].astype(int)
+    valid["strikes"] = valid["strikes"].astype(int)
+
+    situations = [
+        (t["count_first_pitch"], valid[(valid["balls"] == 0) & (valid["strikes"] == 0)]),
+        (t["count_ahead_pitcher"], valid[valid["strikes"] > valid["balls"]]),
+        (t["count_behind_pitcher"], valid[valid["balls"] > valid["strikes"]]),
+        (t["count_even_pitcher"], valid[(valid["balls"] == valid["strikes"]) & (valid["balls"] > 0)]),
+        (t["count_two_strikes"], valid[valid["strikes"] == 2]),
+    ]
+
+    # Filter out empty situations
+    situations = [(name, sdf) for name, sdf in situations if not sdf.empty]
+    if not situations:
+        return
+
+    # Layout: up to 3 per row
+    idx = 0
+    while idx < len(situations):
+        batch = situations[idx:idx + 3]
+        cols = container.columns(len(batch))
+        for col, (sit_name, sit_df) in zip(cols, batch):
+            with col:
+                total = len(sit_df)
+                counts = sit_df["pitch_type"].value_counts()
+                labels = [PITCH_LABELS.get(pt, pt) for pt in counts.index]
+                colors = [PITCH_COLORS.get(pt, "#AAAAAA") for pt in counts.index]
+                sizes = counts.values
+
+                fig_pie, ax_pie = plt.subplots(figsize=(3.5, 3.5), facecolor="#0e1117")
+                wedges, texts, autotexts = ax_pie.pie(
+                    sizes, labels=None, colors=colors, autopct="",
+                    startangle=90, pctdistance=0.75,
+                    wedgeprops=dict(width=0.45, edgecolor="#0e1117", linewidth=1.5),
+                )
+                # Add percentage labels on wedges (only if >= 5%)
+                for i, (w, val) in enumerate(zip(wedges, sizes)):
+                    pct = val / total * 100
+                    if pct >= 5:
+                        ang = (w.theta2 - w.theta1) / 2.0 + w.theta1
+                        x = np.cos(np.radians(ang)) * 0.55
+                        y = np.sin(np.radians(ang)) * 0.55
+                        ax_pie.text(x, y, f"{pct:.0f}%", ha="center", va="center",
+                                    fontsize=11, fontweight="bold", color="white")
+
+                ax_pie.set_title(f"{sit_name}\n(n={total})", color="white",
+                                 fontsize=13, fontweight="bold", pad=8)
+
+                # Legend below
+                legend = ax_pie.legend(
+                    wedges, labels, loc="center", bbox_to_anchor=(0.5, -0.08),
+                    ncol=min(3, len(labels)), fontsize=9,
+                    facecolor="#0e1117", edgecolor="gray", framealpha=0.9,
+                )
+                for txt in legend.get_texts():
+                    txt.set_color("white")
+
+                fig_pie.tight_layout()
+                container_col = col
+                container_col.pyplot(fig_pie, use_container_width=True)
+                plt.close(fig_pie)
+        idx += 3
+
+
 def _zone_names_for_bats(bats: str, lang: str) -> dict:
     """Return zone names adjusted for batter handedness.
 
@@ -2215,29 +2290,49 @@ def main():
                     plt.close(fig_ex)
                     st.caption(t["radar_explain"])
 
-                # 3x3 Zone heatmap
+                # 3x3 Zone heatmap (split by pitcher handedness)
                 with chart_right:
                     st.markdown(f"**{t['zone_3x3']}**")
-                    fig_z3_ex, ax_z3_ex = _dark_fig(figsize=(4, 3.5))
-                    im_z3_ex = draw_zone_3x3(pdf_player, "ba", t["ba_heatmap"], ax_z3_ex, lang=lang)
-                    cb_z3_ex = fig_z3_ex.colorbar(im_z3_ex, ax=ax_z3_ex, fraction=0.046, pad=0.04)
-                    cb_z3_ex.ax.tick_params(colors="white", labelsize=10)
-                    fig_z3_ex.tight_layout(pad=2.0)
-                    st.pyplot(fig_z3_ex, use_container_width=True)
-                    plt.close(fig_z3_ex)
+                    _t1_z3_lhp = pdf_player[pdf_player["p_throws"] == "L"]
+                    _t1_z3_rhp = pdf_player[pdf_player["p_throws"] == "R"]
+                    for _t1_z3df, _t1_z3lbl in [
+                        (_t1_z3_lhp, "vs LHP" if lang == "EN" else "vs 左投手"),
+                        (_t1_z3_rhp, "vs RHP" if lang == "EN" else "vs 右投手"),
+                    ]:
+                        st.markdown(f"**{_t1_z3lbl}**")
+                        _t1_z3df_use = _t1_z3df if len(_t1_z3df) >= 30 else pdf_player
+                        fig_z3_ex, ax_z3_ex = _dark_fig(figsize=(4, 3.5))
+                        im_z3_ex = draw_zone_3x3(_t1_z3df_use, "ba", f"{_t1_z3lbl} — {t['ba_heatmap']}", ax_z3_ex, lang=lang)
+                        cb_z3_ex = fig_z3_ex.colorbar(im_z3_ex, ax=ax_z3_ex, fraction=0.046, pad=0.04)
+                        cb_z3_ex.ax.tick_params(colors="white", labelsize=10)
+                        fig_z3_ex.tight_layout(pad=2.0)
+                        st.pyplot(fig_z3_ex, use_container_width=True)
+                        plt.close(fig_z3_ex)
+                        if len(_t1_z3df) < 30:
+                            st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
                     st.caption(t["zone_explain"])
 
-                # Row 2: Spray chart + Platoon splits (centered ~37.5% each)
+                # Row 2: Spray chart (vs LHP / vs RHP) + Platoon splits
                 _sp3, chart2_left, chart2_right, _sp4 = st.columns([1, 3, 3, 1])
 
                 with chart2_left:
                     st.markdown(f"**{t['spray_chart']}**")
-                    fig_sp_ex, ax_sp_ex = plt.subplots(figsize=(4, 4), facecolor="#0e1117")
-                    ax_sp_ex.set_facecolor("#0e1117")
-                    draw_spray_chart(pdf_player, display_name, ax_sp_ex, stadium="marlins", density=True, lang=lang)
-                    fig_sp_ex.tight_layout()
-                    st.pyplot(fig_sp_ex, use_container_width=True)
-                    plt.close(fig_sp_ex)
+                    _t1_sp_lhp = pdf_player[pdf_player["p_throws"] == "L"]
+                    _t1_sp_rhp = pdf_player[pdf_player["p_throws"] == "R"]
+                    for _t1_spdf, _t1_splbl in [
+                        (_t1_sp_lhp, "vs LHP" if lang == "EN" else "vs 左投手"),
+                        (_t1_sp_rhp, "vs RHP" if lang == "EN" else "vs 右投手"),
+                    ]:
+                        st.markdown(f"**{_t1_splbl}**")
+                        _t1_spdf_use = _t1_spdf if len(_t1_spdf.dropna(subset=["hc_x", "hc_y"])) >= 15 else pdf_player
+                        fig_sp_ex, ax_sp_ex = plt.subplots(figsize=(4, 4), facecolor="#0e1117")
+                        ax_sp_ex.set_facecolor("#0e1117")
+                        draw_spray_chart(_t1_spdf_use, f"{display_name} {_t1_splbl}", ax_sp_ex, stadium="marlins", density=True, lang=lang)
+                        fig_sp_ex.tight_layout()
+                        st.pyplot(fig_sp_ex, use_container_width=True)
+                        plt.close(fig_sp_ex)
+                        if len(_t1_spdf.dropna(subset=["hc_x", "hc_y"])) < 15:
+                            st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
                     st.caption(t["spray_explain"])
 
                 # Platoon splits
@@ -2280,87 +2375,118 @@ def main():
                     else:
                         st.write(t["no_data"])
 
-                # === Defensive Positioning ===
+                # === Defensive Positioning (split by pitcher handedness) ===
                 st.markdown(f"### {t['defensive_positioning']}")
                 st.caption(t["defensive_explain"])
-                st.warning(generate_defensive_positioning(pdf_player, player_info, lang))
+                _def_vs_lhp = pdf_player[pdf_player["p_throws"] == "L"]
+                _def_vs_rhp = pdf_player[pdf_player["p_throws"] == "R"]
+                _dsl, _dcl, _dcr, _dsr = st.columns([0.5, 2, 2, 0.5])
+                with _dcl:
+                    st.markdown(f"**{'vs LHP（左投手時）' if lang == 'JA' else 'vs LHP'}**")
+                    if len(_def_vs_lhp.dropna(subset=["hc_x", "hc_y"])) >= 20:
+                        st.warning(generate_defensive_positioning(_def_vs_lhp, player_info, lang))
+                    else:
+                        st.warning(generate_defensive_positioning(pdf_player, player_info, lang))
+                        st.caption("⚠️ " + ("左投手データ不足のため全体データで算出" if lang == "JA" else "Insufficient LHP data — using overall"))
+                with _dcr:
+                    st.markdown(f"**{'vs RHP（右投手時）' if lang == 'JA' else 'vs RHP'}**")
+                    if len(_def_vs_rhp.dropna(subset=["hc_x", "hc_y"])) >= 20:
+                        st.warning(generate_defensive_positioning(_def_vs_rhp, player_info, lang))
+                    else:
+                        st.warning(generate_defensive_positioning(pdf_player, player_info, lang))
+                        st.caption("⚠️ " + ("右投手データ不足のため全体データで算出" if lang == "JA" else "Insufficient RHP data — using overall"))
 
-                # === 5x5 Zone heatmaps ===
+                # === 5x5 Zone heatmaps (split by pitcher handedness) ===
                 st.markdown(f"**{t['zone_5x5']}**")
+                _t1_zone_vs_lhp = pdf_player[pdf_player["p_throws"] == "L"]
+                _t1_zone_vs_rhp = pdf_player[pdf_player["p_throws"] == "R"]
                 for _t1_hm_m, _t1_hm_t, _t1_hm_c in [
                     ("ba", t["ba_heatmap"], t["danger_zone"]),
                     ("xwoba", t["xwoba_heatmap"], t.get("danger_zone_xwoba", t["danger_zone"])),
                 ]:
                     st.caption(_t1_hm_c)
-                    _t1_hsl, _t1_hcc, _t1_hsr = st.columns([1, 4, 1])
-                    with _t1_hcc:
-                        _t1_fh, _t1_ah = _dark_fig(figsize=(6, 5))
-                        _t1_ih = draw_zone_heatmap(pdf_player, _t1_hm_m, _t1_hm_t, _t1_ah, lang=lang)
-                        _t1_cb = _t1_fh.colorbar(_t1_ih, ax=_t1_ah, fraction=0.046, pad=0.04)
-                        _t1_cb.ax.tick_params(colors="white")
-                        _t1_fh.tight_layout()
-                        st.pyplot(_t1_fh, use_container_width=True)
-                        plt.close(_t1_fh)
-
-                # === Spray chart vs LHP / vs RHP ===
-                _t1_spl = "Spray Chart — vs LHP" if lang == "EN" else "打球方向図 — vs 左投手"
-                _t1_spr = "Spray Chart — vs RHP" if lang == "EN" else "打球方向図 — vs 右投手"
-                _t1_ssl, _t1_scl, _t1_scr, _t1_ssr = st.columns([0.5, 2, 2, 0.5])
-                for _t1_col, _t1_throws, _t1_spt in [(_t1_scl, "L", _t1_spl), (_t1_scr, "R", _t1_spr)]:
-                    with _t1_col:
-                        _t1_split_sp = pdf_player[pdf_player["p_throws"] == _t1_throws]
-                        if _t1_split_sp.empty:
-                            st.write(t["no_data"])
-                            continue
-                        _t1_fs, _t1_as = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
-                        _t1_as.set_facecolor("#0e1117")
-                        draw_spray_chart(_t1_split_sp, _t1_spt, _t1_as, stadium="marlins", density=True, lang=lang)
-                        _t1_fs.tight_layout()
-                        st.pyplot(_t1_fs, use_container_width=True)
-                        plt.close(_t1_fs)
+                    _t1_hzl, _t1_hcl, _t1_hcr, _t1_hzr = st.columns([0.5, 2, 2, 0.5])
+                    for _t1_hcol, _t1_hdf, _t1_hlbl in [
+                        (_t1_hcl, _t1_zone_vs_lhp, "vs LHP" if lang == "EN" else "vs 左投手"),
+                        (_t1_hcr, _t1_zone_vs_rhp, "vs RHP" if lang == "EN" else "vs 右投手"),
+                    ]:
+                        with _t1_hcol:
+                            st.markdown(f"**{_t1_hlbl}**")
+                            _t1_hdf_use = _t1_hdf if len(_t1_hdf) >= 30 else pdf_player
+                            _t1_fh, _t1_ah = _dark_fig(figsize=(5, 4))
+                            _t1_ih = draw_zone_heatmap(_t1_hdf_use, _t1_hm_m, f"{_t1_hlbl} — {_t1_hm_t}", _t1_ah, lang=lang)
+                            _t1_cb = _t1_fh.colorbar(_t1_ih, ax=_t1_ah, fraction=0.046, pad=0.04)
+                            _t1_cb.ax.tick_params(colors="white")
+                            _t1_fh.tight_layout()
+                            st.pyplot(_t1_fh, use_container_width=True)
+                            plt.close(_t1_fh)
+                            if len(_t1_hdf) < 30:
+                                st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
 
                 # === Batted Ball Profile ===
                 st.markdown(f"**{t['batted_ball']}**")
                 with st.expander("What do these mean?" if lang == "EN" else "用語の説明を見る"):
                     st.markdown(t["glossary_batted"])
-                _t1_prof = batted_ball_profile(pdf_player, t)
-                if _t1_prof:
-                    _t1_bbc = st.columns(4)
-                    for _t1_i, (_t1_k, _t1_v) in enumerate(_t1_prof.items()):
-                        _t1_bbc[_t1_i % 4].metric(_t1_k, _t1_v)
-                else:
-                    st.write(t["no_data"])
+                _t1_bb_lhp = pdf_player[pdf_player["p_throws"] == "L"]
+                _t1_bb_rhp = pdf_player[pdf_player["p_throws"] == "R"]
+                _t1_bbsl, _t1_bbcl, _t1_bbcr, _t1_bbsr = st.columns([0.5, 2, 2, 0.5])
+                for _t1_bbcol, _t1_bbdf, _t1_bblbl in [
+                    (_t1_bbcl, _t1_bb_lhp, "vs LHP" if lang == "EN" else "vs 左投手"),
+                    (_t1_bbcr, _t1_bb_rhp, "vs RHP" if lang == "EN" else "vs 右投手"),
+                ]:
+                    with _t1_bbcol:
+                        st.markdown(f"**{_t1_bblbl}**")
+                        _t1_bbdf_use = _t1_bbdf if len(_t1_bbdf) >= 30 else pdf_player
+                        _t1_prof = batted_ball_profile(_t1_bbdf_use, t)
+                        if _t1_prof:
+                            _t1_bbc = st.columns(2)
+                            for _t1_i, (_t1_k, _t1_v) in enumerate(_t1_prof.items()):
+                                _t1_bbc[_t1_i % 2].metric(_t1_k, _t1_v)
+                        else:
+                            st.write(t["no_data"])
+                        if len(_t1_bbdf) < 30:
+                            st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
 
-                # === Pitch type performance ===
+                # === Pitch type performance (split by pitcher handedness) ===
                 st.markdown(f"**{t['pitch_type_perf']}**")
                 with st.expander(t["glossary_pitch"] if lang == "EN" else "空振率・チェイス率とは？"):
                     st.markdown(t["glossary_pitch"])
-                _t1_ptt = pitch_type_table(pdf_player, t)
-                if not _t1_ptt.empty:
-                    st.dataframe(_t1_ptt, use_container_width=True, hide_index=True)
+                _t1_pt_lhp = pdf_player[pdf_player["p_throws"] == "L"]
+                _t1_pt_rhp = pdf_player[pdf_player["p_throws"] == "R"]
+                for _t1_ptdf, _t1_ptlbl in [
+                    (_t1_pt_lhp, "vs LHP" if lang == "EN" else "vs 左投手"),
+                    (_t1_pt_rhp, "vs RHP" if lang == "EN" else "vs 右投手"),
+                ]:
+                    st.markdown(f"**{_t1_ptlbl}**")
+                    _t1_ptdf_use = _t1_ptdf if len(_t1_ptdf) >= 30 else pdf_player
+                    _t1_ptt = pitch_type_table(_t1_ptdf_use, t)
+                    if not _t1_ptt.empty:
+                        st.dataframe(_t1_ptt, use_container_width=True, hide_index=True)
 
-                    _t1_cd = _t1_ptt[[t["pitch_type"], t["whiff_pct"]]].copy()
-                    _t1_cd["wv"] = _t1_cd[t["whiff_pct"]].str.rstrip("%").astype(float)
-                    _t1_cd = _t1_cd.sort_values("wv", ascending=True)
-                    _t1_wsl, _t1_wcc, _t1_wsr = st.columns([1, 4, 1])
-                    with _t1_wcc:
-                        _t1_fw, _t1_aw = _dark_fig(figsize=(8, max(3, len(_t1_cd) * 0.5)))
-                        _t1_clrs = plt.cm.RdYlGn_r(_t1_cd["wv"] / max(_t1_cd["wv"].max(), 1))
-                        _t1_bars = _t1_aw.barh(_t1_cd[t["pitch_type"]], _t1_cd["wv"], color=_t1_clrs)
-                        for _t1_bar, _t1_val in zip(_t1_bars, _t1_cd["wv"]):
-                            _t1_aw.text(_t1_bar.get_width() + 0.5, _t1_bar.get_y() + _t1_bar.get_height() / 2,
-                                        f"{_t1_val:.1f}%", va="center", ha="left", color="white",
-                                        fontsize=12, fontweight="bold")
-                        _t1_aw.set_xlabel(t["whiff_pct"], color="white", fontsize=14)
-                        _t1_aw.tick_params(colors="white", labelsize=12)
-                        _t1_aw.set_title(t["whiff_pct"], color="white", fontsize=16, fontweight="bold")
-                        _t1_xm = _t1_cd["wv"].max()
-                        _t1_aw.set_xlim(0, _t1_xm * 1.25 if _t1_xm > 0 else 10)
-                        for sp in _t1_aw.spines.values():
-                            sp.set_color("white")
-                        _t1_fw.tight_layout()
-                        st.pyplot(_t1_fw, use_container_width=True)
-                        plt.close(_t1_fw)
+                        _t1_cd = _t1_ptt[[t["pitch_type"], t["whiff_pct"]]].copy()
+                        _t1_cd["wv"] = _t1_cd[t["whiff_pct"]].str.rstrip("%").astype(float)
+                        _t1_cd = _t1_cd.sort_values("wv", ascending=True)
+                        _t1_wsl, _t1_wcc, _t1_wsr = st.columns([1, 4, 1])
+                        with _t1_wcc:
+                            _t1_fw, _t1_aw = _dark_fig(figsize=(8, max(3, len(_t1_cd) * 0.5)))
+                            _t1_clrs = plt.cm.RdYlGn_r(_t1_cd["wv"] / max(_t1_cd["wv"].max(), 1))
+                            _t1_bars = _t1_aw.barh(_t1_cd[t["pitch_type"]], _t1_cd["wv"], color=_t1_clrs)
+                            for _t1_bar, _t1_val in zip(_t1_bars, _t1_cd["wv"]):
+                                _t1_aw.text(_t1_bar.get_width() + 0.5, _t1_bar.get_y() + _t1_bar.get_height() / 2,
+                                            f"{_t1_val:.1f}%", va="center", ha="left", color="white",
+                                            fontsize=12, fontweight="bold")
+                            _t1_aw.set_xlabel(t["whiff_pct"], color="white", fontsize=14)
+                            _t1_aw.tick_params(colors="white", labelsize=12)
+                            _t1_aw.set_title(f"{_t1_ptlbl} — {t['whiff_pct']}", color="white", fontsize=16, fontweight="bold")
+                            _t1_xm = _t1_cd["wv"].max()
+                            _t1_aw.set_xlim(0, _t1_xm * 1.25 if _t1_xm > 0 else 10)
+                            for sp in _t1_aw.spines.values():
+                                sp.set_color("white")
+                            _t1_fw.tight_layout()
+                            st.pyplot(_t1_fw, use_container_width=True)
+                            plt.close(_t1_fw)
+                        if len(_t1_ptdf) < 30:
+                            st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
 
                 # === Platoon zone heatmaps ===
                 st.markdown(f"**{t['platoon']} — {t['zone_heatmap_pitch']}**")
@@ -2384,44 +2510,54 @@ def main():
                         st.pyplot(_t1_fz, use_container_width=True)
                         plt.close(_t1_fz)
 
-                # === Count-by-count performance ===
+                # === Count-by-count performance (split by pitcher handedness) ===
                 st.markdown(f"**{t['count_perf']}**")
                 st.caption(t["count_explain"])
-                _t1_cdf = pdf_player.dropna(subset=["balls", "strikes"]).copy()
-                _t1_cdf["balls"] = _t1_cdf["balls"].astype(int)
-                _t1_cdf["strikes"] = _t1_cdf["strikes"].astype(int)
+                _t1_cnt_lhp = pdf_player[pdf_player["p_throws"] == "L"]
+                _t1_cnt_rhp = pdf_player[pdf_player["p_throws"] == "R"]
                 _t1_all_counts = [
                     (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
                     (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
                 ]
-                _t1_crows = []
-                for _t1_b, _t1_s in _t1_all_counts:
-                    _t1_cat = count_category(_t1_b, _t1_s)
-                    _t1_tag = {"ahead": t["ahead"], "behind": t["behind"], "even": t["even"]}[_t1_cat]
-                    _t1_cdf2 = _t1_cdf[(_t1_cdf["balls"] == _t1_b) & (_t1_cdf["strikes"] == _t1_s)]
-                    if _t1_cdf2.empty:
-                        continue
-                    _t1_cs = batting_stats(_t1_cdf2)
-                    if _t1_cs["PA"] < 5:
-                        continue
-                    _t1_crows.append({
-                        ("Count" if lang == "EN" else "カウント"): f"{_t1_b}-{_t1_s}",
-                        ("Type" if lang == "EN" else "分類"): _t1_tag,
-                        "PA": _t1_cs["PA"], "AVG": _t1_cs["AVG"], "OBP": _t1_cs["OBP"],
-                        "SLG": _t1_cs["SLG"], "OPS": _t1_cs["OPS"],
-                        "K%": _t1_cs["K%"], "BB%": _t1_cs["BB%"],
-                    })
-                if _t1_crows:
-                    _t1_ct = pd.DataFrame(_t1_crows)
-                    _t1_type_col = "Type" if lang == "EN" else "分類"
-                    st.dataframe(
-                        _t1_ct.style.format({
-                            "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
-                            "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-                        }).background_gradient(subset=["OPS"], cmap="RdYlGn"
-                        ).map(lambda v: _style_count_type(v, t), subset=[_t1_type_col]),
-                        use_container_width=True, hide_index=True,
-                    )
+                for _t1_cntdf, _t1_cntlbl in [
+                    (_t1_cnt_lhp, "vs LHP" if lang == "EN" else "vs 左投手"),
+                    (_t1_cnt_rhp, "vs RHP" if lang == "EN" else "vs 右投手"),
+                ]:
+                    st.markdown(f"**{_t1_cntlbl}**")
+                    _t1_cntdf_use = _t1_cntdf if len(_t1_cntdf) >= 50 else pdf_player
+                    _t1_cdf = _t1_cntdf_use.dropna(subset=["balls", "strikes"]).copy()
+                    _t1_cdf["balls"] = _t1_cdf["balls"].astype(int)
+                    _t1_cdf["strikes"] = _t1_cdf["strikes"].astype(int)
+                    _t1_crows = []
+                    for _t1_b, _t1_s in _t1_all_counts:
+                        _t1_cat = count_category(_t1_b, _t1_s)
+                        _t1_tag = {"ahead": t["ahead"], "behind": t["behind"], "even": t["even"]}[_t1_cat]
+                        _t1_cdf2 = _t1_cdf[(_t1_cdf["balls"] == _t1_b) & (_t1_cdf["strikes"] == _t1_s)]
+                        if _t1_cdf2.empty:
+                            continue
+                        _t1_cs = batting_stats(_t1_cdf2)
+                        if _t1_cs["PA"] < 5:
+                            continue
+                        _t1_crows.append({
+                            ("Count" if lang == "EN" else "カウント"): f"{_t1_b}-{_t1_s}",
+                            ("Type" if lang == "EN" else "分類"): _t1_tag,
+                            "PA": _t1_cs["PA"], "AVG": _t1_cs["AVG"], "OBP": _t1_cs["OBP"],
+                            "SLG": _t1_cs["SLG"], "OPS": _t1_cs["OPS"],
+                            "K%": _t1_cs["K%"], "BB%": _t1_cs["BB%"],
+                        })
+                    if _t1_crows:
+                        _t1_ct = pd.DataFrame(_t1_crows)
+                        _t1_type_col = "Type" if lang == "EN" else "分類"
+                        st.dataframe(
+                            _t1_ct.style.format({
+                                "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
+                                "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
+                            }).background_gradient(subset=["OPS"], cmap="RdYlGn"
+                            ).map(lambda v: _style_count_type(v, t), subset=[_t1_type_col]),
+                            use_container_width=True, hide_index=True,
+                        )
+                    if len(_t1_cntdf) < 50:
+                        st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
 
         st.divider()
 
@@ -2457,152 +2593,166 @@ def main():
                 velo_label = "平均球速" if lang == "JA" else "Avg Velo"
                 st.caption(f"{velo_label}: {sp_stats['Avg Velo']:.1f} mph ({sp_stats['Avg Velo'] * 1.609:.0f} km/h)")
 
-            # --- SP Detailed Analysis in Tab 1 ---
-            # Scouting summary
-            st.markdown(f"### {t['scouting_summary']}")
+            # --- SP Detailed Analysis in Tab 1 (folded into expanders) ---
+            # Scouting summary (always visible)
             _t1_sp_summary = generate_pitcher_summary(sp_stats, sp_data, sp_info, lang)
             st.info(_t1_sp_summary)
 
-            # Hitting plan (how to attack this pitcher)
-            st.markdown(f"### {t['hitting_plan_title']}")
-            st.caption(t["hitting_plan_explain"])
-            _t1_hit_plan = generate_hitting_plan(sp_data, sp_stats, sp_info, lang)
-            st.success(_t1_hit_plan)
+            # --- Expander: Hitting Plan ---
+            with st.expander("📋 " + t['hitting_plan_title'], expanded=False):
+                st.caption(t["hitting_plan_explain"])
+                _t1_hit_plan = generate_hitting_plan(sp_data, sp_stats, sp_info, lang)
+                st.success(_t1_hit_plan)
 
-            # Left/Right hitting plans
-            _t1_sp_vs_lhb = sp_data[sp_data["stand"] == "L"]
-            _t1_sp_vs_rhb = sp_data[sp_data["stand"] == "R"]
-            _t1_sl_hp, _t1_col_hp_l, _t1_col_hp_r, _t1_sr_hp = st.columns([0.5, 2, 2, 0.5])
-            with _t1_col_hp_l:
-                st.markdown(f"**{t['hitting_plan_as_lhb']}**")
-                if not _t1_sp_vs_lhb.empty and len(_t1_sp_vs_lhb) >= 30:
-                    _t1_stats_lhb = pitching_stats(_t1_sp_vs_lhb)
-                    _t1_plan_lhb = generate_hitting_plan(_t1_sp_vs_lhb, _t1_stats_lhb, sp_info, lang)
-                    st.info(_t1_plan_lhb)
-                else:
-                    st.write(t["no_data"])
-            with _t1_col_hp_r:
-                st.markdown(f"**{t['hitting_plan_as_rhb']}**")
-                if not _t1_sp_vs_rhb.empty and len(_t1_sp_vs_rhb) >= 30:
-                    _t1_stats_rhb = pitching_stats(_t1_sp_vs_rhb)
-                    _t1_plan_rhb = generate_hitting_plan(_t1_sp_vs_rhb, _t1_stats_rhb, sp_info, lang)
-                    st.info(_t1_plan_rhb)
-                else:
-                    st.write(t["no_data"])
-
-            # Arsenal table
-            st.markdown(f"### {t['arsenal']}")
-            _t1_at = arsenal_table(sp_data, t)
-            if not _t1_at.empty:
-                st.dataframe(_t1_at, use_container_width=True, hide_index=True)
-            with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
-                st.markdown(t["arsenal_explain"])
-
-            # Movement chart
-            st.markdown(f"### {t['movement_chart']}")
-            st.caption(t["movement_note"])
-            _t1_fig_m, _t1_ax_m = plt.subplots(figsize=(8, 5), facecolor="#0e1117")
-            _t1_ax_m.set_facecolor("#1a1a2e")
-            for _sp_spine in _t1_ax_m.spines.values():
-                _sp_spine.set_color("white")
-            draw_movement_chart(sp_data, _name_display(PREDICTED_SP, lang), _t1_ax_m, density=True)
-            _t1_fig_m.tight_layout(rect=[0, 0, 0.82, 1])
-            _t1_sl_mv, _t1_cc_mv, _t1_sr_mv = st.columns([1, 4, 1])
-            with _t1_cc_mv:
-                st.pyplot(_t1_fig_m, use_container_width=True)
-            plt.close(_t1_fig_m)
-
-            # Zone heatmap (usage + opp BA)
-            st.markdown(f"### {t['zone_heatmap_pitch']}")
-            for _t1_hm_metric, _t1_hm_title in [("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]:
-                _t1_fig_hm, _t1_ax_hm = _dark_fig(figsize=(6, 5))
-                _t1_im_hm = draw_zone_heatmap(sp_data, _t1_hm_metric, _t1_hm_title, _t1_ax_hm, lang=lang)
-                _t1_cb_hm = _t1_fig_hm.colorbar(_t1_im_hm, ax=_t1_ax_hm, fraction=0.046, pad=0.04)
-                _t1_cb_hm.ax.tick_params(colors="white")
-                _t1_fig_hm.tight_layout(pad=2.0)
-                _t1_sl_hm, _t1_cc_hm, _t1_sr_hm = st.columns([1, 4, 1])
-                with _t1_cc_hm:
-                    st.pyplot(_t1_fig_hm, use_container_width=True)
-                    if _t1_hm_metric == "usage":
-                        st.caption(t["zone_usage_explain"])
+                # Left/Right hitting plans
+                _t1_sp_vs_lhb = sp_data[sp_data["stand"] == "L"]
+                _t1_sp_vs_rhb = sp_data[sp_data["stand"] == "R"]
+                _t1_sl_hp, _t1_col_hp_l, _t1_col_hp_r, _t1_sr_hp = st.columns([0.5, 2, 2, 0.5])
+                with _t1_col_hp_l:
+                    st.markdown(f"**{t['hitting_plan_as_lhb']}**")
+                    if not _t1_sp_vs_lhb.empty and len(_t1_sp_vs_lhb) >= 30:
+                        _t1_stats_lhb = pitching_stats(_t1_sp_vs_lhb)
+                        _t1_plan_lhb = generate_hitting_plan(_t1_sp_vs_lhb, _t1_stats_lhb, sp_info, lang)
+                        st.info(_t1_plan_lhb)
                     else:
-                        st.caption(t["zone_opp_ba_explain"])
-                plt.close(_t1_fig_hm)
-
-            # Platoon splits
-            st.markdown(f"### {t['platoon']}")
-            st.caption(t["platoon_pitcher_explain"])
-            _t1_sl_pl, _t1_cl_pl, _t1_cr_pl, _t1_sr_pl = st.columns([0.5, 2, 2, 0.5])
-            for _t1_pl_col, _t1_stand, _t1_pl_label in [(_t1_cl_pl, "L", t["vs_lhb"]), (_t1_cr_pl, "R", t["vs_rhb"])]:
-                with _t1_pl_col:
-                    st.markdown(f"**{_t1_pl_label}**")
-                    _t1_split_df = sp_data[sp_data["stand"] == _t1_stand]
-                    if _t1_split_df.empty:
                         st.write(t["no_data"])
-                        continue
-                    _t1_ss = pitching_stats(_t1_split_df)
-                    _t1_m1, _t1_m2, _t1_m3, _t1_m4 = st.columns(4)
-                    _t1_m1.metric(t["opp_avg"], f"{_t1_ss['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
-                    _t1_m2.metric(t["opp_slg"], f"{_t1_ss['Opp SLG']:.3f}", help=_help("Opp SLG", lang))
-                    _t1_m3.metric(t["k_pct"], f"{_t1_ss['K%']:.1f}%", help=_help("K%", lang))
-                    _t1_m4.metric(t["bb_pct"], f"{_t1_ss['BB%']:.1f}%", help=_help("BB%", lang))
-                    # Zone heatmap per platoon side
-                    _t1_fig_z, _t1_ax_z = _dark_fig(figsize=(5, 4))
-                    draw_zone_heatmap(_t1_split_df, "ba", f"{_t1_pl_label} — {t['ba_heatmap']}", _t1_ax_z, lang=lang)
-                    _t1_fig_z.tight_layout(pad=2.0)
-                    st.pyplot(_t1_fig_z, use_container_width=True)
-                    plt.close(_t1_fig_z)
+                with _t1_col_hp_r:
+                    st.markdown(f"**{t['hitting_plan_as_rhb']}**")
+                    if not _t1_sp_vs_rhb.empty and len(_t1_sp_vs_rhb) >= 30:
+                        _t1_stats_rhb = pitching_stats(_t1_sp_vs_rhb)
+                        _t1_plan_rhb = generate_hitting_plan(_t1_sp_vs_rhb, _t1_stats_rhb, sp_info, lang)
+                        st.info(_t1_plan_rhb)
+                    else:
+                        st.write(t["no_data"])
 
-            # Pitch selection by count
-            st.markdown(f"### {t['pitch_selection_by_count']}")
-            st.caption(t["pitch_selection_explain"])
-            _t1_ps_table = pitch_selection_by_count(sp_data, t, lang)
-            if not _t1_ps_table.empty:
-                st.dataframe(_t1_ps_table, use_container_width=True, hide_index=True)
+            # --- Expander: Arsenal & Movement ---
+            with st.expander("⚾ " + (t["arsenal"] + " & " + t["movement_chart"]), expanded=False):
+                st.markdown(f"**{t['arsenal']}**")
+                _t1_at = arsenal_table(sp_data, t)
+                if not _t1_at.empty:
+                    st.dataframe(_t1_at, use_container_width=True, hide_index=True)
+                with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
+                    st.markdown(t["arsenal_explain"])
 
-            # Count-by-count performance
-            st.markdown(f"**{t['count_perf']}**")
-            st.caption(t["count_explain"])
-            _t1_pit_count_df = sp_data.dropna(subset=["balls", "strikes"]).copy()
-            _t1_pit_count_df["balls"] = _t1_pit_count_df["balls"].astype(int)
-            _t1_pit_count_df["strikes"] = _t1_pit_count_df["strikes"].astype(int)
-            _t1_all_counts = [
-                (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
-                (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
-            ]
-            _t1_pit_count_rows = []
-            for _t1_b, _t1_s in _t1_all_counts:
-                _t1_cat = count_category(_t1_b, _t1_s)
-                _t1_tag = {"ahead": t["behind"], "behind": t["ahead"], "even": t["even"]}[_t1_cat]
-                _t1_cdf = _t1_pit_count_df[(_t1_pit_count_df["balls"] == _t1_b) & (_t1_pit_count_df["strikes"] == _t1_s)]
-                if _t1_cdf.empty:
-                    continue
-                _t1_ps2 = pitching_stats(_t1_cdf)
-                if _t1_ps2["PA"] < 3:
-                    continue
-                _t1_pit_count_rows.append({
-                    ("Count" if lang == "EN" else "カウント"): f"{_t1_b}-{_t1_s}",
-                    ("Type" if lang == "EN" else "分類"): _t1_tag,
-                    "PA": _t1_ps2["PA"],
-                    t["opp_avg"]: _t1_ps2["Opp AVG"],
-                    t["k_pct"]: _t1_ps2["K%"],
-                    t["bb_pct"]: _t1_ps2["BB%"],
-                    t["whiff_pct"]: _t1_ps2["Whiff%"],
-                })
-            if _t1_pit_count_rows:
-                _t1_pit_count_table = pd.DataFrame(_t1_pit_count_rows)
-                _t1_pit_type_col = "Type" if lang == "EN" else "分類"
-                st.dataframe(
-                    _t1_pit_count_table.style.format({
-                        t["opp_avg"]: "{:.3f}",
-                        t["k_pct"]: "{:.1f}",
-                        t["bb_pct"]: "{:.1f}",
-                        t["whiff_pct"]: "{:.1f}",
-                    }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"
-                    ).map(lambda v: _style_count_type(v, t), subset=[_t1_pit_type_col]),
-                    use_container_width=True,
-                    hide_index=True,
-                )
+                st.divider()
+
+                st.markdown(f"**{t['movement_chart']}**")
+                st.caption(t["movement_note"])
+                _t1_fig_m, _t1_ax_m = plt.subplots(figsize=(8, 5), facecolor="#0e1117")
+                _t1_ax_m.set_facecolor("#1a1a2e")
+                for _sp_spine in _t1_ax_m.spines.values():
+                    _sp_spine.set_color("white")
+                draw_movement_chart(sp_data, _name_display(PREDICTED_SP, lang), _t1_ax_m, density=True)
+                _t1_fig_m.tight_layout(rect=[0, 0, 0.82, 1])
+                _t1_sl_mv, _t1_cc_mv, _t1_sr_mv = st.columns([1, 4, 1])
+                with _t1_cc_mv:
+                    st.pyplot(_t1_fig_m, use_container_width=True)
+                plt.close(_t1_fig_m)
+
+            # --- Expander: Zone & Platoon ---
+            with st.expander("🎯 " + (t["zone_heatmap_pitch"] + " & " + t["platoon"]), expanded=False):
+                st.markdown(f"**{t['zone_heatmap_pitch']}**")
+                for _t1_hm_metric, _t1_hm_title in [("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]:
+                    _t1_fig_hm, _t1_ax_hm = _dark_fig(figsize=(6, 5))
+                    _t1_im_hm = draw_zone_heatmap(sp_data, _t1_hm_metric, _t1_hm_title, _t1_ax_hm, lang=lang)
+                    _t1_cb_hm = _t1_fig_hm.colorbar(_t1_im_hm, ax=_t1_ax_hm, fraction=0.046, pad=0.04)
+                    _t1_cb_hm.ax.tick_params(colors="white")
+                    _t1_fig_hm.tight_layout(pad=2.0)
+                    _t1_sl_hm, _t1_cc_hm, _t1_sr_hm = st.columns([1, 4, 1])
+                    with _t1_cc_hm:
+                        st.pyplot(_t1_fig_hm, use_container_width=True)
+                        if _t1_hm_metric == "usage":
+                            st.caption(t["zone_usage_explain"])
+                        else:
+                            st.caption(t["zone_opp_ba_explain"])
+                    plt.close(_t1_fig_hm)
+
+                st.divider()
+
+                st.markdown(f"**{t['platoon']}**")
+                st.caption(t["platoon_pitcher_explain"])
+                _t1_sl_pl, _t1_cl_pl, _t1_cr_pl, _t1_sr_pl = st.columns([0.5, 2, 2, 0.5])
+                for _t1_pl_col, _t1_stand, _t1_pl_label in [(_t1_cl_pl, "L", t["vs_lhb"]), (_t1_cr_pl, "R", t["vs_rhb"])]:
+                    with _t1_pl_col:
+                        st.markdown(f"**{_t1_pl_label}**")
+                        _t1_split_df = sp_data[sp_data["stand"] == _t1_stand]
+                        if _t1_split_df.empty:
+                            st.write(t["no_data"])
+                            continue
+                        _t1_ss = pitching_stats(_t1_split_df)
+                        _t1_m1, _t1_m2, _t1_m3, _t1_m4 = st.columns(4)
+                        _t1_m1.metric(t["opp_avg"], f"{_t1_ss['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
+                        _t1_m2.metric(t["opp_slg"], f"{_t1_ss['Opp SLG']:.3f}", help=_help("Opp SLG", lang))
+                        _t1_m3.metric(t["k_pct"], f"{_t1_ss['K%']:.1f}%", help=_help("K%", lang))
+                        _t1_m4.metric(t["bb_pct"], f"{_t1_ss['BB%']:.1f}%", help=_help("BB%", lang))
+                        _t1_fig_z, _t1_ax_z = _dark_fig(figsize=(5, 4))
+                        draw_zone_heatmap(_t1_split_df, "ba", f"{_t1_pl_label} — {t['ba_heatmap']}", _t1_ax_z, lang=lang)
+                        _t1_fig_z.tight_layout(pad=2.0)
+                        st.pyplot(_t1_fig_z, use_container_width=True)
+                        plt.close(_t1_fig_z)
+
+            # --- Expander: Count Analysis ---
+            with st.expander("📈 " + t["pitch_selection_by_count"], expanded=False):
+                st.caption(t["pitch_selection_explain"])
+                _t1_sp_lhb = sp_data[sp_data["stand"] == "L"]
+                _t1_sp_rhb = sp_data[sp_data["stand"] == "R"]
+                _t1_all_counts = [
+                    (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
+                    (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
+                ]
+                for _t1_spdf, _t1_splbl in [
+                    (_t1_sp_lhb, t["vs_lhb"]),
+                    (_t1_sp_rhb, t["vs_rhb"]),
+                ]:
+                    st.markdown(f"**{_t1_splbl}**")
+                    _t1_spdf_use = _t1_spdf if len(_t1_spdf) >= 50 else sp_data
+
+                    _t1_ps_table = pitch_selection_by_count(_t1_spdf_use, t, lang)
+                    if not _t1_ps_table.empty:
+                        st.dataframe(_t1_ps_table, use_container_width=True, hide_index=True)
+                    draw_pitch_selection_pies(_t1_spdf_use, t, lang)
+
+                    st.markdown(f"**{t['count_perf']}**")
+                    st.caption(t["count_explain"])
+                    _t1_pit_count_df = _t1_spdf_use.dropna(subset=["balls", "strikes"]).copy()
+                    _t1_pit_count_df["balls"] = _t1_pit_count_df["balls"].astype(int)
+                    _t1_pit_count_df["strikes"] = _t1_pit_count_df["strikes"].astype(int)
+                    _t1_pit_count_rows = []
+                    for _t1_b, _t1_s in _t1_all_counts:
+                        _t1_cat = count_category(_t1_b, _t1_s)
+                        _t1_tag = {"ahead": t["behind"], "behind": t["ahead"], "even": t["even"]}[_t1_cat]
+                        _t1_cdf = _t1_pit_count_df[(_t1_pit_count_df["balls"] == _t1_b) & (_t1_pit_count_df["strikes"] == _t1_s)]
+                        if _t1_cdf.empty:
+                            continue
+                        _t1_ps2 = pitching_stats(_t1_cdf)
+                        if _t1_ps2["PA"] < 3:
+                            continue
+                        _t1_pit_count_rows.append({
+                            ("Count" if lang == "EN" else "カウント"): f"{_t1_b}-{_t1_s}",
+                            ("Type" if lang == "EN" else "分類"): _t1_tag,
+                            "PA": _t1_ps2["PA"],
+                            t["opp_avg"]: _t1_ps2["Opp AVG"],
+                            t["k_pct"]: _t1_ps2["K%"],
+                            t["bb_pct"]: _t1_ps2["BB%"],
+                            t["whiff_pct"]: _t1_ps2["Whiff%"],
+                        })
+                    if _t1_pit_count_rows:
+                        _t1_pit_count_table = pd.DataFrame(_t1_pit_count_rows)
+                        _t1_pit_type_col = "Type" if lang == "EN" else "分類"
+                        st.dataframe(
+                            _t1_pit_count_table.style.format({
+                                t["opp_avg"]: "{:.3f}",
+                                t["k_pct"]: "{:.1f}",
+                                t["bb_pct"]: "{:.1f}",
+                                t["whiff_pct"]: "{:.1f}",
+                            }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"
+                            ).map(lambda v: _style_count_type(v, t), subset=[_t1_pit_type_col]),
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+                    if len(_t1_spdf) < 50:
+                        st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
+                    st.divider()
 
         st.divider()
 
@@ -2959,11 +3109,26 @@ def main():
                 else:
                     st.write(t["no_data"])
 
-            # === Defensive Positioning ===
+            # === Defensive Positioning (split by pitcher handedness) ===
             st.markdown(f"### {t['defensive_positioning']}")
             st.caption(t["defensive_explain"])
-            def_pos = generate_defensive_positioning(pdf, player_info, lang)
-            st.warning(def_pos)
+            _t2_def_vs_lhp = pdf[pdf["p_throws"] == "L"]
+            _t2_def_vs_rhp = pdf[pdf["p_throws"] == "R"]
+            _t2_dsl, _t2_dcl, _t2_dcr, _t2_dsr = st.columns([0.5, 2, 2, 0.5])
+            with _t2_dcl:
+                st.markdown(f"**{'vs LHP（左投手時）' if lang == 'JA' else 'vs LHP'}**")
+                if len(_t2_def_vs_lhp.dropna(subset=["hc_x", "hc_y"])) >= 20:
+                    st.warning(generate_defensive_positioning(_t2_def_vs_lhp, player_info, lang))
+                else:
+                    st.warning(generate_defensive_positioning(pdf, player_info, lang))
+                    st.caption("⚠️ " + ("左投手データ不足のため全体データで算出" if lang == "JA" else "Insufficient LHP data — using overall"))
+            with _t2_dcr:
+                st.markdown(f"**{'vs RHP（右投手時）' if lang == 'JA' else 'vs RHP'}**")
+                if len(_t2_def_vs_rhp.dropna(subset=["hc_x", "hc_y"])) >= 20:
+                    st.warning(generate_defensive_positioning(_t2_def_vs_rhp, player_info, lang))
+                else:
+                    st.warning(generate_defensive_positioning(pdf, player_info, lang))
+                    st.caption("⚠️ " + ("右投手データ不足のため全体データで算出" if lang == "JA" else "Insufficient RHP data — using overall"))
 
             # --- Individual radar chart ---
             _MLB_AVG_R = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
@@ -3031,22 +3196,32 @@ def main():
                     st.pyplot(fig_z3, use_container_width=True)
                     plt.close(fig_z3)
 
-            # --- 5x5 Zone heatmaps ---
+            # --- 5x5 Zone heatmaps (split by pitcher handedness) ---
             st.markdown(f"**{t['zone_5x5']}**")
+            _t2_zone_vs_lhp = pdf[pdf["p_throws"] == "L"]
+            _t2_zone_vs_rhp = pdf[pdf["p_throws"] == "R"]
             for hm_metric, hm_title, hm_caption in [
                 ("ba", t["ba_heatmap"], t["danger_zone"]),
                 ("xwoba", t["xwoba_heatmap"], t.get("danger_zone_xwoba", t["danger_zone"])),
             ]:
                 st.caption(hm_caption)
-                _sl_hm, _cc_hm, _sr_hm = st.columns([1, 4, 1])
-                with _cc_hm:
-                    fig_hm, ax_hm = _dark_fig(figsize=(6, 5))
-                    im_hm = draw_zone_heatmap(pdf, hm_metric, hm_title, ax_hm, lang=lang)
-                    cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
-                    cb_hm.ax.tick_params(colors="white")
-                    fig_hm.tight_layout()
-                    st.pyplot(fig_hm, use_container_width=True)
-                    plt.close(fig_hm)
+                _t2_hzl, _t2_hcl, _t2_hcr, _t2_hzr = st.columns([0.5, 2, 2, 0.5])
+                for _t2_hcol, _t2_hdf, _t2_hlbl in [
+                    (_t2_hcl, _t2_zone_vs_lhp, "vs LHP" if lang == "EN" else "vs 左投手"),
+                    (_t2_hcr, _t2_zone_vs_rhp, "vs RHP" if lang == "EN" else "vs 右投手"),
+                ]:
+                    with _t2_hcol:
+                        st.markdown(f"**{_t2_hlbl}**")
+                        _t2_hdf_use = _t2_hdf if len(_t2_hdf) >= 30 else pdf
+                        fig_hm, ax_hm = _dark_fig(figsize=(5, 4))
+                        im_hm = draw_zone_heatmap(_t2_hdf_use, hm_metric, f"{_t2_hlbl} — {hm_title}", ax_hm, lang=lang)
+                        cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
+                        cb_hm.ax.tick_params(colors="white")
+                        fig_hm.tight_layout()
+                        st.pyplot(fig_hm, use_container_width=True)
+                        plt.close(fig_hm)
+                        if len(_t2_hdf) < 30:
+                            st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
 
             # --- Spray chart ---
             st.markdown(f"**{t['spray_chart']}**")
@@ -3077,50 +3252,71 @@ def main():
                     st.pyplot(fig_sps, use_container_width=True)
                     plt.close(fig_sps)
 
-            # --- Batted Ball Profile ---
+            # --- Batted Ball Profile (split by pitcher handedness) ---
             st.markdown(f"**{t['batted_ball']}**")
             with st.expander("What do these mean?" if lang == "EN" else "用語の説明を見る"):
                 st.markdown(t["glossary_batted"])
-            profile = batted_ball_profile(pdf, t)
-            if profile:
-                bb_cols = st.columns(4)
-                bb_items = list(profile.items())
-                for idx, (k, v) in enumerate(bb_items):
-                    bb_cols[idx % 4].metric(k, v)
-            else:
-                st.write(t["no_data"])
+            _t2_bb_lhp = pdf[pdf["p_throws"] == "L"]
+            _t2_bb_rhp = pdf[pdf["p_throws"] == "R"]
+            _t2_bbsl, _t2_bbcl, _t2_bbcr, _t2_bbsr = st.columns([0.5, 2, 2, 0.5])
+            for _t2_bbcol, _t2_bbdf, _t2_bblbl in [
+                (_t2_bbcl, _t2_bb_lhp, "vs LHP" if lang == "EN" else "vs 左投手"),
+                (_t2_bbcr, _t2_bb_rhp, "vs RHP" if lang == "EN" else "vs 右投手"),
+            ]:
+                with _t2_bbcol:
+                    st.markdown(f"**{_t2_bblbl}**")
+                    _t2_bbdf_use = _t2_bbdf if len(_t2_bbdf) >= 30 else pdf
+                    profile = batted_ball_profile(_t2_bbdf_use, t)
+                    if profile:
+                        bb_cols = st.columns(2)
+                        for idx, (k, v) in enumerate(profile.items()):
+                            bb_cols[idx % 2].metric(k, v)
+                    else:
+                        st.write(t["no_data"])
+                    if len(_t2_bbdf) < 30:
+                        st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
 
-            # --- Pitch type performance table ---
+            # --- Pitch type performance (split by pitcher handedness) ---
             st.markdown(f"**{t['pitch_type_perf']}**")
             with st.expander(t["glossary_pitch"] if lang == "EN" else "空振率・チェイス率とは？"):
                 st.markdown(t["glossary_pitch"])
-            pt_tbl = pitch_type_table(pdf, t)
-            if not pt_tbl.empty:
-                st.dataframe(pt_tbl, use_container_width=True, hide_index=True)
+            _t2_pt_lhp = pdf[pdf["p_throws"] == "L"]
+            _t2_pt_rhp = pdf[pdf["p_throws"] == "R"]
+            for _t2_ptdf, _t2_ptlbl in [
+                (_t2_pt_lhp, "vs LHP" if lang == "EN" else "vs 左投手"),
+                (_t2_pt_rhp, "vs RHP" if lang == "EN" else "vs 右投手"),
+            ]:
+                st.markdown(f"**{_t2_ptlbl}**")
+                _t2_ptdf_use = _t2_ptdf if len(_t2_ptdf) >= 30 else pdf
+                pt_tbl = pitch_type_table(_t2_ptdf_use, t)
+                if not pt_tbl.empty:
+                    st.dataframe(pt_tbl, use_container_width=True, hide_index=True)
 
-                chart_data = pt_tbl[[t["pitch_type"], t["whiff_pct"]]].copy()
-                chart_data["whiff_val"] = chart_data[t["whiff_pct"]].str.rstrip("%").astype(float)
-                chart_data = chart_data.sort_values("whiff_val", ascending=True)
+                    chart_data = pt_tbl[[t["pitch_type"], t["whiff_pct"]]].copy()
+                    chart_data["whiff_val"] = chart_data[t["whiff_pct"]].str.rstrip("%").astype(float)
+                    chart_data = chart_data.sort_values("whiff_val", ascending=True)
 
-                _sl_wh, _cc_wh, _sr_wh = st.columns([1, 4, 1])
-                with _cc_wh:
-                    fig_pt, ax_pt = _dark_fig(figsize=(8, max(3, len(chart_data) * 0.5)))
-                    colors_bar = plt.cm.RdYlGn_r(chart_data["whiff_val"] / max(chart_data["whiff_val"].max(), 1))
-                    bars = ax_pt.barh(chart_data[t["pitch_type"]], chart_data["whiff_val"], color=colors_bar)
-                    for bar, val in zip(bars, chart_data["whiff_val"]):
-                        ax_pt.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height() / 2,
-                                   f"{val:.1f}%", va="center", ha="left", color="white",
-                                   fontsize=12, fontweight="bold")
-                    ax_pt.set_xlabel(t["whiff_pct"], color="white", fontsize=14)
-                    ax_pt.tick_params(colors="white", labelsize=12)
-                    ax_pt.set_title(t["whiff_pct"], color="white", fontsize=16, fontweight="bold")
-                    x_max = chart_data["whiff_val"].max()
-                    ax_pt.set_xlim(0, x_max * 1.25 if x_max > 0 else 10)
-                    for spine in ax_pt.spines.values():
-                        spine.set_color("white")
-                    fig_pt.tight_layout()
-                    st.pyplot(fig_pt, use_container_width=True)
-                    plt.close(fig_pt)
+                    _sl_wh, _cc_wh, _sr_wh = st.columns([1, 4, 1])
+                    with _cc_wh:
+                        fig_pt, ax_pt = _dark_fig(figsize=(8, max(3, len(chart_data) * 0.5)))
+                        colors_bar = plt.cm.RdYlGn_r(chart_data["whiff_val"] / max(chart_data["whiff_val"].max(), 1))
+                        bars = ax_pt.barh(chart_data[t["pitch_type"]], chart_data["whiff_val"], color=colors_bar)
+                        for bar, val in zip(bars, chart_data["whiff_val"]):
+                            ax_pt.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height() / 2,
+                                       f"{val:.1f}%", va="center", ha="left", color="white",
+                                       fontsize=12, fontweight="bold")
+                        ax_pt.set_xlabel(t["whiff_pct"], color="white", fontsize=14)
+                        ax_pt.tick_params(colors="white", labelsize=12)
+                        ax_pt.set_title(f"{_t2_ptlbl} — {t['whiff_pct']}", color="white", fontsize=16, fontweight="bold")
+                        x_max = chart_data["whiff_val"].max()
+                        ax_pt.set_xlim(0, x_max * 1.25 if x_max > 0 else 10)
+                        for spine in ax_pt.spines.values():
+                            spine.set_color("white")
+                        fig_pt.tight_layout()
+                        st.pyplot(fig_pt, use_container_width=True)
+                        plt.close(fig_pt)
+                    if len(_t2_ptdf) < 30:
+                        st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
 
             # --- Platoon splits ---
             st.markdown(f"**{t['platoon']}**")
@@ -3148,47 +3344,53 @@ def main():
                     st.pyplot(fig_z_pl, use_container_width=True)
                     plt.close(fig_z_pl)
 
-            # --- Count-by-count performance ---
+            # --- Count-by-count performance (split by pitcher handedness) ---
             st.markdown(f"**{t['count_perf']}**")
             st.caption(t["count_explain"])
-
-            count_df = pdf.dropna(subset=["balls", "strikes"]).copy()
-            count_df["balls"] = count_df["balls"].astype(int)
-            count_df["strikes"] = count_df["strikes"].astype(int)
-
+            _t2_cnt_lhp = pdf[pdf["p_throws"] == "L"]
+            _t2_cnt_rhp = pdf[pdf["p_throws"] == "R"]
             all_counts = [
                 (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
                 (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
             ]
-
-            count_rows = []
-            for b, s in all_counts:
-                cat = count_category(b, s)
-                tag = {"ahead": t["ahead"], "behind": t["behind"], "even": t["even"]}[cat]
-                cdf = count_df[(count_df["balls"] == b) & (count_df["strikes"] == s)]
-                if cdf.empty:
-                    continue
-                cs = batting_stats(cdf)
-                if cs["PA"] < 5:
-                    continue
-                count_rows.append({
-                    ("Count" if lang == "EN" else "カウント"): f"{b}-{s}",
-                    ("Type" if lang == "EN" else "分類"): tag,
-                    "PA": cs["PA"], "AVG": cs["AVG"], "OBP": cs["OBP"],
-                    "SLG": cs["SLG"], "OPS": cs["OPS"], "K%": cs["K%"], "BB%": cs["BB%"],
-                })
-
-            if count_rows:
-                count_table = pd.DataFrame(count_rows)
-                _ct_type_col = "Type" if lang == "EN" else "分類"
-                st.dataframe(
-                    count_table.style.format({
-                        "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
-                        "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-                    }).background_gradient(subset=["OPS"], cmap="RdYlGn"
-                    ).map(lambda v: _style_count_type(v, t), subset=[_ct_type_col]),
-                    use_container_width=True, hide_index=True,
-                )
+            for _t2_cntdf, _t2_cntlbl in [
+                (_t2_cnt_lhp, "vs LHP" if lang == "EN" else "vs 左投手"),
+                (_t2_cnt_rhp, "vs RHP" if lang == "EN" else "vs 右投手"),
+            ]:
+                st.markdown(f"**{_t2_cntlbl}**")
+                _t2_cntdf_use = _t2_cntdf if len(_t2_cntdf) >= 50 else pdf
+                count_df = _t2_cntdf_use.dropna(subset=["balls", "strikes"]).copy()
+                count_df["balls"] = count_df["balls"].astype(int)
+                count_df["strikes"] = count_df["strikes"].astype(int)
+                count_rows = []
+                for b, s in all_counts:
+                    cat = count_category(b, s)
+                    tag = {"ahead": t["ahead"], "behind": t["behind"], "even": t["even"]}[cat]
+                    cdf = count_df[(count_df["balls"] == b) & (count_df["strikes"] == s)]
+                    if cdf.empty:
+                        continue
+                    cs = batting_stats(cdf)
+                    if cs["PA"] < 5:
+                        continue
+                    count_rows.append({
+                        ("Count" if lang == "EN" else "カウント"): f"{b}-{s}",
+                        ("Type" if lang == "EN" else "分類"): tag,
+                        "PA": cs["PA"], "AVG": cs["AVG"], "OBP": cs["OBP"],
+                        "SLG": cs["SLG"], "OPS": cs["OPS"], "K%": cs["K%"], "BB%": cs["BB%"],
+                    })
+                if count_rows:
+                    count_table = pd.DataFrame(count_rows)
+                    _ct_type_col = "Type" if lang == "EN" else "分類"
+                    st.dataframe(
+                        count_table.style.format({
+                            "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
+                            "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
+                        }).background_gradient(subset=["OPS"], cmap="RdYlGn"
+                        ).map(lambda v: _style_count_type(v, t), subset=[_ct_type_col]),
+                        use_container_width=True, hide_index=True,
+                    )
+                if len(_t2_cntdf) < 50:
+                    st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
 
     # ===================================================================
     # TAB 3: Ranger Suarez Analysis
@@ -3242,172 +3444,183 @@ def main():
                            delta=f"{sp_stats['xwOBA'] - _MLB_AVG_PIT['xwOBA']:+.3f} vs MLB avg",
                            delta_color="inverse", help=_help("xwOBA", lang))
 
-            # Scouting summary
+            # Scouting summary (always visible)
             st.subheader(t["scouting_summary"])
             sp_summary = generate_pitcher_summary(sp_stats, sp_data, sp_info, lang)
             st.info(sp_summary)
 
-            # === Hitting Plan (How to hit this pitcher) ===
-            st.markdown(f"### {t['hitting_plan_title']}")
-            st.caption(t["hitting_plan_explain"])
-            hitting_plan = generate_hitting_plan(sp_data, sp_stats, sp_info, lang)
-            st.success(hitting_plan)
+            # --- Expander 1: Hitting Plan ---
+            with st.expander("📋 " + (t['hitting_plan_title']), expanded=False):
+                st.caption(t["hitting_plan_explain"])
+                hitting_plan = generate_hitting_plan(sp_data, sp_stats, sp_info, lang)
+                st.success(hitting_plan)
 
-            # Split by batter handedness
-            sp_vs_lhb = sp_data[sp_data["stand"] == "L"]
-            sp_vs_rhb = sp_data[sp_data["stand"] == "R"]
-            _sl_hp, col_hp_l, col_hp_r, _sr_hp = st.columns([0.5, 2, 2, 0.5])
-            with col_hp_l:
-                st.markdown(f"**{t['hitting_plan_as_lhb']}**")
-                if not sp_vs_lhb.empty and len(sp_vs_lhb) >= 30:
-                    stats_lhb = pitching_stats(sp_vs_lhb)
-                    plan_lhb = generate_hitting_plan(sp_vs_lhb, stats_lhb, sp_info, lang)
-                    st.info(plan_lhb)
-                else:
-                    st.write(t["no_data"])
-            with col_hp_r:
-                st.markdown(f"**{t['hitting_plan_as_rhb']}**")
-                if not sp_vs_rhb.empty and len(sp_vs_rhb) >= 30:
-                    stats_rhb = pitching_stats(sp_vs_rhb)
-                    plan_rhb = generate_hitting_plan(sp_vs_rhb, stats_rhb, sp_info, lang)
-                    st.info(plan_rhb)
-                else:
-                    st.write(t["no_data"])
-
-            st.divider()
-
-            # Arsenal table
-            st.subheader(t["arsenal"])
-            at = arsenal_table(sp_data, t)
-            if not at.empty:
-                st.dataframe(at, use_container_width=True, hide_index=True)
-            with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
-                st.markdown(t["arsenal_explain"])
-
-            st.divider()
-
-            # Movement chart
-            st.subheader(t["movement_chart"])
-            st.caption(t["movement_note"])
-            fig_m, ax_m = plt.subplots(figsize=(8, 5), facecolor="#0e1117")
-            ax_m.set_facecolor("#1a1a2e")
-            for spine in ax_m.spines.values():
-                spine.set_color("white")
-            draw_movement_chart(sp_data, _name_display(PREDICTED_SP, lang), ax_m, density=True)
-            fig_m.tight_layout(rect=[0, 0, 0.82, 1])
-            _sl_t3_mv, _cc_t3_mv, _sr_t3_mv = st.columns([1, 4, 1])
-            with _cc_t3_mv:
-                st.pyplot(fig_m, use_container_width=True)
-            plt.close(fig_m)
-
-            st.divider()
-
-            # Zone heatmap (pitcher location — usage + opp BA)
-            st.subheader(t["zone_heatmap_pitch"])
-            for _hm_idx, (metric, hm_title) in enumerate([("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]):
-                fig_hm, ax_hm = _dark_fig(figsize=(6, 5))
-                im_hm = draw_zone_heatmap(sp_data, metric, hm_title, ax_hm, lang=lang)
-                cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
-                cb_hm.ax.tick_params(colors="white")
-                fig_hm.tight_layout()
-                _sl_t3_hm, _cc_t3_hm, _sr_t3_hm = st.columns([1, 4, 1])
-                with _cc_t3_hm:
-                    st.pyplot(fig_hm, use_container_width=True)
-                    if metric == "usage":
-                        st.caption(t["zone_usage_explain"])
+                # Split by batter handedness
+                sp_vs_lhb = sp_data[sp_data["stand"] == "L"]
+                sp_vs_rhb = sp_data[sp_data["stand"] == "R"]
+                _sl_hp, col_hp_l, col_hp_r, _sr_hp = st.columns([0.5, 2, 2, 0.5])
+                with col_hp_l:
+                    st.markdown(f"**{t['hitting_plan_as_lhb']}**")
+                    if not sp_vs_lhb.empty and len(sp_vs_lhb) >= 30:
+                        stats_lhb = pitching_stats(sp_vs_lhb)
+                        plan_lhb = generate_hitting_plan(sp_vs_lhb, stats_lhb, sp_info, lang)
+                        st.info(plan_lhb)
                     else:
-                        st.caption(t["zone_opp_ba_explain"])
-                plt.close(fig_hm)
-
-            st.divider()
-
-            # Platoon splits (vs LHB / vs RHB)
-            st.subheader(t["platoon"])
-            st.caption(t["platoon_pitcher_explain"])
-            _sl_t3_pl, _cl_t3_pl, _cr_t3_pl, _sr_t3_pl = st.columns([0.5, 2, 2, 0.5])
-            for col, stand, label in [(_cl_t3_pl, "L", t["vs_lhb"]), (_cr_t3_pl, "R", t["vs_rhb"])]:
-                with col:
-                    st.markdown(f"**{label}**")
-                    split_df = sp_data[sp_data["stand"] == stand]
-                    if split_df.empty:
                         st.write(t["no_data"])
-                        continue
-                    ss = pitching_stats(split_df)
-                    m1, m2, m3, m4 = st.columns(4)
-                    m1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
-                    m2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}", help=_help("Opp SLG", lang))
-                    m3.metric(t["k_pct"], f"{ss['K%']:.1f}%", help=_help("K%", lang))
-                    m4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%", help=_help("BB%", lang))
+                with col_hp_r:
+                    st.markdown(f"**{t['hitting_plan_as_rhb']}**")
+                    if not sp_vs_rhb.empty and len(sp_vs_rhb) >= 30:
+                        stats_rhb = pitching_stats(sp_vs_rhb)
+                        plan_rhb = generate_hitting_plan(sp_vs_rhb, stats_rhb, sp_info, lang)
+                        st.info(plan_rhb)
+                    else:
+                        st.write(t["no_data"])
 
-                    # Zone heatmap per platoon side
-                    fig_z, ax_z = _dark_fig(figsize=(5, 4))
-                    draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z, lang=lang)
-                    fig_z.tight_layout()
-                    st.pyplot(fig_z, use_container_width=True)
-                    plt.close(fig_z)
+                # Where to attack (belongs with hitting plan)
+                st.markdown(f"### {t['where_to_attack']}")
+                st.success(t["attack_text_suarez"])
 
-            st.divider()
+            # --- Expander 2: Arsenal & Movement ---
+            with st.expander("⚾ " + (t["arsenal"] + " & " + t["movement_chart"]), expanded=False):
+                # Arsenal table
+                st.markdown(f"**{t['arsenal']}**")
+                at = arsenal_table(sp_data, t)
+                if not at.empty:
+                    st.dataframe(at, use_container_width=True, hide_index=True)
+                with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
+                    st.markdown(t["arsenal_explain"])
 
-            # Pitch Selection by Count
-            st.subheader(t["pitch_selection_by_count"])
-            st.caption(t["pitch_selection_explain"])
-            ps_table = pitch_selection_by_count(sp_data, t, lang)
-            if not ps_table.empty:
-                st.dataframe(ps_table, use_container_width=True, hide_index=True)
+                st.divider()
 
-            # Count-by-count pitcher performance
-            st.markdown(f"**{t['count_perf']}**")
-            st.caption(t["count_explain"])
+                # Movement chart
+                st.markdown(f"**{t['movement_chart']}**")
+                st.caption(t["movement_note"])
+                fig_m, ax_m = plt.subplots(figsize=(8, 5), facecolor="#0e1117")
+                ax_m.set_facecolor("#1a1a2e")
+                for spine in ax_m.spines.values():
+                    spine.set_color("white")
+                draw_movement_chart(sp_data, _name_display(PREDICTED_SP, lang), ax_m, density=True)
+                fig_m.tight_layout(rect=[0, 0, 0.82, 1])
+                _sl_t3_mv, _cc_t3_mv, _sr_t3_mv = st.columns([1, 4, 1])
+                with _cc_t3_mv:
+                    st.pyplot(fig_m, use_container_width=True)
+                plt.close(fig_m)
 
-            pit_count_df = sp_data.dropna(subset=["balls", "strikes"]).copy()
-            pit_count_df["balls"] = pit_count_df["balls"].astype(int)
-            pit_count_df["strikes"] = pit_count_df["strikes"].astype(int)
+            # --- Expander 3: Zone Analysis & Platoon ---
+            with st.expander("🎯 " + (t["zone_heatmap_pitch"] + " & " + t["platoon"]), expanded=False):
+                # Zone heatmap (pitcher location — usage + opp BA)
+                st.markdown(f"**{t['zone_heatmap_pitch']}**")
+                for _hm_idx, (metric, hm_title) in enumerate([("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]):
+                    fig_hm, ax_hm = _dark_fig(figsize=(6, 5))
+                    im_hm = draw_zone_heatmap(sp_data, metric, hm_title, ax_hm, lang=lang)
+                    cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
+                    cb_hm.ax.tick_params(colors="white")
+                    fig_hm.tight_layout()
+                    _sl_t3_hm, _cc_t3_hm, _sr_t3_hm = st.columns([1, 4, 1])
+                    with _cc_t3_hm:
+                        st.pyplot(fig_hm, use_container_width=True)
+                        if metric == "usage":
+                            st.caption(t["zone_usage_explain"])
+                        else:
+                            st.caption(t["zone_opp_ba_explain"])
+                    plt.close(fig_hm)
 
-            all_counts_pit = [
-                (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
-                (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
-            ]
+                st.divider()
 
-            pit_count_rows = []
-            for b, s in all_counts_pit:
-                cat = count_category(b, s)
-                tag = {"ahead": t["behind"], "behind": t["ahead"], "even": t["even"]}[cat]  # inverted for pitcher perspective
-                cdf = pit_count_df[(pit_count_df["balls"] == b) & (pit_count_df["strikes"] == s)]
-                if cdf.empty:
-                    continue
-                ps = pitching_stats(cdf)
-                if ps["PA"] < 3:
-                    continue
-                pit_count_rows.append({
-                    ("Count" if lang == "EN" else "\u30ab\u30a6\u30f3\u30c8"): f"{b}-{s}",
-                    ("Type" if lang == "EN" else "\u5206\u985e"): tag,
-                    "PA": ps["PA"],
-                    t["opp_avg"]: ps["Opp AVG"],
-                    t["k_pct"]: ps["K%"],
-                    t["bb_pct"]: ps["BB%"],
-                    t["whiff_pct"]: ps["Whiff%"],
-                })
+                # Platoon splits (vs LHB / vs RHB)
+                st.markdown(f"**{t['platoon']}**")
+                st.caption(t["platoon_pitcher_explain"])
+                _sl_t3_pl, _cl_t3_pl, _cr_t3_pl, _sr_t3_pl = st.columns([0.5, 2, 2, 0.5])
+                for col, stand, label in [(_cl_t3_pl, "L", t["vs_lhb"]), (_cr_t3_pl, "R", t["vs_rhb"])]:
+                    with col:
+                        st.markdown(f"**{label}**")
+                        split_df = sp_data[sp_data["stand"] == stand]
+                        if split_df.empty:
+                            st.write(t["no_data"])
+                            continue
+                        ss = pitching_stats(split_df)
+                        m1, m2, m3, m4 = st.columns(4)
+                        m1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
+                        m2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}", help=_help("Opp SLG", lang))
+                        m3.metric(t["k_pct"], f"{ss['K%']:.1f}%", help=_help("K%", lang))
+                        m4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%", help=_help("BB%", lang))
 
-            if pit_count_rows:
-                pit_count_table = pd.DataFrame(pit_count_rows)
-                _pit_type_col = "Type" if lang == "EN" else "分類"
-                st.dataframe(
-                    pit_count_table.style.format({
-                        t["opp_avg"]: "{:.3f}",
-                        t["k_pct"]: "{:.1f}",
-                        t["bb_pct"]: "{:.1f}",
-                        t["whiff_pct"]: "{:.1f}",
-                    }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"
-                    ).map(lambda v: _style_count_type(v, t), subset=[_pit_type_col]),
-                    use_container_width=True,
-                    hide_index=True,
-                )
+                        # Zone heatmap per platoon side
+                        fig_z, ax_z = _dark_fig(figsize=(5, 4))
+                        draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z, lang=lang)
+                        fig_z.tight_layout()
+                        st.pyplot(fig_z, use_container_width=True)
+                        plt.close(fig_z)
 
-            st.divider()
+            # --- Expander 4: Count Analysis (split by batter handedness) ---
+            with st.expander("📈 " + t["pitch_selection_by_count"], expanded=False):
+                st.caption(t["pitch_selection_explain"])
+                _sp_cnt_lhb = sp_data[sp_data["stand"] == "L"]
+                _sp_cnt_rhb = sp_data[sp_data["stand"] == "R"]
 
-            # Where to attack
-            st.subheader(t["where_to_attack"])
-            st.success(t["attack_text_suarez"])
+                all_counts_pit = [
+                    (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
+                    (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
+                ]
+
+                for _sp_cdf, _sp_clbl in [
+                    (_sp_cnt_lhb, t["vs_lhb"]),
+                    (_sp_cnt_rhb, t["vs_rhb"]),
+                ]:
+                    st.markdown(f"**{_sp_clbl}**")
+                    _sp_cdf_use = _sp_cdf if len(_sp_cdf) >= 50 else sp_data
+
+                    # Pitch selection by count
+                    _sp_ps_tbl = pitch_selection_by_count(_sp_cdf_use, t, lang)
+                    if not _sp_ps_tbl.empty:
+                        st.dataframe(_sp_ps_tbl, use_container_width=True, hide_index=True)
+                    draw_pitch_selection_pies(_sp_cdf_use, t, lang)
+
+                    # Count-by-count pitcher performance
+                    st.markdown(f"**{t['count_perf']}**")
+                    st.caption(t["count_explain"])
+
+                    pit_count_df = _sp_cdf_use.dropna(subset=["balls", "strikes"]).copy()
+                    pit_count_df["balls"] = pit_count_df["balls"].astype(int)
+                    pit_count_df["strikes"] = pit_count_df["strikes"].astype(int)
+
+                    pit_count_rows = []
+                    for b, s in all_counts_pit:
+                        cat = count_category(b, s)
+                        tag = {"ahead": t["behind"], "behind": t["ahead"], "even": t["even"]}[cat]  # inverted for pitcher perspective
+                        cdf = pit_count_df[(pit_count_df["balls"] == b) & (pit_count_df["strikes"] == s)]
+                        if cdf.empty:
+                            continue
+                        ps = pitching_stats(cdf)
+                        if ps["PA"] < 3:
+                            continue
+                        pit_count_rows.append({
+                            ("Count" if lang == "EN" else "\u30ab\u30a6\u30f3\u30c8"): f"{b}-{s}",
+                            ("Type" if lang == "EN" else "\u5206\u985e"): tag,
+                            "PA": ps["PA"],
+                            t["opp_avg"]: ps["Opp AVG"],
+                            t["k_pct"]: ps["K%"],
+                            t["bb_pct"]: ps["BB%"],
+                            t["whiff_pct"]: ps["Whiff%"],
+                        })
+
+                    if pit_count_rows:
+                        pit_count_table = pd.DataFrame(pit_count_rows)
+                        _pit_type_col = "Type" if lang == "EN" else "分類"
+                        st.dataframe(
+                            pit_count_table.style.format({
+                                t["opp_avg"]: "{:.3f}",
+                                t["k_pct"]: "{:.1f}",
+                                t["bb_pct"]: "{:.1f}",
+                                t["whiff_pct"]: "{:.1f}",
+                            }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"
+                            ).map(lambda v: _style_count_type(v, t), subset=[_pit_type_col]),
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+                    if len(_sp_cdf) < 50:
+                        st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
+                    st.divider()
 
     # ===================================================================
     # TAB 4: Bullpen Scouting
@@ -3522,100 +3735,169 @@ def main():
             rp_summary = generate_pitcher_summary(rp_stats, rp_data, pitcher_info, lang)
             st.info(rp_summary)
 
-            # === Hitting Plan ===
-            st.markdown(f"### {t['hitting_plan_title']}")
-            st.caption(t["hitting_plan_explain"])
-            rp_hitting_plan = generate_hitting_plan(rp_data, rp_stats, pitcher_info, lang)
-            st.success(rp_hitting_plan)
+            # --- Expander 1: Hitting Plan ---
+            with st.expander("📋 " + t['hitting_plan_title'], expanded=False):
+                st.caption(t["hitting_plan_explain"])
+                rp_hitting_plan = generate_hitting_plan(rp_data, rp_stats, pitcher_info, lang)
+                st.success(rp_hitting_plan)
 
-            rp_vs_lhb = rp_data[rp_data["stand"] == "L"]
-            rp_vs_rhb = rp_data[rp_data["stand"] == "R"]
-            _sl_rphp, col_rphp_l, col_rphp_r, _sr_rphp = st.columns([0.5, 2, 2, 0.5])
-            with col_rphp_l:
-                st.markdown(f"**{t['hitting_plan_as_lhb']}**")
-                if not rp_vs_lhb.empty and len(rp_vs_lhb) >= 30:
-                    rp_stats_lhb = pitching_stats(rp_vs_lhb)
-                    rp_plan_lhb = generate_hitting_plan(rp_vs_lhb, rp_stats_lhb, pitcher_info, lang)
-                    st.info(rp_plan_lhb)
-                else:
-                    st.write(t["no_data"])
-            with col_rphp_r:
-                st.markdown(f"**{t['hitting_plan_as_rhb']}**")
-                if not rp_vs_rhb.empty and len(rp_vs_rhb) >= 30:
-                    rp_stats_rhb = pitching_stats(rp_vs_rhb)
-                    rp_plan_rhb = generate_hitting_plan(rp_vs_rhb, rp_stats_rhb, pitcher_info, lang)
-                    st.info(rp_plan_rhb)
-                else:
-                    st.write(t["no_data"])
-
-            # Arsenal
-            rp_arsenal = arsenal_table(rp_data, t)
-            if not rp_arsenal.empty:
-                st.markdown(f"**{t['arsenal']}**")
-                st.caption(t["arsenal_explain"])
-                st.dataframe(rp_arsenal, use_container_width=True, hide_index=True)
-
-            # Movement chart
-            st.markdown(f"**{t['movement_chart']}**")
-            st.caption(t["movement_note"])
-            fig_rp_m, ax_rp_m = plt.subplots(figsize=(8, 5), facecolor="#0e1117")
-            ax_rp_m.set_facecolor("#1a1a2e")
-            for spine in ax_rp_m.spines.values():
-                spine.set_color("white")
-            draw_movement_chart(rp_data, _name_display(reliever_name, lang), ax_rp_m, density=True)
-            fig_rp_m.tight_layout(rect=[0, 0, 0.82, 1])
-            _sl_rp_mv, _cc_rp_mv, _sr_rp_mv = st.columns([1, 4, 1])
-            with _cc_rp_mv:
-                st.pyplot(fig_rp_m, use_container_width=True)
-            plt.close(fig_rp_m)
-
-            # Zone heatmaps
-            st.markdown(f"**{t['zone_heatmap_pitch']}**")
-            for _rp_hm_idx, (rp_hm_metric, rp_hm_title) in enumerate([("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]):
-                fig_rp_hm, ax_rp_hm = _dark_fig(figsize=(6, 5))
-                im_rp_hm = draw_zone_heatmap(rp_data, rp_hm_metric, rp_hm_title, ax_rp_hm, lang=lang)
-                cb_rp_hm = fig_rp_hm.colorbar(im_rp_hm, ax=ax_rp_hm, fraction=0.046, pad=0.04)
-                cb_rp_hm.ax.tick_params(colors="white")
-                fig_rp_hm.tight_layout()
-                _sl_rp_hm, _cc_rp_hm, _sr_rp_hm = st.columns([1, 4, 1])
-                with _cc_rp_hm:
-                    st.pyplot(fig_rp_hm, use_container_width=True)
-                    if rp_hm_metric == "usage":
-                        st.caption(t["zone_usage_explain"])
+                rp_vs_lhb = rp_data[rp_data["stand"] == "L"]
+                rp_vs_rhb = rp_data[rp_data["stand"] == "R"]
+                _sl_rphp, col_rphp_l, col_rphp_r, _sr_rphp = st.columns([0.5, 2, 2, 0.5])
+                with col_rphp_l:
+                    st.markdown(f"**{t['hitting_plan_as_lhb']}**")
+                    if not rp_vs_lhb.empty and len(rp_vs_lhb) >= 30:
+                        rp_stats_lhb = pitching_stats(rp_vs_lhb)
+                        rp_plan_lhb = generate_hitting_plan(rp_vs_lhb, rp_stats_lhb, pitcher_info, lang)
+                        st.info(rp_plan_lhb)
                     else:
-                        st.caption(t["zone_opp_ba_explain"])
-                plt.close(fig_rp_hm)
-
-            # Pitch Selection by Count
-            st.markdown(f"**{t['pitch_selection_by_count']}**")
-            st.caption(t["pitch_selection_explain"])
-            rp_ps_table = pitch_selection_by_count(rp_data, t, lang)
-            if not rp_ps_table.empty:
-                st.dataframe(rp_ps_table, use_container_width=True, hide_index=True)
-
-            # Platoon splits
-            st.markdown(f"**{t['platoon']}**")
-            st.caption(t["platoon_pitcher_explain"])
-            _sl_rp_pl, _cl_rp_pl, _cr_rp_pl, _sr_rp_pl = st.columns([0.5, 2, 2, 0.5])
-            for col, stand, label in [(_cl_rp_pl, "L", t["vs_lhb"]), (_cr_rp_pl, "R", t["vs_rhb"])]:
-                with col:
-                    st.markdown(f"**{label}**")
-                    split_df = rp_data[rp_data["stand"] == stand]
-                    if split_df.empty:
                         st.write(t["no_data"])
-                        continue
-                    ss = pitching_stats(split_df)
-                    sm1, sm2, sm3, sm4 = st.columns(4)
-                    sm1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
-                    sm2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}", help=_help("Opp SLG", lang))
-                    sm3.metric(t["k_pct"], f"{ss['K%']:.1f}%", help=_help("K%", lang))
-                    sm4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%", help=_help("BB%", lang))
+                with col_rphp_r:
+                    st.markdown(f"**{t['hitting_plan_as_rhb']}**")
+                    if not rp_vs_rhb.empty and len(rp_vs_rhb) >= 30:
+                        rp_stats_rhb = pitching_stats(rp_vs_rhb)
+                        rp_plan_rhb = generate_hitting_plan(rp_vs_rhb, rp_stats_rhb, pitcher_info, lang)
+                        st.info(rp_plan_rhb)
+                    else:
+                        st.write(t["no_data"])
 
-                    fig_rp_z, ax_rp_z = _dark_fig(figsize=(5, 4))
-                    draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_rp_z, lang=lang)
-                    fig_rp_z.tight_layout()
-                    st.pyplot(fig_rp_z, use_container_width=True)
-                    plt.close(fig_rp_z)
+            # --- Expander 2: Arsenal & Movement ---
+            with st.expander("⚾ " + (t["arsenal"] + " & " + t["movement_chart"]), expanded=False):
+                rp_arsenal = arsenal_table(rp_data, t)
+                if not rp_arsenal.empty:
+                    st.markdown(f"**{t['arsenal']}**")
+                    st.caption(t["arsenal_explain"])
+                    st.dataframe(rp_arsenal, use_container_width=True, hide_index=True)
+
+                st.divider()
+
+                # Movement chart
+                st.markdown(f"**{t['movement_chart']}**")
+                st.caption(t["movement_note"])
+                fig_rp_m, ax_rp_m = plt.subplots(figsize=(8, 5), facecolor="#0e1117")
+                ax_rp_m.set_facecolor("#1a1a2e")
+                for spine in ax_rp_m.spines.values():
+                    spine.set_color("white")
+                draw_movement_chart(rp_data, _name_display(reliever_name, lang), ax_rp_m, density=True)
+                fig_rp_m.tight_layout(rect=[0, 0, 0.82, 1])
+                _sl_rp_mv, _cc_rp_mv, _sr_rp_mv = st.columns([1, 4, 1])
+                with _cc_rp_mv:
+                    st.pyplot(fig_rp_m, use_container_width=True)
+                plt.close(fig_rp_m)
+
+            # --- Expander 3: Zone Analysis & Platoon ---
+            with st.expander("🎯 " + (t["zone_heatmap_pitch"] + " & " + t["platoon"]), expanded=False):
+                st.markdown(f"**{t['zone_heatmap_pitch']}**")
+                for _rp_hm_idx, (rp_hm_metric, rp_hm_title) in enumerate([("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]):
+                    fig_rp_hm, ax_rp_hm = _dark_fig(figsize=(6, 5))
+                    im_rp_hm = draw_zone_heatmap(rp_data, rp_hm_metric, rp_hm_title, ax_rp_hm, lang=lang)
+                    cb_rp_hm = fig_rp_hm.colorbar(im_rp_hm, ax=ax_rp_hm, fraction=0.046, pad=0.04)
+                    cb_rp_hm.ax.tick_params(colors="white")
+                    fig_rp_hm.tight_layout()
+                    _sl_rp_hm, _cc_rp_hm, _sr_rp_hm = st.columns([1, 4, 1])
+                    with _cc_rp_hm:
+                        st.pyplot(fig_rp_hm, use_container_width=True)
+                        if rp_hm_metric == "usage":
+                            st.caption(t["zone_usage_explain"])
+                        else:
+                            st.caption(t["zone_opp_ba_explain"])
+                    plt.close(fig_rp_hm)
+
+                st.divider()
+
+                # Platoon splits
+                st.markdown(f"**{t['platoon']}**")
+                st.caption(t["platoon_pitcher_explain"])
+                _sl_rp_pl, _cl_rp_pl, _cr_rp_pl, _sr_rp_pl = st.columns([0.5, 2, 2, 0.5])
+                for col, stand, label in [(_cl_rp_pl, "L", t["vs_lhb"]), (_cr_rp_pl, "R", t["vs_rhb"])]:
+                    with col:
+                        st.markdown(f"**{label}**")
+                        split_df = rp_data[rp_data["stand"] == stand]
+                        if split_df.empty:
+                            st.write(t["no_data"])
+                            continue
+                        ss = pitching_stats(split_df)
+                        sm1, sm2, sm3, sm4 = st.columns(4)
+                        sm1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}", help=_help("Opp AVG", lang))
+                        sm2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}", help=_help("Opp SLG", lang))
+                        sm3.metric(t["k_pct"], f"{ss['K%']:.1f}%", help=_help("K%", lang))
+                        sm4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%", help=_help("BB%", lang))
+
+                        fig_rp_z, ax_rp_z = _dark_fig(figsize=(5, 4))
+                        draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_rp_z, lang=lang)
+                        fig_rp_z.tight_layout()
+                        st.pyplot(fig_rp_z, use_container_width=True)
+                        plt.close(fig_rp_z)
+
+            # --- Expander 4: Count Analysis (split by batter handedness) ---
+            with st.expander("📈 " + t["pitch_selection_by_count"], expanded=False):
+                st.caption(t["pitch_selection_explain"])
+                _rp_cnt_lhb = rp_data[rp_data["stand"] == "L"]
+                _rp_cnt_rhb = rp_data[rp_data["stand"] == "R"]
+
+                _rp_all_counts = [
+                    (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
+                    (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
+                ]
+
+                for _rp_cdf, _rp_clbl in [
+                    (_rp_cnt_lhb, t["vs_lhb"]),
+                    (_rp_cnt_rhb, t["vs_rhb"]),
+                ]:
+                    st.markdown(f"**{_rp_clbl}**")
+                    _rp_cdf_use = _rp_cdf if len(_rp_cdf) >= 50 else rp_data
+
+                    # Pitch selection by count
+                    rp_ps_table = pitch_selection_by_count(_rp_cdf_use, t, lang)
+                    if not rp_ps_table.empty:
+                        st.dataframe(rp_ps_table, use_container_width=True, hide_index=True)
+                    draw_pitch_selection_pies(_rp_cdf_use, t, lang)
+
+                    # Count-by-count pitcher performance
+                    st.markdown(f"**{t['count_perf']}**")
+                    st.caption(t["count_explain"])
+
+                    _rp_cnt_df = _rp_cdf_use.dropna(subset=["balls", "strikes"]).copy()
+                    _rp_cnt_df["balls"] = _rp_cnt_df["balls"].astype(int)
+                    _rp_cnt_df["strikes"] = _rp_cnt_df["strikes"].astype(int)
+
+                    _rp_cnt_rows = []
+                    for b, s in _rp_all_counts:
+                        cat = count_category(b, s)
+                        tag = {"ahead": t["behind"], "behind": t["ahead"], "even": t["even"]}[cat]
+                        cdf = _rp_cnt_df[(_rp_cnt_df["balls"] == b) & (_rp_cnt_df["strikes"] == s)]
+                        if cdf.empty:
+                            continue
+                        ps = pitching_stats(cdf)
+                        if ps["PA"] < 3:
+                            continue
+                        _rp_cnt_rows.append({
+                            ("Count" if lang == "EN" else "\u30ab\u30a6\u30f3\u30c8"): f"{b}-{s}",
+                            ("Type" if lang == "EN" else "\u5206\u985e"): tag,
+                            "PA": ps["PA"],
+                            t["opp_avg"]: ps["Opp AVG"],
+                            t["k_pct"]: ps["K%"],
+                            t["bb_pct"]: ps["BB%"],
+                            t["whiff_pct"]: ps["Whiff%"],
+                        })
+
+                    if _rp_cnt_rows:
+                        _rp_cnt_table = pd.DataFrame(_rp_cnt_rows)
+                        _rp_type_col = "Type" if lang == "EN" else "分類"
+                        st.dataframe(
+                            _rp_cnt_table.style.format({
+                                t["opp_avg"]: "{:.3f}",
+                                t["k_pct"]: "{:.1f}",
+                                t["bb_pct"]: "{:.1f}",
+                                t["whiff_pct"]: "{:.1f}",
+                            }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"
+                            ).map(lambda v: _style_count_type(v, t), subset=[_rp_type_col]),
+                            use_container_width=True,
+                            hide_index=True,
+                        )
+                    if len(_rp_cdf) < 50:
+                        st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
+                    st.divider()
 
 
 if __name__ == "__main__":
