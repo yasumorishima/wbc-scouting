@@ -1152,91 +1152,101 @@ def main():
                 summary = generate_player_summary(stats, pdf_player, player_info, lang)
                 st.info(summary)
 
-                # Radar chart (AVG/OBP/SLG/K%/BB% vs MLB avg)
-                _MLB_AVG_EX = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
-                radar_cats_ex = ["AVG", "OBP", "SLG",
-                                 "K%" if lang == "EN" else "\u4e09\u632f\u7387",
-                                 "BB%" if lang == "EN" else "\u56db\u7403\u7387"]
-                player_vals_ex = [
-                    min(stats["AVG"] / 0.300, 1.0),
-                    min(stats["OBP"] / 0.380, 1.0),
-                    min(stats["SLG"] / 0.500, 1.0),
-                    1.0 - min(stats["K%"] / 35.0, 1.0),
-                    min(stats["BB%"] / 15.0, 1.0),
-                ]
-                mlb_vals_ex = [
-                    min(_MLB_AVG_EX["AVG"] / 0.300, 1.0),
-                    min(_MLB_AVG_EX["OBP"] / 0.380, 1.0),
-                    min(_MLB_AVG_EX["SLG"] / 0.500, 1.0),
-                    1.0 - min(_MLB_AVG_EX["K%"] / 35.0, 1.0),
-                    min(_MLB_AVG_EX["BB%"] / 15.0, 1.0),
-                ]
-                raw_vals_ex = [f"{stats['AVG']:.3f}", f"{stats['OBP']:.3f}", f"{stats['SLG']:.3f}",
-                               f"{stats['K%']:.1f}%", f"{stats['BB%']:.1f}%"]
-                angles_ex = np.linspace(0, 2 * np.pi, len(radar_cats_ex), endpoint=False).tolist()
-                p_plot_ex = player_vals_ex + [player_vals_ex[0]]
-                m_plot_ex = mlb_vals_ex + [mlb_vals_ex[0]]
-                a_plot_ex = angles_ex + [angles_ex[0]]
+                # --- Charts in 2-column layout (compact for PC) ---
+                chart_left, chart_right = st.columns(2)
 
-                fig_ex, ax_ex = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
-                                              facecolor="#0e1117")
-                ax_ex.set_facecolor("#0e1117")
-                ax_ex.plot(a_plot_ex, m_plot_ex, "--", linewidth=1.5, color="#888888",
-                           alpha=0.7, label="MLB avg")
-                ax_ex.fill(a_plot_ex, m_plot_ex, alpha=0.08, color="#888888")
-                ax_ex.plot(a_plot_ex, p_plot_ex, "o-", linewidth=2, color="#4fc3f7",
-                           label=display_name)
-                ax_ex.fill(a_plot_ex, p_plot_ex, alpha=0.25, color="#4fc3f7")
-                ax_ex.set_thetagrids(np.degrees(angles_ex), radar_cats_ex, color="white", fontsize=12)
-                ax_ex.set_ylim(0, 1)
-                ax_ex.set_yticks([0.25, 0.5, 0.75, 1.0])
-                ax_ex.set_yticklabels(["", "", "", ""], color="white")
-                ax_ex.grid(color="gray", alpha=0.3)
-                ax_ex.spines["polar"].set_color("gray")
-                for angle_ex, val_ex, raw_ex in zip(angles_ex, player_vals_ex, raw_vals_ex):
-                    ax_ex.annotate(raw_ex, xy=(angle_ex, val_ex), fontsize=12,
-                                   ha="center", va="bottom", color="white", fontweight="bold")
-                leg_ex = ax_ex.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
-                                       fontsize=12, facecolor="#0e1117", edgecolor="gray")
-                for txt_ex in leg_ex.get_texts():
-                    txt_ex.set_color("white")
-                fig_ex.tight_layout()
-                st.pyplot(fig_ex, use_container_width=True)
-                plt.close(fig_ex)
-                st.caption("Gray dashed = MLB avg (2024). K% is inverted — lower is better."
-                           if lang == "EN" else
-                           "\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747(2024)\u3002K%\u306f\u9006\u8ee2\u2014\u4f4e\u3044\u307b\u3069\u5916\u5074\u3002")
+                # Radar chart (left column)
+                with chart_left:
+                    _MLB_AVG_EX = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
+                    radar_cats_ex = ["AVG", "OBP", "SLG",
+                                     "K%" if lang == "EN" else "\u4e09\u632f\u7387",
+                                     "BB%" if lang == "EN" else "\u56db\u7403\u7387"]
+                    player_vals_ex = [
+                        min(stats["AVG"] / 0.300, 1.0),
+                        min(stats["OBP"] / 0.380, 1.0),
+                        min(stats["SLG"] / 0.500, 1.0),
+                        1.0 - min(stats["K%"] / 35.0, 1.0),
+                        min(stats["BB%"] / 15.0, 1.0),
+                    ]
+                    mlb_vals_ex = [
+                        min(_MLB_AVG_EX["AVG"] / 0.300, 1.0),
+                        min(_MLB_AVG_EX["OBP"] / 0.380, 1.0),
+                        min(_MLB_AVG_EX["SLG"] / 0.500, 1.0),
+                        1.0 - min(_MLB_AVG_EX["K%"] / 35.0, 1.0),
+                        min(_MLB_AVG_EX["BB%"] / 15.0, 1.0),
+                    ]
+                    raw_vals_ex = [f"{stats['AVG']:.3f}", f"{stats['OBP']:.3f}", f"{stats['SLG']:.3f}",
+                                   f"{stats['K%']:.1f}%", f"{stats['BB%']:.1f}%"]
+                    angles_ex = np.linspace(0, 2 * np.pi, len(radar_cats_ex), endpoint=False).tolist()
+                    p_plot_ex = player_vals_ex + [player_vals_ex[0]]
+                    m_plot_ex = mlb_vals_ex + [mlb_vals_ex[0]]
+                    a_plot_ex = angles_ex + [angles_ex[0]]
 
-                # 3x3 Zone heatmap
-                fig_z3_ex, ax_z3_ex = _dark_fig(figsize=(6, 5))
-                im_z3_ex = draw_zone_3x3(pdf_player, "ba", t["ba_heatmap"], ax_z3_ex)
-                cb_z3_ex = fig_z3_ex.colorbar(im_z3_ex, ax=ax_z3_ex, fraction=0.046, pad=0.04)
-                cb_z3_ex.ax.tick_params(colors="white")
-                fig_z3_ex.tight_layout()
-                st.pyplot(fig_z3_ex, use_container_width=True)
-                plt.close(fig_z3_ex)
+                    fig_ex, ax_ex = plt.subplots(figsize=(3.5, 3.5), subplot_kw=dict(polar=True),
+                                                  facecolor="#0e1117")
+                    ax_ex.set_facecolor("#0e1117")
+                    ax_ex.plot(a_plot_ex, m_plot_ex, "--", linewidth=1.5, color="#888888",
+                               alpha=0.7, label="MLB avg")
+                    ax_ex.fill(a_plot_ex, m_plot_ex, alpha=0.08, color="#888888")
+                    ax_ex.plot(a_plot_ex, p_plot_ex, "o-", linewidth=2, color="#4fc3f7",
+                               label=display_name)
+                    ax_ex.fill(a_plot_ex, p_plot_ex, alpha=0.25, color="#4fc3f7")
+                    ax_ex.set_thetagrids(np.degrees(angles_ex), radar_cats_ex, color="white", fontsize=10)
+                    ax_ex.set_ylim(0, 1)
+                    ax_ex.set_yticks([0.25, 0.5, 0.75, 1.0])
+                    ax_ex.set_yticklabels(["", "", "", ""], color="white")
+                    ax_ex.grid(color="gray", alpha=0.3)
+                    ax_ex.spines["polar"].set_color("gray")
+                    for angle_ex, val_ex, raw_ex in zip(angles_ex, player_vals_ex, raw_vals_ex):
+                        ax_ex.annotate(raw_ex, xy=(angle_ex, val_ex), fontsize=10,
+                                       ha="center", va="bottom", color="white", fontweight="bold")
+                    leg_ex = ax_ex.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
+                                           fontsize=9, facecolor="#0e1117", edgecolor="gray")
+                    for txt_ex in leg_ex.get_texts():
+                        txt_ex.set_color("white")
+                    fig_ex.tight_layout()
+                    st.pyplot(fig_ex, use_container_width=True)
+                    plt.close(fig_ex)
+                    st.caption("Gray dashed = MLB avg (2024). K% inverted."
+                               if lang == "EN" else
+                               "\u7070\u7834\u7dda=MLB\u5e73\u5747\u3002K%\u306f\u9006\u8ee2\u3002")
 
-                # Spray chart (LoanDepot Park)
-                fig_sp_ex, ax_sp_ex = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
-                ax_sp_ex.set_facecolor("#0e1117")
-                draw_spray_chart(pdf_player, display_name, ax_sp_ex, stadium="marlins", density=True)
-                fig_sp_ex.tight_layout()
-                st.pyplot(fig_sp_ex, use_container_width=True)
-                plt.close(fig_sp_ex)
+                # 3x3 Zone heatmap (right column)
+                with chart_right:
+                    st.markdown(f"**{t['zone_3x3']}**")
+                    fig_z3_ex, ax_z3_ex = _dark_fig(figsize=(3.5, 3))
+                    im_z3_ex = draw_zone_3x3(pdf_player, "ba", t["ba_heatmap"], ax_z3_ex)
+                    cb_z3_ex = fig_z3_ex.colorbar(im_z3_ex, ax=ax_z3_ex, fraction=0.046, pad=0.04)
+                    cb_z3_ex.ax.tick_params(colors="white")
+                    fig_z3_ex.tight_layout()
+                    st.pyplot(fig_z3_ex, use_container_width=True)
+                    plt.close(fig_z3_ex)
 
-                # Platoon splits (compact)
-                st.markdown(f"**{t['platoon']}**")
-                ps_l, ps_r = st.columns(2)
-                for ps_col, ps_throws, ps_label in [(ps_l, "L", t["vs_lhp"]), (ps_r, "R", t["vs_rhp"])]:
-                    with ps_col:
-                        st.markdown(f"**{ps_label}**")
+                # Second row: Spray chart + Platoon splits
+                chart2_left, chart2_right = st.columns(2)
+
+                with chart2_left:
+                    st.markdown(f"**{t['spray_chart']}**")
+                    fig_sp_ex, ax_sp_ex = plt.subplots(figsize=(3.5, 3.5), facecolor="#0e1117")
+                    ax_sp_ex.set_facecolor("#0e1117")
+                    draw_spray_chart(pdf_player, display_name, ax_sp_ex, stadium="marlins", density=True)
+                    fig_sp_ex.tight_layout()
+                    st.pyplot(fig_sp_ex, use_container_width=True)
+                    plt.close(fig_sp_ex)
+
+                # Platoon splits (right column)
+                with chart2_right:
+                    st.markdown(f"**{t['platoon']}**")
+                    for ps_throws, ps_label in [("L", t["vs_lhp"]), ("R", t["vs_rhp"])]:
                         split_ps = pdf_player[pdf_player["p_throws"] == ps_throws]
                         if split_ps.empty:
-                            st.write(t["no_data"])
+                            st.markdown(f"**{ps_label}**: {t['no_data']}")
                             continue
                         ss_ps = batting_stats(split_ps)
-                        st.metric("AVG", f"{ss_ps['AVG']:.3f}")
-                        st.metric("OPS", f"{ss_ps['OPS']:.3f}")
+                        st.markdown(
+                            f"**{ps_label}** — AVG {ss_ps['AVG']:.3f} / "
+                            f"OPS {ss_ps['OPS']:.3f} / K% {ss_ps['K%']:.1f}%"
+                        )
 
                 st.caption(
                     "See Tab 2 for full details (5x5 zone, batted ball, count matrix, Whiff%)."
