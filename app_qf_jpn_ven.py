@@ -1,0 +1,1310 @@
+"""WBC 2026 Quarterfinal: Japan vs Venezuela — Scouting Dashboard.
+
+A unified scouting report for Japan's coaching staff, covering Venezuela's
+predicted lineup, starting pitcher (Ranger Suarez), and bullpen usage from
+Pool D. All analysis is based on Venezuela players' MLB Statcast data.
+"""
+
+import pathlib
+
+import matplotlib.patches as patches
+import matplotlib.patheffects as pe
+import matplotlib.pyplot as plt
+import matplotlib_fontja  # noqa: F401 — enables Japanese font
+import numpy as np
+import pandas as pd
+import streamlit as st
+from scipy.stats import gaussian_kde
+
+from players import (
+    PITCHER_BY_NAME,
+    PLAYER_BY_NAME,
+    VENEZUELA_BATTERS,
+    VENEZUELA_PITCHERS,
+)
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+PITCH_LABELS = {
+    "FF": "4-Seam", "SI": "Sinker", "FC": "Cutter", "SL": "Slider",
+    "CU": "Curveball", "CH": "Changeup", "FS": "Splitter",
+    "KC": "Knuckle Curve", "ST": "Sweeper", "SV": "Slurve",
+}
+PITCH_COLORS = {
+    "FF": "#FF6347", "SI": "#FF8C00", "FC": "#DAA520", "SL": "#4169E1",
+    "CU": "#9370DB", "CH": "#2E8B57", "FS": "#20B2AA", "KC": "#BA55D3",
+    "ST": "#1E90FF", "SV": "#7B68EE",
+}
+
+PREDICTED_LINEUP = [
+    {"order": 1, "name": "Ronald Acuña Jr.", "pos": "RF", "note_en": "Locked-in leadoff — started every game", "note_ja": "不動の1番・全試合スタメン"},
+    {"order": 2, "name": "Maikel Garcia", "pos": "3B", "note_en": "#2 spot in 3 of 4 games", "note_ja": "2番3回起用"},
+    {"order": 3, "name": "Luis Arráez", "pos": "1B", "note_en": "Fixed #3 hitter", "note_ja": "3番固定"},
+    {"order": 4, "name": "Willson Contreras", "pos": "DH", "note_en": "Cleanup in 3 games", "note_ja": "4番3回起用"},
+    {"order": 5, "name": "Gleyber Torres", "pos": "2B", "note_en": "Mid-to-lower order", "note_ja": "中軸〜下位で起用"},
+    {"order": 6, "name": "Salvador Perez", "pos": "C", "note_en": "DH / Catcher", "note_ja": "指名打者/捕手"},
+    {"order": 7, "name": "William Contreras", "pos": "C", "note_en": "Catcher / DH", "note_ja": "捕手/DH"},
+    {"order": 8, "name": "Wilyer Abreu", "pos": "LF", "note_en": "Fixed in left field", "note_ja": "左翼固定"},
+    {"order": 9, "name": "Ezequiel Tovar", "pos": "SS", "note_en": "Fixed at shortstop", "note_ja": "遊撃固定"},
+]
+
+PREDICTED_SP = "Ranger Suárez"
+
+WBC_PITCHING_STATS = [
+    {"name": "E. Rodríguez", "full": "Eduardo Rodríguez", "games": "vs Dominican Republic (starter)", "games_ja": "vsドミニカ(先発)", "era": "10.13", "ip": "2.2", "pitches": "53", "result": "L"},
+    {"name": "R. Suárez", "full": "Ranger Suárez", "games": "vs Netherlands (starter)", "games_ja": "vsオランダ(先発)", "era": "4.50", "ip": "2.0", "pitches": "43", "result": "W"},
+    {"name": "Y. Gómez", "full": "Yoendrys Gómez", "games": "vs Nicaragua (starter)", "games_ja": "vsニカラグア(先発)", "era": "0.00", "ip": "2.0", "pitches": "—", "result": "W"},
+    {"name": "E. De Jesus", "full": "Enmanuel De Jesus", "games": "vs Israel (starter)", "games_ja": "vsイスラエル(先発)", "era": "1.80", "ip": "5.0", "pitches": "63", "result": "W"},
+    {"name": "E. Bazardo", "full": "Eduard Bazardo", "games": "Relief (3 games)", "games_ja": "リリーフ(3試合)", "era": "—", "ip": "—", "pitches": "—", "result": "—"},
+    {"name": "J. Buttó", "full": "José Buttó", "games": "Relief (4 games)", "games_ja": "リリーフ(4試合)", "era": "0.00", "ip": "—", "pitches": "—", "result": "—"},
+    {"name": "L. Ávila", "full": "Luinder Ávila", "games": "Relief (1 game)", "games_ja": "リリーフ(1試合)", "era": "0.00", "ip": "2.0", "pitches": "44", "result": "H"},
+    {"name": "D. Palencia", "full": "Daniel Palencia", "games": "Relief (2 games)", "games_ja": "リリーフ(2試合)", "era": "0.00", "ip": "2.0", "pitches": "—", "result": "—"},
+]
+
+KEY_RELIEVERS = ["José Buttó", "Eduard Bazardo", "Daniel Palencia", "Luinder Ávila"]
+
+# MLB average benchmarks (2024 season)
+_MLB_AVG_BAT = {"AVG": .243, "OBP": .312, "SLG": .397, "OPS": .709, "K%": 22.4, "BB%": 8.3, "xwOBA": .311}
+_MLB_AVG_PIT = {"Opp AVG": .243, "Opp SLG": .397, "K%": 22.4, "BB%": 8.3, "xwOBA": .311, "Whiff%": 25.0, "Velo": 93.5}
+
+# ---------------------------------------------------------------------------
+# Stadium data
+# ---------------------------------------------------------------------------
+STADIUM_SCALE = 2.495 / 2.33
+STADIUM_CSV = pathlib.Path(__file__).parent / "data" / "mlbstadiums_wbc.csv"
+
+
+@st.cache_data
+def load_stadium_coords() -> pd.DataFrame:
+    df = pd.read_csv(STADIUM_CSV)
+    df["x"] = (df["x"] - 125) * STADIUM_SCALE + 125
+    df["y"] = -((df["y"] - 199) * STADIUM_SCALE + 199)
+    df["y"] = -df["y"]
+    return df
+
+
+# ---------------------------------------------------------------------------
+# i18n
+# ---------------------------------------------------------------------------
+TEXTS = {
+    "EN": {
+        "page_title": "WBC 2026 QF: Japan vs Venezuela",
+        "main_title": "WBC 2026 Quarterfinal: Japan vs Venezuela",
+        "subtitle": "Venezuela Scouting Report for Japan",
+        "tab1": "Matchup Overview",
+        "tab2": "Lineup Scouting",
+        "tab3": "Starting Pitcher",
+        "tab4": "Bullpen Scouting",
+        "season": "Season",
+        "predicted_lineup": "Venezuela Predicted Starting Lineup",
+        "predicted_sp": "Predicted Starting Pitcher",
+        "pool_d_record": "Pool D Record: 3W-1L",
+        "pool_d_summary": "Pool D Pitching Summary",
+        "key_tendencies": "Key Tendencies from Pool D",
+        "tendency_text": (
+            "Venezuela went 3-1 in Pool D, losing only to the Dominican Republic. "
+            "Their lineup is anchored by Ronald Acuna Jr. at leadoff and Luis Arraez in the #3 hole. "
+            "The top of the order (1-4) was remarkably consistent across all 4 games. "
+            "The lower order rotated between Salvador Perez and William Contreras at C/DH. "
+            "Pitching strategy: short starts (2-5 IP) with heavy bullpen usage — "
+            "Jose Butto appeared in all 4 games. "
+            "Predicted QF starter: Ranger Suarez (LHP), who earned the win vs Netherlands."
+        ),
+        "order": "#", "pos": "Pos", "player": "Player", "note": "Note",
+        "team": "Team", "bats": "Bats", "throws": "Throws", "role": "Role",
+        "profile": "Player Profile",
+        "scouting_summary": "Scouting Summary",
+        "zone_heatmap": "Strike Zone Heatmap (BA)",
+        "zone_3x3": "Zone Chart (3x3 BA)",
+        "pitch_type_perf": "Performance by Pitch Type",
+        "pitch_type": "Pitch Type", "count": "Count", "ba": "BA", "slg": "SLG",
+        "whiff_pct": "Whiff%", "chase_pct": "Chase%",
+        "platoon": "Platoon Splits",
+        "vs_lhp": "vs LHP", "vs_rhp": "vs RHP",
+        "vs_lhb": "vs LHB", "vs_rhb": "vs RHB",
+        "no_data": "No data available for this selection.",
+        "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
+        "team_radar_title": "Team Batting Profile (Predicted Lineup)",
+        "arsenal": "Pitch Arsenal",
+        "usage_pct": "Usage%",
+        "avg_velo": "Avg Velo (mph / km/h)",
+        "max_velo": "Max Velo (mph / km/h)",
+        "avg_spin": "Avg Spin (rpm)",
+        "h_break": "H-Break (in)",
+        "v_break": "V-Break (in)",
+        "put_away_pct": "Put Away%",
+        "movement_chart": "Pitch Movement Chart",
+        "movement_note": "Each dot = 1 pitch. Horizontal axis = glove-side break, vertical = induced vertical break.",
+        "opp_avg": "Opp AVG", "opp_slg": "Opp SLG",
+        "k_pct": "K%", "bb_pct": "BB%",
+        "xwoba": "xwOBA",
+        "where_to_attack": "Where to Attack",
+        "attack_text_suarez": (
+            "Ranger Suarez is a soft-contact LHP who relies heavily on his sinker and changeup. "
+            "Against RHB: look for the changeup down and away — it generates swings and misses "
+            "but can be vulnerable when left up in the zone. "
+            "Against LHB: his sinker runs arm-side; sit on pitches on the inner half. "
+            "Key: be patient early — he is a pitch-to-contact pitcher with a low K rate. "
+            "Force him to elevate or fall behind in counts."
+        ),
+        "bullpen_overview": "Bullpen Usage Pattern",
+        "bullpen_text": (
+            "Venezuela relied heavily on their bullpen throughout Pool D. "
+            "Jose Butto appeared in all 4 games — he is the high-leverage reliever. "
+            "Eduard Bazardo was used in 3 games as a multi-inning bridge option. "
+            "Daniel Palencia appeared in 2 games. Luinder Avila had one strong outing (2 IP, 0 ER). "
+            "Expect similar usage: short start from Suarez (3-4 IP), "
+            "then Bazardo/Avila to bridge, Butto for high-leverage spots."
+        ),
+        "reliever_profile": "Reliever Profile",
+        "games_col": "Games", "era_col": "ERA", "ip_col": "IP",
+        "pitches_col": "Pitches", "result_col": "Result",
+        "sp_label": "Starter", "rp_label": "Reliever",
+        "glossary_stats": (
+            "- **AVG** = Batting Average\n"
+            "- **OBP** = On-Base Percentage\n"
+            "- **SLG** = Slugging Percentage\n"
+            "- **OPS** = OBP + SLG\n"
+            "- **xwOBA** = Expected Weighted On-Base Average"
+        ),
+        "glossary_pitch": (
+            "- **Whiff%** = Swing-and-miss rate\n"
+            "- **Chase%** = Swing rate on pitches outside the zone"
+        ),
+        "glossary_platoon": (
+            "Platoon splits show performance vs left-handed vs right-handed pitchers/batters."
+        ),
+        "zone_heatmap_pitch": "Pitch Location Heatmap",
+        "usage_heatmap": "Usage by Zone",
+        "ba_heatmap": "Batting Avg by Zone",
+    },
+    "JA": {
+        "page_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
+        "main_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
+        "subtitle": "ベネズエラ スカウティングレポート（日本代表向け）",
+        "tab1": "対戦プレビュー",
+        "tab2": "打線スカウティング",
+        "tab3": "先発投手分析",
+        "tab4": "ブルペン分析",
+        "season": "シーズン",
+        "predicted_lineup": "ベネズエラ 予想スタメン",
+        "predicted_sp": "予想先発投手",
+        "pool_d_record": "プールD成績: 3勝1敗",
+        "pool_d_summary": "プールD 投手起用一覧",
+        "key_tendencies": "プールDから見える傾向",
+        "tendency_text": (
+            "ベネズエラはプールDを3勝1敗で通過。唯一の敗戦はドミニカ共和国戦。"
+            "打線はアクーニャJr.が1番に固定、アラエスが3番に座る。"
+            "1〜4番は4試合を通じてほぼ固定。下位はペレスとW.コントレラスが捕手/DHで併用。"
+            "投手運用: 先発は2〜5イニングの短いイニングで、ブルペン多投。"
+            "ホセ・ブットは4試合全てに登板。"
+            "準々決勝の予想先発: レンジャー・スアレス（左腕）— オランダ戦で勝利投手。"
+        ),
+        "order": "#", "pos": "守備", "player": "選手", "note": "備考",
+        "team": "チーム", "bats": "打席", "throws": "投", "role": "役割",
+        "profile": "選手プロフィール",
+        "scouting_summary": "スカウティング要約",
+        "zone_heatmap": "ストライクゾーン ヒートマップ（打率）",
+        "zone_3x3": "ゾーンチャート (3x3 打率)",
+        "pitch_type_perf": "球種別パフォーマンス",
+        "pitch_type": "球種", "count": "投球数", "ba": "打率", "slg": "長打率",
+        "whiff_pct": "空振率", "chase_pct": "チェイス率",
+        "platoon": "左右投手別成績",
+        "vs_lhp": "vs 左投手", "vs_rhp": "vs 右投手",
+        "vs_lhb": "vs 左打者", "vs_rhb": "vs 右打者",
+        "no_data": "データがありません。",
+        "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
+        "team_radar_title": "チーム打線の特徴（予想スタメン）",
+        "arsenal": "球種構成",
+        "usage_pct": "使用率",
+        "avg_velo": "平均球速 (mph / km/h)",
+        "max_velo": "最高球速 (mph / km/h)",
+        "avg_spin": "平均回転数 (rpm)",
+        "h_break": "横変化 (in)",
+        "v_break": "縦変化 (in)",
+        "put_away_pct": "決め球率",
+        "movement_chart": "変化量チャート",
+        "movement_note": "各ドット = 1球。横軸 = グラブ側への曲がり、縦軸 = 重力に逆らう縦の変化量。",
+        "opp_avg": "被打率", "opp_slg": "被長打率",
+        "k_pct": "奪三振率", "bb_pct": "与四球率",
+        "xwoba": "xwOBA",
+        "where_to_attack": "攻略ポイント",
+        "attack_text_suarez": (
+            "レンジャー・スアレスはソフトコンタクト型の左腕。シンカーとチェンジアップが主体。"
+            "対右打者: 外角低めのチェンジアップに空振りを取るが、高めに浮くと打たれやすい。"
+            "対左打者: シンカーがアーム側に動く。インコースの球に狙いを絞る。"
+            "攻略の鍵: 早いカウントで仕掛けない。奪三振率が低い投手なので、"
+            "ボールを見極めてカウントを有利に進め、甘い球を待つ。"
+        ),
+        "bullpen_overview": "ブルペン運用パターン",
+        "bullpen_text": (
+            "ベネズエラはプールDを通じてブルペンを多投。"
+            "ホセ・ブットは4試合全てに登板 — ハイレバレッジの切り札。"
+            "エドゥアルド・バサルドは3試合に登板、イニング跨ぎの中継ぎ。"
+            "ダニエル・パレンシアは2試合登板。ルインデル・アビラは1試合（2回無失点）。"
+            "準々決勝もスアレスの短いイニング（3〜4回）→ バサルド/アビラの中継ぎ → "
+            "ブットがハイレバレッジで登板、という運用が予想される。"
+        ),
+        "reliever_profile": "リリーフ投手プロフィール",
+        "games_col": "登板", "era_col": "防御率", "ip_col": "投球回",
+        "pitches_col": "球数", "result_col": "結果",
+        "sp_label": "先発", "rp_label": "リリーフ",
+        "glossary_stats": (
+            "- **AVG（打率）** = 安打数 / 打数\n"
+            "- **OBP（出塁率）** = 塁に出る割合\n"
+            "- **SLG（長打率）** = 塁打数 / 打数\n"
+            "- **OPS** = OBP + SLG\n"
+            "- **xwOBA** = 打球の質から算出した期待値"
+        ),
+        "glossary_pitch": (
+            "- **空振率（Whiff%）** = スイングに対する空振りの割合\n"
+            "- **チェイス率（Chase%）** = ゾーン外の球に手を出す割合"
+        ),
+        "glossary_platoon": (
+            "左右投手/打者に対する成績の比較。大きな差がある場合、マッチアップを活用可能。"
+        ),
+        "zone_heatmap_pitch": "配球ヒートマップ",
+        "usage_heatmap": "ゾーン別投球分布",
+        "ba_heatmap": "ゾーン別 打率",
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# Data loading
+# ---------------------------------------------------------------------------
+DATA_DIR = pathlib.Path(__file__).parent / "data"
+BATTER_CSV = DATA_DIR / "venezuela_statcast.csv"
+PITCHER_CSV = DATA_DIR / "venezuela_pitchers_statcast.csv"
+
+
+@st.cache_data
+def load_batter_data() -> pd.DataFrame:
+    df = pd.read_csv(BATTER_CSV, low_memory=False)
+    df["game_date"] = pd.to_datetime(df["game_date"])
+    if "season" not in df.columns:
+        df["season"] = df["game_date"].dt.year
+    return df
+
+
+@st.cache_data
+def load_pitcher_data() -> pd.DataFrame:
+    df = pd.read_csv(PITCHER_CSV, low_memory=False)
+    df["game_date"] = pd.to_datetime(df["game_date"])
+    if "season" not in df.columns:
+        df["season"] = df["game_date"].dt.year
+    return df
+
+
+def filter_season(df: pd.DataFrame, season) -> pd.DataFrame:
+    return df[df["season"] == int(season)]
+
+
+# ---------------------------------------------------------------------------
+# Stats helpers
+# ---------------------------------------------------------------------------
+_AB_EVENTS = {"single", "double", "triple", "home_run", "field_out",
+              "strikeout", "grounded_into_double_play", "double_play",
+              "force_out", "fielders_choice", "fielders_choice_out",
+              "strikeout_double_play", "triple_play", "field_error"}
+_PA_EVENTS = _AB_EVENTS | {"walk", "hit_by_pitch", "sac_fly", "sac_bunt",
+                            "sac_fly_double_play", "catcher_interf",
+                            "intent_walk"}
+_HIT_EVENTS = {"single", "double", "triple", "home_run"}
+
+
+def batting_stats(df: pd.DataFrame) -> dict:
+    """Compute basic batting stats from Statcast event-level data."""
+    evts = df.dropna(subset=["events"])
+    pa = evts[evts["events"].isin(_PA_EVENTS)]
+    ab = evts[evts["events"].isin(_AB_EVENTS)]
+    hits = evts[evts["events"].isin(_HIT_EVENTS)]
+
+    n_pa = len(pa)
+    n_ab = len(ab)
+    n_h = len(hits)
+    n_bb = len(pa[pa["events"].isin({"walk", "intent_walk"})])
+    n_hbp = len(pa[pa["events"].isin({"hit_by_pitch"})])
+    n_1b = len(hits[hits["events"] == "single"])
+    n_2b = len(hits[hits["events"] == "double"])
+    n_3b = len(hits[hits["events"] == "triple"])
+    n_hr = len(hits[hits["events"] == "home_run"])
+    n_k = len(ab[ab["events"].str.contains("strikeout", na=False)])
+    tb = n_1b + 2 * n_2b + 3 * n_3b + 4 * n_hr
+
+    avg = n_h / n_ab if n_ab else 0
+    obp = (n_h + n_bb + n_hbp) / n_pa if n_pa else 0
+    slg = tb / n_ab if n_ab else 0
+    ops = obp + slg
+    k_pct = n_k / n_pa * 100 if n_pa else 0
+    bb_pct = n_bb / n_pa * 100 if n_pa else 0
+    xwoba = df["estimated_woba_using_speedangle"].dropna().mean()
+
+    return {
+        "PA": n_pa, "AB": n_ab, "H": n_h, "HR": n_hr,
+        "AVG": round(avg, 3), "OBP": round(obp, 3),
+        "SLG": round(slg, 3), "OPS": round(ops, 3),
+        "K%": round(k_pct, 1), "BB%": round(bb_pct, 1),
+        "xwOBA": round(xwoba, 3) if not pd.isna(xwoba) else None,
+    }
+
+
+def pitching_stats(df: pd.DataFrame) -> dict:
+    """Compute pitching stats from Statcast pitch-level data."""
+    total_pitches = len(df)
+    evts = df.dropna(subset=["events"])
+    pa = evts[evts["events"].isin(_PA_EVENTS)]
+    ab = evts[evts["events"].isin(_AB_EVENTS)]
+    hits = evts[evts["events"].isin(_HIT_EVENTS)]
+
+    n_pa = len(pa)
+    n_ab = len(ab)
+    n_h = len(hits)
+    n_k = len(ab[ab["events"].str.contains("strikeout", na=False)])
+    n_bb = len(pa[pa["events"].isin({"walk", "intent_walk"})])
+    n_1b = len(hits[hits["events"] == "single"])
+    n_2b = len(hits[hits["events"] == "double"])
+    n_3b = len(hits[hits["events"] == "triple"])
+    n_hr = len(hits[hits["events"] == "home_run"])
+    tb = n_1b + 2 * n_2b + 3 * n_3b + 4 * n_hr
+
+    opp_avg = n_h / n_ab if n_ab else 0
+    opp_slg = tb / n_ab if n_ab else 0
+    k_pct = n_k / n_pa * 100 if n_pa else 0
+    bb_pct = n_bb / n_pa * 100 if n_pa else 0
+    xwoba = df["estimated_woba_using_speedangle"].dropna().mean()
+    avg_velo = df["release_speed"].dropna().mean() if "release_speed" in df.columns else None
+
+    swing_events = {"hit_into_play", "foul", "swinging_strike",
+                    "swinging_strike_blocked", "foul_tip", "hit_into_play_score",
+                    "hit_into_play_no_out"}
+    swings = df[df["description"].isin(swing_events)]
+    whiffs = df[df["description"].isin({"swinging_strike", "swinging_strike_blocked", "foul_tip"})]
+    whiff_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
+
+    return {
+        "Pitches": total_pitches,
+        "PA": n_pa, "K": n_k, "BB": n_bb, "HR": n_hr,
+        "Opp AVG": round(opp_avg, 3),
+        "Opp SLG": round(opp_slg, 3),
+        "K%": round(k_pct, 1),
+        "BB%": round(bb_pct, 1),
+        "Whiff%": round(whiff_pct, 1),
+        "xwOBA": round(xwoba, 3) if not pd.isna(xwoba) else None,
+        "Avg Velo": round(avg_velo, 1) if avg_velo and not pd.isna(avg_velo) else None,
+    }
+
+
+def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
+                            lang: str) -> str:
+    """Auto-generate a scouting summary for a batter."""
+    strengths = []
+    weaknesses = []
+
+    if stats["SLG"] >= 0.450:
+        strengths.append("elite power (SLG .450+)" if lang == "EN"
+                         else "長打力が非常に高い（SLG .450以上）")
+    elif stats["SLG"] >= 0.400:
+        strengths.append("above-average power" if lang == "EN"
+                         else "平均以上の長打力")
+    if stats["AVG"] >= 0.300:
+        strengths.append("elite contact ability (AVG .300+)" if lang == "EN"
+                         else "卓越したコンタクト力（打率 .300以上）")
+    elif stats["AVG"] >= 0.270:
+        strengths.append("solid contact hitter" if lang == "EN"
+                         else "安定したコンタクトヒッター")
+    if stats["BB%"] >= 10.0:
+        strengths.append(f"patient approach (BB% {stats['BB%']:.1f})" if lang == "EN"
+                         else f"選球眼が良い（四球率 {stats['BB%']:.1f}%）")
+    if stats["xwOBA"] and stats["xwOBA"] >= 0.350:
+        strengths.append("high batted-ball quality (xwOBA .350+)" if lang == "EN"
+                         else "打球の質が高い（xwOBA .350以上）")
+    if stats["K%"] >= 25.0:
+        weaknesses.append(f"high strikeout rate (K% {stats['K%']:.1f})" if lang == "EN"
+                          else f"三振が多い（三振率 {stats['K%']:.1f}%）")
+    elif stats["K%"] >= 20.0:
+        weaknesses.append(f"moderate strikeout rate (K% {stats['K%']:.1f})" if lang == "EN"
+                          else f"三振がやや多い（三振率 {stats['K%']:.1f}%）")
+
+    vs_l = pdf[pdf["p_throws"] == "L"]
+    vs_r = pdf[pdf["p_throws"] == "R"]
+    if not vs_l.empty and not vs_r.empty:
+        s_l = batting_stats(vs_l)
+        s_r = batting_stats(vs_r)
+        if s_l["PA"] >= 30 and s_r["PA"] >= 30:
+            ops_diff = abs(s_l["OPS"] - s_r["OPS"])
+            if ops_diff >= 0.100:
+                weak_side = "LHP" if s_l["OPS"] < s_r["OPS"] else "RHP"
+                weak_ops = s_l["OPS"] if s_l["OPS"] < s_r["OPS"] else s_r["OPS"]
+                if lang == "EN":
+                    weaknesses.append(
+                        f"notable platoon split — weaker vs {weak_side} "
+                        f"(OPS .{int(weak_ops * 1000):03d})"
+                    )
+                else:
+                    weak_ja = "左投手" if weak_side == "LHP" else "右投手"
+                    weaknesses.append(
+                        f"左右差が大きい — {weak_ja}に弱い "
+                        f"（OPS .{int(weak_ops * 1000):03d}）"
+                    )
+
+    parts = []
+    if strengths:
+        prefix = "Strengths: " if lang == "EN" else "強み: "
+        parts.append(prefix + ", ".join(strengths) + ".")
+    if weaknesses:
+        prefix = "Weaknesses: " if lang == "EN" else "弱み: "
+        parts.append(prefix + ", ".join(weaknesses) + ".")
+    if not parts:
+        return ("Balanced profile with no extreme strengths or weaknesses."
+                if lang == "EN" else "特に目立つ偏りのないバランス型の打者。")
+    return " ".join(parts)
+
+
+def generate_pitcher_summary(stats: dict, pdf: pd.DataFrame, pitcher: dict,
+                             lang: str) -> str:
+    """Auto-generate a scouting summary for a pitcher."""
+    strengths = []
+    weaknesses = []
+
+    if stats["K%"] >= 25.0:
+        strengths.append("elite strikeout ability (K% 25+)" if lang == "EN"
+                         else "三振を奪う能力が非常に高い（K% 25以上）")
+    elif stats["K%"] >= 20.0:
+        strengths.append("above-average strikeout rate" if lang == "EN"
+                         else "平均以上の奪三振率")
+    if stats["Opp AVG"] <= 0.220:
+        strengths.append(f"excellent contact management (Opp AVG .{int(stats['Opp AVG'] * 1000):03d})" if lang == "EN"
+                         else f"被打率が非常に低い（被打率 .{int(stats['Opp AVG'] * 1000):03d}）")
+    if stats["xwOBA"] and stats["xwOBA"] <= 0.290:
+        strengths.append("low batted-ball quality allowed (xwOBA .290-)" if lang == "EN"
+                         else "打球の質を抑えている（被xwOBA .290以下）")
+    if stats["Avg Velo"] and stats["Avg Velo"] >= 95.0:
+        strengths.append(f"power arm (Avg Velo {stats['Avg Velo']:.1f} mph)" if lang == "EN"
+                         else f"パワーアーム（平均球速 {stats['Avg Velo']:.1f} mph）")
+    if stats["BB%"] >= 10.0:
+        weaknesses.append(f"high walk rate (BB% {stats['BB%']:.1f})" if lang == "EN"
+                          else f"四球が多い（与四球率 {stats['BB%']:.1f}%）")
+    elif stats["BB%"] >= 8.0:
+        weaknesses.append(f"moderate walk rate (BB% {stats['BB%']:.1f})" if lang == "EN"
+                          else f"四球がやや多い（与四球率 {stats['BB%']:.1f}%）")
+    if stats["K%"] < 15.0:
+        weaknesses.append(f"low strikeout rate (K% {stats['K%']:.1f})" if lang == "EN"
+                          else f"三振を奪えない（奪三振率 {stats['K%']:.1f}%）")
+
+    vs_l = pdf[pdf["stand"] == "L"]
+    vs_r = pdf[pdf["stand"] == "R"]
+    if not vs_l.empty and not vs_r.empty:
+        s_l = pitching_stats(vs_l)
+        s_r = pitching_stats(vs_r)
+        if s_l["PA"] >= 30 and s_r["PA"] >= 30:
+            avg_diff = abs(s_l["Opp AVG"] - s_r["Opp AVG"])
+            if avg_diff >= 0.040:
+                weak_side = "LHB" if s_l["Opp AVG"] > s_r["Opp AVG"] else "RHB"
+                weak_avg = max(s_l["Opp AVG"], s_r["Opp AVG"])
+                if lang == "EN":
+                    weaknesses.append(
+                        f"platoon vulnerability — weaker vs {weak_side} "
+                        f"(Opp AVG .{int(weak_avg * 1000):03d})"
+                    )
+                else:
+                    weak_ja = "左打者" if weak_side == "LHB" else "右打者"
+                    weaknesses.append(
+                        f"左右差あり — {weak_ja}に打たれやすい "
+                        f"（被打率 .{int(weak_avg * 1000):03d}）"
+                    )
+
+    parts = []
+    if strengths:
+        prefix = "Strengths: " if lang == "EN" else "強み: "
+        parts.append(prefix + ", ".join(strengths) + ".")
+    if weaknesses:
+        prefix = "Weaknesses: " if lang == "EN" else "弱み: "
+        parts.append(prefix + ", ".join(weaknesses) + ".")
+    if not parts:
+        return ("Balanced profile with no extreme strengths or weaknesses."
+                if lang == "EN" else "特に目立つ偏りのないバランス型の投手。")
+    return " ".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# Visualization helpers
+# ---------------------------------------------------------------------------
+def _dark_fig(figsize=(6, 5)):
+    fig, ax = plt.subplots(figsize=figsize, facecolor="#0e1117")
+    ax.set_facecolor("#1a1a2e")
+    ax.tick_params(colors="white")
+    ax.xaxis.label.set_color("white")
+    ax.yaxis.label.set_color("white")
+    ax.title.set_color("white")
+    for spine in ax.spines.values():
+        spine.set_color("white")
+    return fig, ax
+
+
+def _zone_text_color(val: float, vmin: float, vmax: float) -> str:
+    norm = (val - vmin) / (vmax - vmin) if vmax > vmin else 0.5
+    if 0.25 < norm < 0.65:
+        return "black"
+    return "white"
+
+
+def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
+    """Draw a 5x5 heatmap over the strike zone."""
+    x_bins = np.linspace(-1.5, 1.5, 6)
+    z_bins = np.linspace(1.0, 4.0, 6)
+    valid = df.dropna(subset=["plate_x", "plate_z"]).copy()
+
+    if metric == "usage":
+        total = len(valid)
+        grid = np.full((5, 5), np.nan)
+        for i in range(5):
+            for j in range(5):
+                mask = ((valid["plate_x"] >= x_bins[j]) & (valid["plate_x"] < x_bins[j + 1])
+                        & (valid["plate_z"] >= z_bins[i]) & (valid["plate_z"] < z_bins[i + 1]))
+                cell_count = mask.sum()
+                if cell_count >= 3:
+                    grid[i, j] = cell_count / total * 100
+        vmin, vmax = 0, 10
+        cmap = plt.cm.YlOrRd.copy()
+    else:  # ba
+        valid = valid[valid["events"].isin(_AB_EVENTS)]
+        valid["is_hit"] = valid["events"].isin(_HIT_EVENTS).astype(int)
+        grid = np.full((5, 5), np.nan)
+        for i in range(5):
+            for j in range(5):
+                mask = ((valid["plate_x"] >= x_bins[j]) & (valid["plate_x"] < x_bins[j + 1])
+                        & (valid["plate_z"] >= z_bins[i]) & (valid["plate_z"] < z_bins[i + 1]))
+                cell = valid.loc[mask, "is_hit"]
+                if len(cell) >= 5:
+                    grid[i, j] = cell.mean()
+        vmin, vmax = 0, 0.450
+        cmap = plt.cm.RdYlGn.copy()
+
+    cmap.set_bad(color="#222222")
+    im = ax.pcolormesh(x_bins, z_bins, grid, cmap=cmap, vmin=vmin, vmax=vmax,
+                       edgecolors="white", linewidth=0.5)
+
+    rect = patches.Rectangle((-0.83, 1.5), 1.66, 2.0,
+                              linewidth=2, edgecolor="black", facecolor="none")
+    ax.add_patch(rect)
+
+    for i in range(5):
+        for j in range(5):
+            val = grid[i, j]
+            if not np.isnan(val):
+                txt = f"{val:.1f}%" if metric == "usage" else f".{int(val * 1000):03d}"
+                txt_color = _zone_text_color(val, vmin, vmax)
+                ax.text((x_bins[j] + x_bins[j + 1]) / 2,
+                        (z_bins[i] + z_bins[i + 1]) / 2,
+                        txt, ha="center", va="center",
+                        fontsize=9, fontweight="bold", color=txt_color,
+                        path_effects=[pe.withStroke(linewidth=2,
+                                                    foreground="white" if txt_color == "black" else "black")])
+
+    ax.set_xlim(-1.8, 1.8)
+    ax.set_ylim(0.5, 4.5)
+    ax.set_aspect("equal")
+    ax.set_title(title, fontsize=16, fontweight="bold", color="white")
+    ax.set_xlabel("plate_x (ft)", fontsize=14)
+    ax.set_ylabel("plate_z (ft)", fontsize=14)
+    return im
+
+
+def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
+    """Draw 3x3 zone chart using Statcast zone 1-9."""
+    valid = df.dropna(subset=["zone"]).copy()
+    valid["zone"] = valid["zone"].astype(int)
+
+    x_edges = np.linspace(-0.83, 0.83, 4)
+    z_edges = np.linspace(1.5, 3.5, 4)
+
+    grid = np.full((3, 3), np.nan)
+    zone_map = {
+        1: (2, 0), 2: (2, 1), 3: (2, 2),
+        4: (1, 0), 5: (1, 1), 6: (1, 2),
+        7: (0, 0), 8: (0, 1), 9: (0, 2),
+    }
+    vmin, vmax = 0, 0.450
+
+    for zone_num, (row, col) in zone_map.items():
+        zdf = valid[valid["zone"] == zone_num]
+        ab = zdf[zdf["events"].isin(_AB_EVENTS)]
+        hits = zdf[zdf["events"].isin(_HIT_EVENTS)]
+        if len(ab) >= 5:
+            grid[row, col] = len(hits) / len(ab)
+
+    cmap = plt.cm.RdYlGn.copy()
+    cmap.set_bad(color="#222222")
+    im = ax.pcolormesh(x_edges, z_edges, grid, cmap=cmap, vmin=vmin, vmax=vmax,
+                       edgecolors="white", linewidth=1.5)
+
+    rect = patches.Rectangle((-0.83, 1.5), 1.66, 2.0,
+                              linewidth=2, edgecolor="black", facecolor="none")
+    ax.add_patch(rect)
+
+    for zone_num, (row, col) in zone_map.items():
+        val = grid[row, col]
+        if not np.isnan(val):
+            cx = (x_edges[col] + x_edges[col + 1]) / 2
+            cz = (z_edges[row] + z_edges[row + 1]) / 2
+            txt = f".{int(val * 1000):03d}"
+            txt_color = _zone_text_color(val, vmin, vmax)
+            ax.text(cx, cz, txt, ha="center", va="center",
+                    fontsize=14, fontweight="bold", color=txt_color,
+                    path_effects=[pe.withStroke(linewidth=2,
+                                               foreground="white" if txt_color == "black" else "black")])
+
+    ax.set_xlim(-1.2, 1.2)
+    ax.set_ylim(1.0, 4.0)
+    ax.set_aspect("equal")
+    ax.set_title(title, fontsize=16, fontweight="bold", color="white")
+    ax.set_xlabel("plate_x (ft)", fontsize=14)
+    ax.set_ylabel("plate_z (ft)", fontsize=14)
+    return im
+
+
+def draw_movement_chart(df: pd.DataFrame, title: str, ax, density: bool = True):
+    """Draw pitch movement chart (horizontal vs vertical break)."""
+    valid = df.dropna(subset=["pfx_x", "pfx_z", "pitch_type"]).copy()
+    valid["pfx_x_in"] = valid["pfx_x"] * 12
+    valid["pfx_z_in"] = valid["pfx_z"] * 12
+    top_types = valid["pitch_type"].value_counts().head(8).index
+
+    if density:
+        for pt in top_types:
+            sub = valid[valid["pitch_type"] == pt]
+            if len(sub) < 20:
+                continue
+            try:
+                xy = np.vstack([sub["pfx_x_in"].values, sub["pfx_z_in"].values])
+                kde = gaussian_kde(xy, bw_method=0.3)
+                xmin, xmax = sub["pfx_x_in"].min(), sub["pfx_x_in"].max()
+                zmin, zmax = sub["pfx_z_in"].min(), sub["pfx_z_in"].max()
+                xg = np.linspace(xmin, xmax, 80)
+                yg = np.linspace(zmin, zmax, 80)
+                xx, yy = np.meshgrid(xg, yg)
+                zz = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
+                color = PITCH_COLORS.get(pt, "#AAAAAA")
+                ax.contour(xx, yy, zz, levels=3, colors=[color], alpha=0.6,
+                           linewidths=1.5, zorder=1)
+            except np.linalg.LinAlgError:
+                pass
+
+    for pt in top_types:
+        sub = valid[valid["pitch_type"] == pt]
+        color = PITCH_COLORS.get(pt, "#AAAAAA")
+        label = PITCH_LABELS.get(pt, pt)
+        ax.scatter(sub["pfx_x_in"], sub["pfx_z_in"],
+                   c=color, s=15, alpha=0.5, label=label, edgecolors="none", zorder=3)
+
+    ax.axhline(0, color="white", linewidth=0.5, alpha=0.3)
+    ax.axvline(0, color="white", linewidth=0.5, alpha=0.3)
+    ax.set_xlabel("Horizontal Break (in)", color="white", fontsize=14)
+    ax.set_ylabel("Induced Vertical Break (in)", color="white", fontsize=14)
+    ax.set_title(title, fontsize=16, fontweight="bold", color="white")
+    leg = ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=12,
+                    facecolor="#0e1117", edgecolor="white",
+                    labelspacing=1.0, borderpad=1.0,
+                    markerscale=3.0, handletextpad=0.8)
+    for text in leg.get_texts():
+        text.set_color("white")
+    ax.tick_params(colors="white")
+
+
+def pitch_type_table(df: pd.DataFrame, t) -> pd.DataFrame:
+    """Build pitch-type performance table for a batter."""
+    valid = df.dropna(subset=["pitch_type"]).copy()
+    top_types = valid["pitch_type"].value_counts().head(8).index
+    valid.loc[~valid["pitch_type"].isin(top_types), "pitch_type"] = "Other"
+
+    rows = []
+    for pt, grp in valid.groupby("pitch_type"):
+        n_pitches = len(grp)
+        swings = grp[grp["description"].isin({
+            "hit_into_play", "foul", "swinging_strike",
+            "swinging_strike_blocked", "foul_tip", "foul_bunt",
+            "missed_bunt", "bunt_foul_tip",
+        })]
+        whiffs = grp[grp["description"].isin({
+            "swinging_strike", "swinging_strike_blocked", "foul_tip",
+        })]
+        whiff_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
+
+        outside = grp[(grp["zone"].notna()) & (grp["zone"] >= 11)]
+        chase_swings = outside[outside["description"].isin({
+            "hit_into_play", "foul", "swinging_strike",
+            "swinging_strike_blocked", "foul_tip",
+        })]
+        chase_pct = len(chase_swings) / len(outside) * 100 if len(outside) > 0 else 0
+
+        ab = grp[grp["events"].isin(_AB_EVENTS)]
+        hits = grp[grp["events"].isin(_HIT_EVENTS)]
+        n_ab = len(ab)
+        n_h = len(hits)
+        n_1b = len(hits[hits["events"] == "single"])
+        n_2b = len(hits[hits["events"] == "double"])
+        n_3b_h = len(hits[hits["events"] == "triple"])
+        n_hr = len(hits[hits["events"] == "home_run"])
+        tb = n_1b + 2 * n_2b + 3 * n_3b_h + 4 * n_hr
+        ba = n_h / n_ab if n_ab >= 10 else None
+        slg = tb / n_ab if n_ab >= 10 else None
+
+        label = PITCH_LABELS.get(pt, pt)
+        rows.append({
+            t["pitch_type"]: label,
+            t["count"]: n_pitches,
+            t["ba"]: f".{int(ba * 1000):03d}" if ba is not None else "—",
+            t["slg"]: f".{int(slg * 1000):03d}" if slg is not None else "—",
+            t["whiff_pct"]: f"{whiff_pct:.1f}%",
+            t["chase_pct"]: f"{chase_pct:.1f}%",
+        })
+
+    result = pd.DataFrame(rows)
+    if not result.empty:
+        result = result.sort_values(t["count"], ascending=False).reset_index(drop=True)
+    return result
+
+
+def arsenal_table(df: pd.DataFrame, t) -> pd.DataFrame:
+    """Build pitch arsenal table for a pitcher."""
+    valid = df.dropna(subset=["pitch_type"]).copy()
+    top_types = valid["pitch_type"].value_counts().head(8).index
+    valid.loc[~valid["pitch_type"].isin(top_types), "pitch_type"] = "Other"
+
+    total = len(valid)
+    rows = []
+    for pt, grp in valid.groupby("pitch_type"):
+        n_pitches = len(grp)
+        usage = n_pitches / total * 100
+
+        avg_velo = grp["release_speed"].dropna().mean() if "release_speed" in grp.columns else None
+        max_velo = grp["release_speed"].dropna().max() if "release_speed" in grp.columns else None
+        avg_spin = grp["release_spin_rate"].dropna().mean() if "release_spin_rate" in grp.columns else None
+        h_break = grp["pfx_x"].dropna().mean() * 12 if "pfx_x" in grp.columns and grp["pfx_x"].notna().any() else None
+        v_break = grp["pfx_z"].dropna().mean() * 12 if "pfx_z" in grp.columns and grp["pfx_z"].notna().any() else None
+
+        swings = grp[grp["description"].isin({
+            "hit_into_play", "foul", "swinging_strike",
+            "swinging_strike_blocked", "foul_tip",
+        })]
+        whiffs = grp[grp["description"].isin({
+            "swinging_strike", "swinging_strike_blocked", "foul_tip",
+        })]
+        whiff_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
+
+        two_strike = grp[grp["strikes"] == 2]
+        k_on_two = two_strike[two_strike["events"].str.contains("strikeout", na=False)] if "events" in two_strike.columns else pd.DataFrame()
+        put_away = len(k_on_two) / len(two_strike) * 100 if len(two_strike) > 0 else 0
+
+        label = PITCH_LABELS.get(pt, pt)
+        rows.append({
+            t["pitch_type"]: label,
+            t["count"]: n_pitches,
+            t["usage_pct"]: f"{usage:.1f}%",
+            t["avg_velo"]: f"{avg_velo:.1f} / {avg_velo * 1.609:.0f}" if avg_velo and not pd.isna(avg_velo) else "\u2014",
+            t["max_velo"]: f"{max_velo:.1f} / {max_velo * 1.609:.0f}" if max_velo and not pd.isna(max_velo) else "\u2014",
+            t["avg_spin"]: f"{avg_spin:.0f}" if avg_spin and not pd.isna(avg_spin) else "\u2014",
+            t["h_break"]: f"{h_break:.1f}" if h_break is not None else "\u2014",
+            t["v_break"]: f"{v_break:.1f}" if v_break is not None else "\u2014",
+            t["whiff_pct"]: f"{whiff_pct:.1f}%",
+            t["put_away_pct"]: f"{put_away:.1f}%",
+        })
+
+    result = pd.DataFrame(rows)
+    if not result.empty:
+        result = result.sort_values(t["count"], ascending=False).reset_index(drop=True)
+    return result
+
+
+def _name_display(name: str, lang: str) -> str:
+    """Get bilingual display name."""
+    p = PLAYER_BY_NAME.get(name) or PITCHER_BY_NAME.get(name)
+    if p and lang == "JA":
+        ja = p.get("name_ja", "")
+        if ja:
+            return f"{ja}（{name}）"
+    return name
+
+
+# ---------------------------------------------------------------------------
+# Streamlit App
+# ---------------------------------------------------------------------------
+def main():
+    st.set_page_config(
+        page_title="WBC 2026 QF: JPN vs VEN",
+        page_icon="\U0001F1EF\U0001F1F5",
+        layout="wide",
+        initial_sidebar_state="collapsed",
+    )
+
+    st.markdown("""
+    <style>
+    @media (max-width: 768px) {
+        [data-testid="stMetric"] { padding: 0.3rem 0.4rem; }
+        [data-testid="stMetricLabel"] { font-size: 0.75rem !important; }
+        [data-testid="stMetricValue"] { font-size: 1.1rem !important; }
+        [data-testid="stHorizontalBlock"] { gap: 0.3rem !important; }
+        .stDataFrame td, .stDataFrame th { font-size: 0.8rem !important; }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # -- Sidebar --
+    lang = st.sidebar.radio("Language / 言語", ["JA", "EN"], horizontal=True)
+    t = TEXTS[lang]
+
+    st.sidebar.markdown(f"# \U0001F1EF\U0001F1F5 vs \U0001F1FB\U0001F1EA")
+    st.sidebar.caption(t["subtitle"])
+
+    # Load data
+    df_bat_all = load_batter_data()
+    df_pit_all = load_pitcher_data()
+
+    # Season filter
+    bat_seasons = sorted(df_bat_all["season"].unique().tolist())
+    pit_seasons = sorted(df_pit_all["season"].unique().tolist())
+    all_seasons = sorted(set(bat_seasons) | set(pit_seasons))
+    season = st.sidebar.selectbox(t["season"], all_seasons, index=len(all_seasons) - 1, format_func=str)
+    df_bat = filter_season(df_bat_all, season)
+    df_pit = filter_season(df_pit_all, season)
+
+    # -- Main content --
+    st.title(t["main_title"])
+    st.caption(t["subtitle"])
+
+    tab1, tab2, tab3, tab4 = st.tabs([
+        f"\U0001F3AF {t['tab1']}",
+        f"\u2694\uFE0F {t['tab2']}",
+        f"\U0001F3B1 {t['tab3']}",
+        f"\U0001F525 {t['tab4']}",
+    ])
+
+    # ===================================================================
+    # TAB 1: Matchup Overview
+    # ===================================================================
+    with tab1:
+        st.header(t["predicted_lineup"])
+        st.markdown(f"**{t['pool_d_record']}**")
+
+        # Lineup table
+        lineup_rows = []
+        for p in PREDICTED_LINEUP:
+            note = p["note_ja"] if lang == "JA" else p["note_en"]
+            player_info = PLAYER_BY_NAME.get(p["name"], {})
+            lineup_rows.append({
+                t["order"]: p["order"],
+                t["player"]: _name_display(p["name"], lang),
+                t["pos"]: p["pos"],
+                t["team"]: player_info.get("team", "—"),
+                t["bats"]: player_info.get("bats", "—"),
+                t["note"]: note,
+            })
+        lineup_df = pd.DataFrame(lineup_rows)
+        st.dataframe(lineup_df, use_container_width=True, hide_index=True)
+
+        st.divider()
+
+        # Predicted SP card
+        st.subheader(t["predicted_sp"])
+        sp_info = PITCHER_BY_NAME.get(PREDICTED_SP, {})
+        sp_cols = st.columns(4)
+        sp_cols[0].metric(t["player"], _name_display(PREDICTED_SP, lang))
+        sp_cols[1].metric(t["team"], sp_info.get("team", "—"))
+        sp_cols[2].metric(t["throws"], sp_info.get("throws", "—"))
+        sp_cols[3].metric(t["role"], t["sp_label"])
+
+        # SP MLB stats from Statcast
+        sp_data = df_pit[df_pit["pitcher"] == sp_info.get("mlbam_id", -1)]
+        if not sp_data.empty:
+            sp_stats = pitching_stats(sp_data)
+            sc1, sc2, sc3, sc4 = st.columns(4)
+            sc1.metric(t["opp_avg"], f"{sp_stats['Opp AVG']:.3f}")
+            sc2.metric(t["k_pct"], f"{sp_stats['K%']:.1f}%")
+            sc3.metric(t["bb_pct"], f"{sp_stats['BB%']:.1f}%")
+            sc4.metric(t["whiff_pct"], f"{sp_stats['Whiff%']:.1f}%")
+            if sp_stats["Avg Velo"]:
+                st.caption(f"Avg Velo: {sp_stats['Avg Velo']:.1f} mph ({sp_stats['Avg Velo'] * 1.609:.0f} km/h)")
+
+        st.divider()
+
+        # Pool D pitching summary table
+        st.subheader(t["pool_d_summary"])
+        wbc_rows = []
+        for row in WBC_PITCHING_STATS:
+            games = row["games_ja"] if lang == "JA" else row["games"]
+            wbc_rows.append({
+                t["player"]: row["name"],
+                t["games_col"]: games,
+                t["era_col"]: row["era"],
+                t["ip_col"]: row["ip"],
+                t["pitches_col"]: row["pitches"],
+                t["result_col"]: row["result"],
+            })
+        st.dataframe(pd.DataFrame(wbc_rows), use_container_width=True, hide_index=True)
+
+        st.divider()
+
+        # Key tendencies
+        st.subheader(t["key_tendencies"])
+        st.info(t["tendency_text"])
+
+    # ===================================================================
+    # TAB 2: Venezuela Lineup Scouting
+    # ===================================================================
+    with tab2:
+        season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+        st.header(f"\u2694\uFE0F {t['tab2']} — {season_label}")
+
+        # Team batting radar chart (using predicted lineup)
+        lineup_stats_list = []
+        for p in PREDICTED_LINEUP:
+            player_info = PLAYER_BY_NAME.get(p["name"])
+            if not player_info:
+                continue
+            pdf = df_bat[df_bat["batter"] == player_info["mlbam_id"]]
+            if pdf.empty:
+                continue
+            s = batting_stats(pdf)
+            if s["PA"] >= 50:
+                lineup_stats_list.append({"name": p["name"], **s})
+
+        if lineup_stats_list:
+            st.subheader(t["team_radar_title"])
+            avg_avg = np.mean([ps["AVG"] for ps in lineup_stats_list])
+            avg_obp = np.mean([ps["OBP"] for ps in lineup_stats_list])
+            avg_slg = np.mean([ps["SLG"] for ps in lineup_stats_list])
+            avg_k = np.mean([ps["K%"] for ps in lineup_stats_list])
+            avg_bb = np.mean([ps["BB%"] for ps in lineup_stats_list])
+
+            norm_avg = min(avg_avg / 0.300, 1.0)
+            norm_obp = min(avg_obp / 0.380, 1.0)
+            norm_slg = min(avg_slg / 0.500, 1.0)
+            norm_k = 1.0 - min(avg_k / 35.0, 1.0)
+            norm_bb = min(avg_bb / 15.0, 1.0)
+
+            categories = ["AVG", "OBP", "SLG",
+                          "K%" if lang == "EN" else "三振率",
+                          "BB%" if lang == "EN" else "四球率"]
+            values = [norm_avg, norm_obp, norm_slg, norm_k, norm_bb]
+            raw_values = [f"{avg_avg:.3f}", f"{avg_obp:.3f}", f"{avg_slg:.3f}",
+                          f"{avg_k:.1f}%", f"{avg_bb:.1f}%"]
+
+            mlb_vals = [
+                min(_MLB_AVG_BAT["AVG"] / 0.300, 1.0),
+                min(_MLB_AVG_BAT["OBP"] / 0.380, 1.0),
+                min(_MLB_AVG_BAT["SLG"] / 0.500, 1.0),
+                1.0 - min(_MLB_AVG_BAT["K%"] / 35.0, 1.0),
+                min(_MLB_AVG_BAT["BB%"] / 15.0, 1.0),
+            ]
+
+            angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+            values_plot = values + [values[0]]
+            angles_plot = angles + [angles[0]]
+            mlb_plot = mlb_vals + [mlb_vals[0]]
+
+            fig_radar, ax_radar = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
+                                               facecolor="#0e1117")
+            ax_radar.set_facecolor("#0e1117")
+            ax_radar.plot(angles_plot, mlb_plot, "--", linewidth=1.5, color="#888888",
+                          alpha=0.7, label="MLB avg")
+            ax_radar.fill(angles_plot, mlb_plot, alpha=0.08, color="#888888")
+            ax_radar.plot(angles_plot, values_plot, "o-", linewidth=2, color="#4fc3f7",
+                          label="Team avg" if lang == "EN" else "チーム平均")
+            ax_radar.fill(angles_plot, values_plot, alpha=0.25, color="#4fc3f7")
+            ax_radar.set_thetagrids(np.degrees(angles), categories, color="white", fontsize=12)
+            ax_radar.set_ylim(0, 1)
+            ax_radar.set_yticks([0.25, 0.5, 0.75, 1.0])
+            ax_radar.set_yticklabels(["", "", "", ""], color="white")
+            ax_radar.grid(color="gray", alpha=0.3)
+            ax_radar.spines["polar"].set_color("gray")
+            for angle, val, raw in zip(angles, values, raw_values):
+                ax_radar.annotate(raw, xy=(angle, val), fontsize=12,
+                                  ha="center", va="bottom", color="white", fontweight="bold")
+            leg = ax_radar.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1),
+                                  fontsize=12, facecolor="#0e1117", edgecolor="gray")
+            for txt in leg.get_texts():
+                txt.set_color("white")
+            fig_radar.tight_layout()
+            st.pyplot(fig_radar, use_container_width=True)
+            plt.close(fig_radar)
+            st.caption("Gray dashed = MLB avg. K% inverted (lower = better)."
+                       if lang == "EN" else
+                       "灰色破線=MLB平均。K%は低いほど外側（良い）。")
+
+        st.divider()
+
+        # Individual batter reports in lineup order
+        for lineup_entry in PREDICTED_LINEUP:
+            player_info = PLAYER_BY_NAME.get(lineup_entry["name"])
+            if not player_info:
+                continue
+            pdf = df_bat[df_bat["batter"] == player_info["mlbam_id"]]
+
+            st.markdown("---")
+            order_label = f"#{lineup_entry['order']}"
+            display_name = _name_display(lineup_entry["name"], lang)
+            st.subheader(f"{order_label} {display_name} ({lineup_entry['pos']})")
+
+            if pdf.empty:
+                st.warning(t["no_data"])
+                continue
+
+            stats = batting_stats(pdf)
+
+            # Profile metrics
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric(t["team"], player_info["team"])
+            c2.metric(t["pos"], lineup_entry["pos"])
+            c3.metric(t["bats"], player_info["bats"])
+            c4.metric("OPS", f"{stats['OPS']:.3f}")
+
+            c5, c6, c7, c8 = st.columns(4)
+            c5.metric("AVG", f"{stats['AVG']:.3f}")
+            c6.metric("SLG", f"{stats['SLG']:.3f}")
+            c7.metric("K%", f"{stats['K%']:.1f}%")
+            c8.metric("BB%", f"{stats['BB%']:.1f}%")
+
+            # Scouting summary
+            st.markdown(f"**{t['scouting_summary']}**")
+            summary = generate_player_summary(stats, pdf, player_info, lang)
+            st.info(summary)
+
+            # 3x3 Zone heatmap (BA)
+            st.markdown(f"**{t['zone_3x3']}**")
+            st.caption(t["danger_zone"])
+            fig_z3, ax_z3 = _dark_fig(figsize=(6, 5))
+            im_z3 = draw_zone_3x3(pdf, "ba", t["ba_heatmap"], ax_z3)
+            cb_z3 = fig_z3.colorbar(im_z3, ax=ax_z3, fraction=0.046, pad=0.04)
+            cb_z3.ax.tick_params(colors="white")
+            fig_z3.tight_layout()
+            st.pyplot(fig_z3, use_container_width=True)
+            plt.close(fig_z3)
+
+            # Pitch type performance table
+            st.markdown(f"**{t['pitch_type_perf']}**")
+            with st.expander(t["glossary_pitch"] if lang == "EN" else "空振率・チェイス率とは？"):
+                st.markdown(t["glossary_pitch"])
+            pt_tbl = pitch_type_table(pdf, t)
+            if not pt_tbl.empty:
+                st.dataframe(pt_tbl, use_container_width=True, hide_index=True)
+
+            # Platoon splits (vs LHP / vs RHP)
+            st.markdown(f"**{t['platoon']}**")
+            col_l, col_r = st.columns(2)
+
+            for col, throws_val, label in [(col_l, "L", t["vs_lhp"]), (col_r, "R", t["vs_rhp"])]:
+                with col:
+                    st.markdown(f"**{label}**")
+                    split_df = pdf[pdf["p_throws"] == throws_val]
+                    if split_df.empty:
+                        st.write(t["no_data"])
+                        continue
+                    ss = batting_stats(split_df)
+                    m1, m2, m3 = st.columns(3)
+                    m1.metric("AVG", f"{ss['AVG']:.3f}")
+                    m2.metric("OPS", f"{ss['OPS']:.3f}")
+                    m3.metric("K%", f"{ss['K%']:.1f}%")
+
+    # ===================================================================
+    # TAB 3: Ranger Suarez Analysis
+    # ===================================================================
+    with tab3:
+        season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+        st.header(f"\U0001F3B1 {t['tab3']} — {season_label}")
+
+        sp_info = PITCHER_BY_NAME.get(PREDICTED_SP, {})
+        sp_data = df_pit[df_pit["pitcher"] == sp_info.get("mlbam_id", -1)]
+
+        # Profile card
+        st.subheader(_name_display(PREDICTED_SP, lang))
+        pc1, pc2, pc3, pc4 = st.columns(4)
+        pc1.metric(t["team"], sp_info.get("team", "—"))
+        pc2.metric(t["throws"], sp_info.get("throws", "—"))
+        pc3.metric(t["role"], t["sp_label"])
+        pc4.metric("MLB ID", sp_info.get("mlbam_id", "—"))
+
+        if sp_data.empty:
+            st.warning(t["no_data"])
+        else:
+            sp_stats = pitching_stats(sp_data)
+
+            # Key metrics with MLB comparison
+            sc1, sc2, sc3 = st.columns(3)
+            sc1.metric(t["opp_avg"], f"{sp_stats['Opp AVG']:.3f}",
+                       delta=f"{sp_stats['Opp AVG'] - _MLB_AVG_PIT['Opp AVG']:+.3f} vs MLB avg",
+                       delta_color="inverse")
+            sc2.metric(t["k_pct"], f"{sp_stats['K%']:.1f}%",
+                       delta=f"{sp_stats['K%'] - _MLB_AVG_PIT['K%']:+.1f}% vs MLB avg")
+            sc3.metric(t["bb_pct"], f"{sp_stats['BB%']:.1f}%",
+                       delta=f"{sp_stats['BB%'] - _MLB_AVG_PIT['BB%']:+.1f}% vs MLB avg",
+                       delta_color="inverse")
+            sc4, sc5 = st.columns(2)
+            sc4.metric(t["whiff_pct"], f"{sp_stats['Whiff%']:.1f}%")
+            if sp_stats["xwOBA"]:
+                sc5.metric(t["xwoba"], f"{sp_stats['xwOBA']:.3f}",
+                           delta=f"{sp_stats['xwOBA'] - _MLB_AVG_PIT['xwOBA']:+.3f} vs MLB avg",
+                           delta_color="inverse")
+
+            # Scouting summary
+            st.subheader(t["scouting_summary"])
+            sp_summary = generate_pitcher_summary(sp_stats, sp_data, sp_info, lang)
+            st.info(sp_summary)
+
+            st.divider()
+
+            # Arsenal table
+            st.subheader(t["arsenal"])
+            at = arsenal_table(sp_data, t)
+            if not at.empty:
+                st.dataframe(at, use_container_width=True, hide_index=True)
+
+            st.divider()
+
+            # Movement chart
+            st.subheader(t["movement_chart"])
+            st.caption(t["movement_note"])
+            fig_m, ax_m = plt.subplots(figsize=(8, 5), facecolor="#0e1117")
+            ax_m.set_facecolor("#1a1a2e")
+            for spine in ax_m.spines.values():
+                spine.set_color("white")
+            draw_movement_chart(sp_data, _name_display(PREDICTED_SP, lang), ax_m, density=True)
+            fig_m.tight_layout(rect=[0, 0, 0.82, 1])
+            st.pyplot(fig_m, use_container_width=True)
+            plt.close(fig_m)
+
+            st.divider()
+
+            # Zone heatmap (pitcher location — usage + opp BA)
+            st.subheader(t["zone_heatmap_pitch"])
+            for metric, hm_title in [("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]:
+                fig_hm, ax_hm = _dark_fig(figsize=(6, 5))
+                im_hm = draw_zone_heatmap(sp_data, metric, hm_title, ax_hm)
+                cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
+                cb_hm.ax.tick_params(colors="white")
+                fig_hm.tight_layout()
+                st.pyplot(fig_hm, use_container_width=True)
+                plt.close(fig_hm)
+
+            st.divider()
+
+            # Platoon splits (vs LHB / vs RHB)
+            st.subheader(t["platoon"])
+            col_l, col_r = st.columns(2)
+            for col, stand, label in [(col_l, "L", t["vs_lhb"]), (col_r, "R", t["vs_rhb"])]:
+                with col:
+                    st.markdown(f"**{label}**")
+                    split_df = sp_data[sp_data["stand"] == stand]
+                    if split_df.empty:
+                        st.write(t["no_data"])
+                        continue
+                    ss = pitching_stats(split_df)
+                    m1, m2, m3, m4 = st.columns(4)
+                    m1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}")
+                    m2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}")
+                    m3.metric(t["k_pct"], f"{ss['K%']:.1f}%")
+                    m4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%")
+
+                    # Zone heatmap per platoon side
+                    fig_z, ax_z = _dark_fig(figsize=(5, 4))
+                    draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z)
+                    fig_z.tight_layout()
+                    st.pyplot(fig_z, use_container_width=True)
+                    plt.close(fig_z)
+
+            st.divider()
+
+            # Where to attack
+            st.subheader(t["where_to_attack"])
+            st.success(t["attack_text_suarez"])
+
+    # ===================================================================
+    # TAB 4: Bullpen Scouting
+    # ===================================================================
+    with tab4:
+        season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+        st.header(f"\U0001F525 {t['tab4']} — {season_label}")
+
+        # Bullpen usage overview
+        st.subheader(t["bullpen_overview"])
+        st.info(t["bullpen_text"])
+
+        # Pool D usage table (relievers only)
+        reliever_wbc = [r for r in WBC_PITCHING_STATS if r["full"] in KEY_RELIEVERS]
+        if reliever_wbc:
+            rp_rows = []
+            for row in reliever_wbc:
+                games = row["games_ja"] if lang == "JA" else row["games"]
+                rp_rows.append({
+                    t["player"]: _name_display(row["full"], lang),
+                    t["games_col"]: games,
+                    t["era_col"]: row["era"],
+                    t["ip_col"]: row["ip"],
+                    t["pitches_col"]: row["pitches"],
+                    t["result_col"]: row["result"],
+                })
+            st.dataframe(pd.DataFrame(rp_rows), use_container_width=True, hide_index=True)
+
+        st.divider()
+
+        # Individual reliever profiles
+        for reliever_name in KEY_RELIEVERS:
+            pitcher_info = PITCHER_BY_NAME.get(reliever_name)
+            if not pitcher_info:
+                continue
+
+            rp_data = df_pit[df_pit["pitcher"] == pitcher_info["mlbam_id"]]
+
+            st.markdown("---")
+            st.subheader(f"{t['reliever_profile']}: {_name_display(reliever_name, lang)}")
+
+            rpc1, rpc2, rpc3 = st.columns(3)
+            rpc1.metric(t["team"], pitcher_info.get("team", "—"))
+            rpc2.metric(t["throws"], pitcher_info.get("throws", "—"))
+            rpc3.metric(t["role"], t["rp_label"])
+
+            if rp_data.empty:
+                st.warning(t["no_data"])
+                continue
+
+            rp_stats = pitching_stats(rp_data)
+
+            # Key metrics
+            rm1, rm2, rm3, rm4 = st.columns(4)
+            rm1.metric(t["opp_avg"], f"{rp_stats['Opp AVG']:.3f}")
+            rm2.metric(t["k_pct"], f"{rp_stats['K%']:.1f}%")
+            rm3.metric(t["bb_pct"], f"{rp_stats['BB%']:.1f}%")
+            rm4.metric(t["whiff_pct"], f"{rp_stats['Whiff%']:.1f}%")
+            if rp_stats["Avg Velo"]:
+                st.caption(f"Avg Velo: {rp_stats['Avg Velo']:.1f} mph ({rp_stats['Avg Velo'] * 1.609:.0f} km/h)")
+
+            # Scouting summary
+            rp_summary = generate_pitcher_summary(rp_stats, rp_data, pitcher_info, lang)
+            st.info(rp_summary)
+
+            # Arsenal summary
+            rp_arsenal = arsenal_table(rp_data, t)
+            if not rp_arsenal.empty:
+                st.markdown(f"**{t['arsenal']}**")
+                st.dataframe(rp_arsenal, use_container_width=True, hide_index=True)
+
+            # Platoon splits
+            st.markdown(f"**{t['platoon']}**")
+            rp_col_l, rp_col_r = st.columns(2)
+            for col, stand, label in [(rp_col_l, "L", t["vs_lhb"]), (rp_col_r, "R", t["vs_rhb"])]:
+                with col:
+                    st.markdown(f"**{label}**")
+                    split_df = rp_data[rp_data["stand"] == stand]
+                    if split_df.empty:
+                        st.write(t["no_data"])
+                        continue
+                    ss = pitching_stats(split_df)
+                    sm1, sm2, sm3 = st.columns(3)
+                    sm1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}")
+                    sm2.metric(t["k_pct"], f"{ss['K%']:.1f}%")
+                    sm3.metric(t["bb_pct"], f"{ss['BB%']:.1f}%")
+
+
+if __name__ == "__main__":
+    main()
