@@ -1119,6 +1119,40 @@ def pitch_selection_by_count(df: pd.DataFrame, t, lang: str):
     return pd.DataFrame()
 
 
+def _zone_names_for_bats(bats: str, lang: str) -> dict:
+    """Return zone names adjusted for batter handedness.
+
+    Statcast zones 1-9 from catcher's POV:
+      1 | 2 | 3   (top, catcher's left to right)
+      4 | 5 | 6   (middle)
+      7 | 8 | 9   (bottom)
+    Catcher's left = 3rd base side = RHB inside / LHB outside.
+    """
+    if bats == "L":
+        # LHB: catcher-left = outside, catcher-right = inside
+        if lang == "JA":
+            return {1: "高めアウト", 2: "高め真ん中", 3: "高めイン",
+                    4: "真ん中アウト", 5: "ど真ん中", 6: "真ん中イン",
+                    7: "低めアウト", 8: "低め真ん中", 9: "低めイン"}
+        return {1: "Up-Away", 2: "Up-Mid", 3: "Up-In",
+                4: "Mid-Away", 5: "Heart", 6: "Mid-In",
+                7: "Down-Away", 8: "Down-Mid", 9: "Down-In"}
+    # RHB (default): catcher-left = inside, catcher-right = outside
+    if lang == "JA":
+        return {1: "高めイン", 2: "高め真ん中", 3: "高めアウト",
+                4: "真ん中イン", 5: "ど真ん中", 6: "真ん中アウト",
+                7: "低めイン", 8: "低め真ん中", 9: "低めアウト"}
+    return {1: "Up-In", 2: "Up-Mid", 3: "Up-Away",
+            4: "Mid-In", 5: "Heart", 6: "Mid-Away",
+            7: "Down-In", 8: "Down-Mid", 9: "Down-Away"}
+
+
+# Swing descriptions (used across plan functions)
+_SWING_DESCS = {"hit_into_play", "foul", "swinging_strike", "swinging_strike_blocked", "foul_tip"}
+# Whiff descriptions — foul_tip is NOT a whiff in Statcast standard definition
+_WHIFF_DESCS = {"swinging_strike", "swinging_strike_blocked"}
+
+
 def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, lang: str) -> str:
     """Generate data-driven pitching plan for a batter.
 
@@ -1137,21 +1171,13 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, la
                 continue
             ab = grp[grp["events"].isin(_AB_EVENTS)]
             hits = grp[grp["events"].isin(_HIT_EVENTS)]
-            swings = grp[grp["description"].isin({
-                "hit_into_play", "foul", "swinging_strike",
-                "swinging_strike_blocked", "foul_tip",
-            })]
-            whiffs = grp[grp["description"].isin({
-                "swinging_strike", "swinging_strike_blocked", "foul_tip",
-            })]
+            swings = grp[grp["description"].isin(_SWING_DESCS)]
+            whiffs = grp[grp["description"].isin(_WHIFF_DESCS)]
             ba = len(hits) / len(ab) if len(ab) >= 10 else None
             whiff_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
 
             outside = grp[(grp["zone"].notna()) & (grp["zone"] >= 11)]
-            chase_swings = outside[outside["description"].isin({
-                "hit_into_play", "foul", "swinging_strike",
-                "swinging_strike_blocked", "foul_tip",
-            })]
+            chase_swings = outside[outside["description"].isin(_SWING_DESCS)]
             chase_pct = len(chase_swings) / len(outside) * 100 if len(outside) > 0 else 0
 
             label = PITCH_LABELS.get(pt, pt)
@@ -1161,40 +1187,35 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, la
             })
 
         if pt_stats:
-            # Best pitch to use (highest whiff%)
             best_whiff = sorted([p for p in pt_stats if p["whiff"] > 0], key=lambda x: x["whiff"], reverse=True)
-            # Worst pitch (highest BA against)
             hittable = sorted([p for p in pt_stats if p["ba"] is not None], key=lambda x: x["ba"], reverse=True)
-            # Best chase pitch
             best_chase = sorted([p for p in pt_stats if p["chase"] > 0], key=lambda x: x["chase"], reverse=True)
 
             if best_whiff:
                 bw = best_whiff[0]
                 if lang == "EN":
-                    lines.append(f"**Best strikeout pitch:** {bw['label']} (Whiff% {bw['whiff']:.1f}%)")
+                    lines.append(f"- **Best strikeout pitch:** {bw['label']} (Whiff% {bw['whiff']:.1f}%)")
                 else:
-                    lines.append(f"**決め球に最適:** {bw['label']}（空振率 {bw['whiff']:.1f}%）")
+                    lines.append(f"- **決め球に最適:** {bw['label']}（空振率 {bw['whiff']:.1f}%）")
 
             if hittable and hittable[0]["ba"] is not None and hittable[0]["ba"] >= 0.280:
                 h = hittable[0]
                 if lang == "EN":
-                    lines.append(f"**Avoid:** {h['label']} — he hits it well (BA .{int(h['ba']*1000):03d})")
+                    lines.append(f"- **Avoid:** {h['label']} — he hits it well (BA .{int(h['ba']*1000):03d})")
                 else:
-                    lines.append(f"**要注意球種:** {h['label']} — 打率 .{int(h['ba']*1000):03d} で打たれている")
+                    lines.append(f"- **要注意球種:** {h['label']} — 打率 .{int(h['ba']*1000):03d} で打たれている")
 
             if best_chase:
                 bc = best_chase[0]
                 if lang == "EN":
-                    lines.append(f"**Chase pitch:** {bc['label']} outside the zone (Chase% {bc['chase']:.1f}%)")
+                    lines.append(f"- **Chase pitch:** {bc['label']} outside the zone (Chase% {bc['chase']:.1f}%)")
                 else:
-                    lines.append(f"**ゾーン外で振らせる球:** {bc['label']}（チェイス率 {bc['chase']:.1f}%）")
+                    lines.append(f"- **ゾーン外で振らせる球:** {bc['label']}（チェイス率 {bc['chase']:.1f}%）")
 
-    # 2. Zone weakness analysis (3x3)
+    # 2. Zone weakness analysis (3x3) — handedness-adjusted names
     zone_valid = pdf.dropna(subset=["zone"]).copy()
     zone_valid["zone"] = zone_valid["zone"].astype(int)
-    zone_names_en = {1: "Up-In", 2: "Up-Mid", 3: "Up-Away", 4: "Mid-In", 5: "Heart", 6: "Mid-Away", 7: "Down-In", 8: "Down-Mid", 9: "Down-Away"}
-    zone_names_ja = {1: "高めイン", 2: "高め真ん中", 3: "高めアウト", 4: "真ん中イン", 5: "ど真ん中", 6: "真ん中アウト", 7: "低めイン", 8: "低め真ん中", 9: "低めアウト"}
-    zone_names = zone_names_ja if lang == "JA" else zone_names_en
+    zone_names = _zone_names_for_bats(bats, lang)
 
     zone_ba = {}
     for z in range(1, 10):
@@ -1213,14 +1234,14 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, la
 
         if weak_str:
             if lang == "EN":
-                lines.append(f"**Attack zones (low BA):** {weak_str}")
+                lines.append(f"- **Attack zones (low BA):** {weak_str}")
             else:
-                lines.append(f"**攻めるゾーン（低打率）:** {weak_str}")
+                lines.append(f"- **攻めるゾーン（低打率）:** {weak_str}")
         if strong_str:
             if lang == "EN":
-                lines.append(f"**Danger zones (high BA):** {strong_str}")
+                lines.append(f"- **Danger zones (high BA):** {strong_str}")
             else:
-                lines.append(f"**危険ゾーン（高打率）:** {strong_str}")
+                lines.append(f"- **危険ゾーン（高打率）:** {strong_str}")
 
     # 3. Count situation analysis
     count_valid = pdf.dropna(subset=["balls", "strikes"]).copy()
@@ -1238,33 +1259,32 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, la
     if ahead_stats and behind_stats and ahead_stats["PA"] >= 20 and behind_stats["PA"] >= 20:
         if ahead_stats["OPS"] >= 0.800 and behind_stats["OPS"] < 0.600:
             if lang == "EN":
-                lines.append(f"**Count strategy:** Dangerous when ahead in count (OPS .{int(ahead_stats['OPS']*1000):03d}). "
+                lines.append(f"- **Count strategy:** Dangerous when ahead in count (OPS .{int(ahead_stats['OPS']*1000):03d}). "
                            f"Get ahead early — he collapses behind (OPS .{int(behind_stats['OPS']*1000):03d})")
             else:
-                lines.append(f"**カウント戦略:** 有利カウントで強い（OPS .{int(ahead_stats['OPS']*1000):03d}）。"
+                lines.append(f"- **カウント戦略:** 有利カウントで強い（OPS .{int(ahead_stats['OPS']*1000):03d}）。"
                            f"先手を取れ — 不利カウントでは崩れる（OPS .{int(behind_stats['OPS']*1000):03d}）")
         elif behind_stats["OPS"] >= 0.700:
             if lang == "EN":
-                lines.append(f"**Count strategy:** Still dangerous behind in count (OPS .{int(behind_stats['OPS']*1000):03d}). "
+                lines.append(f"- **Count strategy:** Still dangerous behind in count (OPS .{int(behind_stats['OPS']*1000):03d}). "
                            f"Don't let up with 2 strikes — compete through the at-bat.")
             else:
-                lines.append(f"**カウント戦略:** 不利カウントでもしぶとい（OPS .{int(behind_stats['OPS']*1000):03d}）。"
+                lines.append(f"- **カウント戦略:** 不利カウントでもしぶとい（OPS .{int(behind_stats['OPS']*1000):03d}）。"
                            f"追い込んでも油断禁物 — 最後まで攻め切る")
 
     if two_strike_stats and two_strike_stats["PA"] >= 20:
         if two_strike_stats["K%"] >= 35:
             if lang == "EN":
-                lines.append(f"**2-strike approach:** High K rate with 2 strikes ({two_strike_stats['K%']:.1f}%). "
+                lines.append(f"- **2-strike approach:** High K rate with 2 strikes ({two_strike_stats['K%']:.1f}%). "
                            f"Use best put-away pitch aggressively.")
             else:
-                lines.append(f"**2ストライク後:** 三振率が高い（{two_strike_stats['K%']:.1f}%）。"
-                           f"決め球を大胆に使え")
+                lines.append(f"- **2ストライク後:** 三振率が高い（{two_strike_stats['K%']:.1f}%）。決め球を大胆に使え")
         elif two_strike_stats["K%"] < 20:
             if lang == "EN":
-                lines.append(f"**2-strike approach:** Very hard to strike out ({two_strike_stats['K%']:.1f}% K rate). "
+                lines.append(f"- **2-strike approach:** Very hard to strike out ({two_strike_stats['K%']:.1f}% K rate). "
                            f"Expand the zone gradually — don't waste pitches down the middle.")
             else:
-                lines.append(f"**2ストライク後:** 三振しにくい（{two_strike_stats['K%']:.1f}%）。"
+                lines.append(f"- **2ストライク後:** 三振しにくい（{two_strike_stats['K%']:.1f}%）。"
                            f"ゾーンを少しずつ広げろ — 甘い球は禁物")
 
     # 4. Platoon recommendation
@@ -1276,18 +1296,16 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, la
         if sl["PA"] >= 30 and sr["PA"] >= 30:
             if sl["OPS"] < sr["OPS"] - 0.080:
                 if lang == "EN":
-                    lines.append(f"**Platoon edge:** Weaker vs LHP (OPS .{int(sl['OPS']*1000):03d} vs .{int(sr['OPS']*1000):03d}). "
+                    lines.append(f"- **Platoon edge:** Weaker vs LHP (OPS .{int(sl['OPS']*1000):03d} vs .{int(sr['OPS']*1000):03d}). "
                                f"Use left-handed pitcher if available.")
                 else:
-                    lines.append(f"**左右マッチアップ:** 左投手に弱い（OPS .{int(sl['OPS']*1000):03d} vs 右 .{int(sr['OPS']*1000):03d}）。"
-                               f"左腕を当てたい")
+                    lines.append(f"- **左右マッチアップ:** 左投手に弱い（OPS .{int(sl['OPS']*1000):03d} vs 右 .{int(sr['OPS']*1000):03d}）。左腕を当てたい")
             elif sr["OPS"] < sl["OPS"] - 0.080:
                 if lang == "EN":
-                    lines.append(f"**Platoon edge:** Weaker vs RHP (OPS .{int(sr['OPS']*1000):03d} vs .{int(sl['OPS']*1000):03d}). "
+                    lines.append(f"- **Platoon edge:** Weaker vs RHP (OPS .{int(sr['OPS']*1000):03d} vs .{int(sl['OPS']*1000):03d}). "
                                f"Use right-handed pitcher if available.")
                 else:
-                    lines.append(f"**左右マッチアップ:** 右投手に弱い（OPS .{int(sr['OPS']*1000):03d} vs 左 .{int(sl['OPS']*1000):03d}）。"
-                               f"右腕を当てたい")
+                    lines.append(f"- **左右マッチアップ:** 右投手に弱い（OPS .{int(sr['OPS']*1000):03d} vs 左 .{int(sl['OPS']*1000):03d}）。右腕を当てたい")
 
     # 5. Batted ball tendency
     bip = pdf.dropna(subset=["hc_x", "hc_y"]).copy()
@@ -1305,30 +1323,28 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, la
 
             if pull_pct >= 45:
                 if lang == "EN":
-                    lines.append(f"**Batted ball:** Strong pull tendency ({pull_pct:.0f}%). "
+                    lines.append(f"- **Batted ball:** Strong pull tendency ({pull_pct:.0f}%). "
                                f"Shift defense pull-side. Pitch away to neutralize power.")
                 else:
-                    lines.append(f"**打球傾向:** プル方向が多い（{pull_pct:.0f}%）。"
-                               f"守備シフトをプル側に。外角で長打を防ぐ")
+                    lines.append(f"- **打球傾向:** プル方向が多い（{pull_pct:.0f}%）。守備シフトをプル側に。外角で長打を防ぐ")
 
             if gb_pct >= 50:
                 if lang == "EN":
-                    lines.append(f"**Ground ball hitter ({gb_pct:.0f}% GB).** Keep the ball down — sinkers and low changeups effective.")
+                    lines.append(f"- **Ground ball hitter ({gb_pct:.0f}% GB).** Keep the ball down — sinkers and low changeups effective.")
                 else:
-                    lines.append(f"**ゴロ打者（{gb_pct:.0f}%）。** 低め中心の投球が有効 — シンカー、低めチェンジアップ")
+                    lines.append(f"- **ゴロ打者（{gb_pct:.0f}%）。** 低め中心の投球が有効 — シンカー、低めチェンジアップ")
             elif fb_pct >= 45:
                 if lang == "EN":
-                    lines.append(f"**Fly ball hitter ({fb_pct:.0f}% FB).** Careful with pitches up in zone — he elevates. "
+                    lines.append(f"- **Fly ball hitter ({fb_pct:.0f}% FB).** Careful with pitches up in zone — he elevates. "
                                f"Keep offspeed down and bury breaking balls.")
                 else:
-                    lines.append(f"**フライ打者（{fb_pct:.0f}%）。** 高めの球は打ち上げる。"
-                               f"変化球は低めに集め、ブレーキングボールを叩きつけろ")
+                    lines.append(f"- **フライ打者（{fb_pct:.0f}%）。** 高めの球は打ち上げる。変化球は低めに集め、ブレーキングボールを叩きつけろ")
 
     if not lines:
         if lang == "EN":
-            return "Balanced hitter with no extreme vulnerabilities. Compete with best stuff and mix locations."
+            return "- Balanced hitter with no extreme vulnerabilities. Compete with best stuff and mix locations."
         else:
-            return "極端な弱点のないバランス型打者。持ち球で勝負し、コースを散らせ。"
+            return "- 極端な弱点のないバランス型打者。持ち球で勝負し、コースを散らせ。"
 
     return "\n".join(lines)
 
@@ -1352,13 +1368,8 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
             usage = len(grp) / total * 100
             ab = grp[grp["events"].isin(_AB_EVENTS)]
             hits = grp[grp["events"].isin(_HIT_EVENTS)]
-            swings = grp[grp["description"].isin({
-                "hit_into_play", "foul", "swinging_strike",
-                "swinging_strike_blocked", "foul_tip",
-            })]
-            whiffs = grp[grp["description"].isin({
-                "swinging_strike", "swinging_strike_blocked", "foul_tip",
-            })]
+            swings = grp[grp["description"].isin(_SWING_DESCS)]
+            whiffs = grp[grp["description"].isin(_WHIFF_DESCS)]
             ba = len(hits) / len(ab) if len(ab) >= 10 else None
             whiff_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
 
@@ -1369,46 +1380,38 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
             })
 
         if pt_stats:
-            # Most hittable pitch (highest BA against)
             hittable = sorted([p for p in pt_stats if p["ba"] is not None], key=lambda x: x["ba"], reverse=True)
-            # His best pitch (highest whiff%)
             best_pitch = sorted([p for p in pt_stats if p["whiff"] > 0], key=lambda x: x["whiff"], reverse=True)
-            # Primary pitch (highest usage)
             primary = sorted(pt_stats, key=lambda x: x["usage"], reverse=True)
 
             if primary:
                 pr = primary[0]
                 if lang == "EN":
-                    lines.append(f"**Primary pitch:** {pr['label']} ({pr['usage']:.0f}% usage). "
+                    lines.append(f"- **Primary pitch:** {pr['label']} ({pr['usage']:.0f}% usage). "
                                f"You will see this most — time it early in counts.")
                 else:
-                    lines.append(f"**主要球種:** {pr['label']}（使用率 {pr['usage']:.0f}%）。"
-                               f"最も多く来る球 — 早いカウントで狙え")
+                    lines.append(f"- **主要球種:** {pr['label']}（使用率 {pr['usage']:.0f}%）。最も多く来る球 — 早いカウントで狙え")
 
             if hittable and hittable[0]["ba"] is not None and hittable[0]["ba"] >= 0.250:
                 h = hittable[0]
                 if lang == "EN":
-                    lines.append(f"**Most hittable pitch:** {h['label']} (BA .{int(h['ba']*1000):03d}). "
-                               f"Look for this pitch to drive.")
+                    lines.append(f"- **Most hittable pitch:** {h['label']} (BA .{int(h['ba']*1000):03d}). Look for this pitch to drive.")
                 else:
-                    lines.append(f"**最も打ちやすい球種:** {h['label']}（被打率 .{int(h['ba']*1000):03d}）。"
-                               f"この球を狙って長打を狙え")
+                    lines.append(f"- **最も打ちやすい球種:** {h['label']}（被打率 .{int(h['ba']*1000):03d}）。この球を狙って長打を狙え")
 
             if best_pitch:
                 bp = best_pitch[0]
                 if lang == "EN":
-                    lines.append(f"**Beware:** {bp['label']} is his best pitch (Whiff% {bp['whiff']:.1f}%). "
+                    lines.append(f"- **Beware:** {bp['label']} is his best pitch (Whiff% {bp['whiff']:.1f}%). "
                                f"Lay off this pitch unless it's in the zone.")
                 else:
-                    lines.append(f"**要注意:** {bp['label']} が最も空振りを取る球（空振率 {bp['whiff']:.1f}%）。"
-                               f"ゾーン外なら見逃せ")
+                    lines.append(f"- **要注意:** {bp['label']} が最も空振りを取る球（空振率 {bp['whiff']:.1f}%）。ゾーン外なら見逃せ")
 
-    # 2. Zone vulnerability (where opponents hit him hardest)
+    # 2. Zone vulnerability — pitcher context: use "R" default (zone names are relative to generic batter POV)
     zone_valid = pdf.dropna(subset=["zone"]).copy()
     zone_valid["zone"] = zone_valid["zone"].astype(int)
-    zone_names_en = {1: "up-in", 2: "up-middle", 3: "up-away", 4: "mid-in", 5: "heart", 6: "mid-away", 7: "down-in", 8: "down-middle", 9: "down-away"}
-    zone_names_ja = {1: "高めイン", 2: "高め真ん中", 3: "高めアウト", 4: "真ん中イン", 5: "ど真ん中", 6: "真ん中アウト", 7: "低めイン", 8: "低め真ん中", 9: "低めアウト"}
-    zone_names = zone_names_ja if lang == "JA" else zone_names_en
+    # For pitcher analysis, zone names use catcher's perspective labels (no in/out flip)
+    zone_names = _zone_names_for_bats("R", lang)
 
     zone_ba = {}
     for z in range(1, 10):
@@ -1427,21 +1430,20 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
 
         if hit_str:
             if lang == "EN":
-                lines.append(f"**Look for pitches here (high opp BA):** {hit_str}")
+                lines.append(f"- **Look for pitches here (high opp BA):** {hit_str}")
             else:
-                lines.append(f"**狙うゾーン（被打率高い）:** {hit_str}")
+                lines.append(f"- **狙うゾーン（被打率高い）:** {hit_str}")
         if tough_str:
             if lang == "EN":
-                lines.append(f"**Tough zones (low opp BA):** {tough_str} — lay off or foul off")
+                lines.append(f"- **Tough zones (low opp BA):** {tough_str} — lay off or foul off")
             else:
-                lines.append(f"**手を出しにくいゾーン（被打率低い）:** {tough_str} — 見逃すかファウルで粘れ")
+                lines.append(f"- **手を出しにくいゾーン（被打率低い）:** {tough_str} — 見逃すかファウルで粘れ")
 
     # 3. Count strategy
     count_valid = pdf.dropna(subset=["balls", "strikes"]).copy()
     count_valid["balls"] = count_valid["balls"].astype(int)
     count_valid["strikes"] = count_valid["strikes"].astype(int)
 
-    # Pitcher ahead vs behind
     p_ahead = count_valid[count_valid["strikes"] > count_valid["balls"]]
     p_behind = count_valid[count_valid["balls"] > count_valid["strikes"]]
 
@@ -1452,19 +1454,17 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
         if pa_stats and pb_stats:
             if pb_stats["Opp AVG"] >= 0.280:
                 if lang == "EN":
-                    lines.append(f"**When behind in count:** He gives up hits (Opp AVG .{int(pb_stats['Opp AVG']*1000):03d}). "
+                    lines.append(f"- **When behind in count:** He gives up hits (Opp AVG .{int(pb_stats['Opp AVG']*1000):03d}). "
                                f"Be patient — work counts and make him come to you.")
                 else:
-                    lines.append(f"**投手不利カウントで:** 被打率が高い（.{int(pb_stats['Opp AVG']*1000):03d}）。"
-                               f"粘ってカウントを有利に持ち込め")
+                    lines.append(f"- **投手不利カウントで:** 被打率が高い（.{int(pb_stats['Opp AVG']*1000):03d}）。粘ってカウントを有利に持ち込め")
 
             if pa_stats["K%"] >= 30:
                 if lang == "EN":
-                    lines.append(f"**When he's ahead:** High K rate ({pa_stats['K%']:.1f}%). "
+                    lines.append(f"- **When he's ahead:** High K rate ({pa_stats['K%']:.1f}%). "
                                f"Shorten up and protect the plate — don't give away ABs.")
                 else:
-                    lines.append(f"**投手有利カウントで:** 奪三振率が高い（{pa_stats['K%']:.1f}%）。"
-                               f"コンパクトに振り、ゾーン内の球をカットして粘れ")
+                    lines.append(f"- **投手有利カウントで:** 奪三振率が高い（{pa_stats['K%']:.1f}%）。コンパクトに振り、ゾーン内の球をカットして粘れ")
 
     # 4. First pitch tendency
     first_pitch = count_valid[(count_valid["balls"] == 0) & (count_valid["strikes"] == 0)]
@@ -1475,7 +1475,6 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
             top_fp_pct = fp_types.iloc[0] / len(first_pitch) * 100
             label = PITCH_LABELS.get(top_fp, top_fp)
 
-            # Check first pitch strike rate
             fp_strikes = first_pitch[first_pitch["description"].isin({
                 "called_strike", "swinging_strike", "swinging_strike_blocked",
                 "foul", "foul_tip", "hit_into_play",
@@ -1483,12 +1482,11 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
             fp_strike_pct = len(fp_strikes) / len(first_pitch) * 100
 
             if lang == "EN":
-                lines.append(f"**First pitch:** {label} {top_fp_pct:.0f}% of the time. "
+                lines.append(f"- **First pitch:** {label} {top_fp_pct:.0f}% of the time. "
                            f"Strike rate: {fp_strike_pct:.0f}%. "
                            + ("Aggressive on first pitch can pay off." if fp_strike_pct >= 60 else "Patient approach recommended — he misses often."))
             else:
-                lines.append(f"**初球:** {label} が {top_fp_pct:.0f}%。"
-                           f"ストライク率: {fp_strike_pct:.0f}%。"
+                lines.append(f"- **初球:** {label} が {top_fp_pct:.0f}%。ストライク率: {fp_strike_pct:.0f}%。"
                            + ("初球から積極的に狙える。" if fp_strike_pct >= 60 else "初球は様子を見るのが得策 — ボールになることが多い。"))
 
     # 5. Platoon recommendation
@@ -1500,24 +1498,20 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
         if sl["PA"] >= 20 and sr["PA"] >= 20:
             if sl["Opp AVG"] > sr["Opp AVG"] + 0.030:
                 if lang == "EN":
-                    lines.append(f"**Platoon weakness:** Gives up more hits to LHB (Opp AVG .{int(sl['Opp AVG']*1000):03d}). "
-                               f"Stack left-handed batters.")
+                    lines.append(f"- **Platoon weakness:** Gives up more hits to LHB (Opp AVG .{int(sl['Opp AVG']*1000):03d}). Stack left-handed batters.")
                 else:
-                    lines.append(f"**左右差:** 左打者に打たれやすい（被打率 .{int(sl['Opp AVG']*1000):03d}）。"
-                               f"左打者を並べたい")
+                    lines.append(f"- **左右差:** 左打者に打たれやすい（被打率 .{int(sl['Opp AVG']*1000):03d}）。左打者を並べたい")
             elif sr["Opp AVG"] > sl["Opp AVG"] + 0.030:
                 if lang == "EN":
-                    lines.append(f"**Platoon weakness:** Gives up more hits to RHB (Opp AVG .{int(sr['Opp AVG']*1000):03d}). "
-                               f"Stack right-handed batters.")
+                    lines.append(f"- **Platoon weakness:** Gives up more hits to RHB (Opp AVG .{int(sr['Opp AVG']*1000):03d}). Stack right-handed batters.")
                 else:
-                    lines.append(f"**左右差:** 右打者に打たれやすい（被打率 .{int(sr['Opp AVG']*1000):03d}）。"
-                               f"右打者を並べたい")
+                    lines.append(f"- **左右差:** 右打者に打たれやすい（被打率 .{int(sr['Opp AVG']*1000):03d}）。右打者を並べたい")
 
     if not lines:
         if lang == "EN":
-            return "Balanced pitcher with no extreme vulnerabilities. Compete at the plate and be ready to adjust."
+            return "- Balanced pitcher with no extreme vulnerabilities. Compete at the plate and be ready to adjust."
         else:
-            return "極端な弱点のないバランス型投手。打席で積極的に対応し、試合の中で調整せよ。"
+            return "- 極端な弱点のないバランス型投手。打席で積極的に対応し、試合の中で調整せよ。"
 
     return "\n".join(lines)
 
