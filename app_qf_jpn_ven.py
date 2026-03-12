@@ -1083,6 +1083,17 @@ def count_category(balls: int, strikes: int) -> str:
     return "even"
 
 
+def _style_count_type(val, t):
+    """Return CSS for count category cell (subtle background tint)."""
+    if val == t["ahead"]:
+        return "background-color: rgba(76, 175, 80, 0.25); color: #a5d6a7;"  # green — hitter favorable
+    elif val == t["behind"]:
+        return "background-color: rgba(244, 67, 54, 0.25); color: #ef9a9a;"  # red — hitter unfavorable
+    elif val == t["even"]:
+        return "background-color: rgba(255, 193, 7, 0.18); color: #ffe082;"  # amber — neutral
+    return ""
+
+
 def pitch_selection_by_count(df: pd.DataFrame, t, lang: str):
     """Show pitch type distribution for different count situations."""
     valid = df.dropna(subset=["pitch_type", "balls", "strikes"]).copy()
@@ -1730,6 +1741,20 @@ def main():
 
     /* --- DataFrames --- */
     .stDataFrame { border-radius: 8px; overflow: hidden; }
+    .stDataFrame [data-testid="glideDataEditor"] th,
+    .stDataFrame thead th {
+        background: linear-gradient(135deg, #1a1a40, #0f3460) !important;
+        color: #e6f1ff !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+        border-bottom: 2px solid #e94560 !important;
+    }
+    .stDataFrame [data-testid="glideDataEditor"] tr:nth-child(even) td {
+        background: rgba(20, 20, 50, 0.5) !important;
+    }
+    .stDataFrame [data-testid="glideDataEditor"] tr:hover td {
+        background: rgba(79, 195, 247, 0.08) !important;
+    }
 
     /* --- Selectbox --- */
     [data-testid="stSelectbox"] > div > div {
@@ -1890,6 +1915,38 @@ def main():
     [data-testid="stAlert"] {
         border-radius: 10px !important;
         border-left-width: 4px !important;
+        font-size: 1.0rem !important;
+        line-height: 1.7 !important;
+    }
+    /* Info = scouting blue */
+    [data-testid="stAlert"][data-baseweb*="info"],
+    div[class*="stAlert"]:has(svg[fill="rgb(49, 130, 206)"]) {
+        background: rgba(79, 195, 247, 0.06) !important;
+        border-left-color: #4fc3f7 !important;
+    }
+    /* Success = action green */
+    [data-testid="stAlert"][data-baseweb*="success"],
+    div[class*="stAlert"]:has(svg[fill="rgb(56, 161, 105)"]) {
+        background: rgba(76, 175, 80, 0.06) !important;
+        border-left-color: #4caf50 !important;
+    }
+    /* Warning = caution amber */
+    [data-testid="stAlert"][data-baseweb*="warning"],
+    div[class*="stAlert"]:has(svg[fill="rgb(214, 158, 46)"]) {
+        background: rgba(255, 193, 7, 0.06) !important;
+        border-left-color: #ffc107 !important;
+    }
+
+    /* --- Caption styling --- */
+    [data-testid="stCaption"], .stCaption {
+        color: #8892b0 !important;
+        font-size: 0.88rem !important;
+        letter-spacing: 0.01em;
+    }
+
+    /* --- Metric delta (consistent with brand) --- */
+    [data-testid="stMetricDelta"] {
+        font-size: 0.82rem !important;
     }
 
     /* --- Mobile responsive --- */
@@ -1898,7 +1955,7 @@ def main():
         [data-testid="stMetricLabel"] { font-size: 0.7rem !important; }
         [data-testid="stMetricValue"] { font-size: 1.05rem !important; }
         [data-testid="stHorizontalBlock"] { gap: 4px !important; }
-        .stDataFrame td, .stDataFrame th { font-size: 0.78rem !important; }
+        .stDataFrame td, .stDataFrame th { font-size: 1.05rem !important; }
         .hero-banner { padding: 18px 16px; }
         .hero-banner .hero-flags { font-size: 2.5rem; letter-spacing: 10px; }
         .hero-banner .hero-title { font-size: 1.2rem; }
@@ -2316,11 +2373,13 @@ def main():
                     })
                 if _t1_crows:
                     _t1_ct = pd.DataFrame(_t1_crows)
+                    _t1_type_col = "Type" if lang == "EN" else "分類"
                     st.dataframe(
                         _t1_ct.style.format({
                             "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                             "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-                        }).background_gradient(subset=["OPS"], cmap="RdYlGn"),
+                        }).background_gradient(subset=["OPS"], cmap="RdYlGn"
+                        ).map(lambda v: _style_count_type(v, t), subset=[_t1_type_col]),
                         use_container_width=True, hide_index=True,
                     )
 
@@ -2492,13 +2551,15 @@ def main():
                 })
             if _t1_pit_count_rows:
                 _t1_pit_count_table = pd.DataFrame(_t1_pit_count_rows)
+                _t1_pit_type_col = "Type" if lang == "EN" else "分類"
                 st.dataframe(
                     _t1_pit_count_table.style.format({
                         t["opp_avg"]: "{:.3f}",
                         t["k_pct"]: "{:.1f}",
                         t["bb_pct"]: "{:.1f}",
                         t["whiff_pct"]: "{:.1f}",
-                    }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
+                    }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"
+                    ).map(lambda v: _style_count_type(v, t), subset=[_t1_pit_type_col]),
                     use_container_width=True,
                     hide_index=True,
                 )
@@ -3079,11 +3140,13 @@ def main():
 
             if count_rows:
                 count_table = pd.DataFrame(count_rows)
+                _ct_type_col = "Type" if lang == "EN" else "分類"
                 st.dataframe(
                     count_table.style.format({
                         "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                         "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-                    }).background_gradient(subset=["OPS"], cmap="RdYlGn"),
+                    }).background_gradient(subset=["OPS"], cmap="RdYlGn"
+                    ).map(lambda v: _style_count_type(v, t), subset=[_ct_type_col]),
                     use_container_width=True, hide_index=True,
                 )
 
@@ -3286,13 +3349,15 @@ def main():
 
             if pit_count_rows:
                 pit_count_table = pd.DataFrame(pit_count_rows)
+                _pit_type_col = "Type" if lang == "EN" else "分類"
                 st.dataframe(
                     pit_count_table.style.format({
                         t["opp_avg"]: "{:.3f}",
                         t["k_pct"]: "{:.1f}",
                         t["bb_pct"]: "{:.1f}",
                         t["whiff_pct"]: "{:.1f}",
-                    }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
+                    }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"
+                    ).map(lambda v: _style_count_type(v, t), subset=[_pit_type_col]),
                     use_container_width=True,
                     hide_index=True,
                 )
