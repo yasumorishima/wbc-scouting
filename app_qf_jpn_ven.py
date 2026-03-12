@@ -223,6 +223,22 @@ TEXTS = {
             "- **GB%** = Ground ball rate\n- **LD%** = Line drive rate\n- **FB%** = Fly ball rate\n"
             "- **Avg EV** = Average exit velocity (mph)\n- **Avg LA** = Average launch angle (degrees)"
         ),
+        "glossary_pct": "- **K%** = Strikeout rate (strikeouts / plate appearances)\n- **BB%** = Walk rate (walks / plate appearances)",
+        "glossary_stats_title": "What do these stats mean?",
+        "radar_explain": "Each axis shows a stat vs MLB average (gray). Farther from center = better. K% is inverted (lower = better).",
+        "zone_explain": "Strike zone split into 9 areas. Red = batter hits well (danger). Green = batter struggles (attack here).",
+        "spray_explain": "Where each batted ball landed. Red = HR, Orange = Extra-base hit, Green = Single, Gray = Out.",
+        "platoon_explain": "Performance vs left-handed (LHP) and right-handed (RHP) pitchers. Most batters hit better against opposite-hand pitching.",
+        "arsenal_explain": "Usage% = frequency thrown. Whiff% = swing-and-miss rate. Chase% = swing rate outside zone. Put Away% = strikeout rate on this pitch.",
+        "zone_usage_explain": "Where pitches are thrown most often. Darker = more pitches in that zone.",
+        "zone_opp_ba_explain": "Opponents' batting average by zone. Red = batters hit well (avoid). Green = effective zone (attack).",
+        "platoon_pitcher_explain": "Performance against left-handed (LHB) vs right-handed (RHB) batters.",
+        "glossary_arsenal_pct": (
+            "- **Usage%** = Frequency this pitch is thrown\n"
+            "- **Whiff%** = Swing-and-miss rate\n"
+            "- **Chase%** = Swing rate on pitches outside the zone\n"
+            "- **Put Away%** = Strikeout rate on this pitch"
+        ),
     },
     "JA": {
         "page_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
@@ -340,6 +356,22 @@ TEXTS = {
             "- **プル%** = 引っ張り方向への打球割合\n"
             "- **ゴロ%** = ゴロの割合\n- **ライナー%** = ライナーの割合\n- **フライ%** = フライの割合\n"
             "- **平均打球速度** = 打球のスピード（mph）\n- **平均打球角度** = 打球の打ち出し角度"
+        ),
+        "glossary_pct": "- **K%（三振率）** = 打席に対する三振の割合\n- **BB%（四球率）** = 打席に対する四球の割合",
+        "glossary_stats_title": "これらの指標の意味は？",
+        "radar_explain": "各軸はMLB平均（灰色）と比較した成績。中心から遠いほど優秀。K%（三振率）は逆転表示—低いほど外側。",
+        "zone_explain": "ストライクゾーンを9分割。赤 = 打者が得意なゾーン（投手にとって危険）。緑 = 打者が苦手なゾーン（攻めどころ）。",
+        "spray_explain": "打球がフィールドのどこに飛んだかの分布。赤 = 本塁打、橙 = 長打（二塁打/三塁打）、緑 = 単打、灰 = アウト。",
+        "platoon_explain": "左投手（LHP）・右投手（RHP）別の成績。多くの打者は反対の手の投手に強い傾向。",
+        "arsenal_explain": "使用率 = この球種を投げる頻度。空振率 = スイングに対する空振りの割合。チェイス率 = ゾーン外の球を振る割合。決め球率 = この球種で三振を奪う割合。",
+        "zone_usage_explain": "投球が多いゾーン。色が濃いほど投球数が多い。",
+        "zone_opp_ba_explain": "ゾーン別の被打率。赤 = 打者が得意（避けるべき）。緑 = 有効なゾーン（攻める）。",
+        "platoon_pitcher_explain": "左打者（LHB）・右打者（RHB）別の投球成績。",
+        "glossary_arsenal_pct": (
+            "- **使用率（Usage%）** = この球種を投げる頻度\n"
+            "- **空振率（Whiff%）** = スイングに対する空振りの割合\n"
+            "- **チェイス率（Chase%）** = ゾーン外の球に手を出す割合\n"
+            "- **決め球率（Put Away%）** = この球種で三振を奪う割合"
         ),
     },
 }
@@ -1162,13 +1194,20 @@ def main():
                 mc5.metric("K%", f"{stats['K%']:.1f}%")
                 mc6.metric("BB%", f"{stats['BB%']:.1f}%")
 
+                # Metrics glossary expander
+                with st.expander(
+                    "What do these stats mean?" if lang == "EN"
+                    else "これらの指標の意味は？"
+                ):
+                    st.markdown(t["glossary_stats"])
+
                 # Scouting summary
                 summary = generate_player_summary(stats, pdf_player, player_info, lang)
                 st.info(summary)
 
                 # --- Charts: spacer columns constrain width on PC ---
-                # Row 1: Radar + Zone (centered ~60% of page)
-                _sp1, chart_left, chart_right, _sp2 = st.columns([0.5, 2, 2, 0.5])
+                # Row 1: Radar + Zone (centered ~37.5% each)
+                _sp1, chart_left, chart_right, _sp2 = st.columns([1, 3, 3, 1])
 
                 # Radar chart
                 with chart_left:
@@ -1207,15 +1246,18 @@ def main():
                                label=display_name)
                     ax_ex.fill(a_plot_ex, p_plot_ex, alpha=0.25, color="#4fc3f7")
                     ax_ex.set_thetagrids(np.degrees(angles_ex), radar_cats_ex, color="white", fontsize=11)
-                    ax_ex.set_ylim(0, 1.15)  # extra headroom so annotations don't clip
+                    ax_ex.set_ylim(0, 1.2)  # headroom so annotations don't clip
                     ax_ex.set_yticks([0.25, 0.5, 0.75, 1.0])
                     ax_ex.set_yticklabels(["", "", "", ""], color="white")
                     ax_ex.grid(color="gray", alpha=0.3)
                     ax_ex.spines["polar"].set_color("gray")
                     for angle_ex, val_ex, raw_ex in zip(angles_ex, player_vals_ex, raw_vals_ex):
-                        # Offset annotations outward to avoid overlapping the line
+                        # Calculate offset direction based on angle to push text outward
+                        dx = np.cos(angle_ex - np.pi / 2) * 18
+                        dy = np.sin(angle_ex - np.pi / 2) * 18
                         ax_ex.annotate(raw_ex, xy=(angle_ex, val_ex),
-                                       xytext=(angle_ex, val_ex + 0.10),
+                                       xytext=(dx, dy),
+                                       textcoords="offset points",
                                        fontsize=11, ha="center", va="center",
                                        color="white", fontweight="bold")
                     leg_ex = ax_ex.legend(loc="lower right", bbox_to_anchor=(1.25, -0.05),
@@ -1226,24 +1268,27 @@ def main():
                     fig_ex.tight_layout()
                     st.pyplot(fig_ex, use_container_width=True)
                     plt.close(fig_ex)
-                    st.caption("Gray dashed = MLB avg (2024). K% is inverted — lower is better."
-                               if lang == "EN" else
-                               "\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747(2024)\u3002K%\u306f\u9006\u8ee2\u2014\u4f4e\u3044\u307b\u3069\u5916\u5074\u3002")
+                    st.caption(t["radar_explain"])
 
                 # 3x3 Zone heatmap
                 with chart_right:
                     st.markdown(f"**{t['zone_3x3']}**")
                     fig_z3_ex, ax_z3_ex = _dark_fig(figsize=(4, 3.5))
                     im_z3_ex = draw_zone_3x3(pdf_player, "ba", t["ba_heatmap"], ax_z3_ex)
+                    # Override axis labels with human-readable names
+                    zone_xlabel = "Horizontal Position (ft)" if lang == "EN" else "\u6a2a\u4f4d\u7f6e (ft)"
+                    zone_ylabel = "Height (ft)" if lang == "EN" else "\u9ad8\u3055 (ft)"
+                    ax_z3_ex.set_xlabel(zone_xlabel, color="white", fontsize=11)
+                    ax_z3_ex.set_ylabel(zone_ylabel, color="white", fontsize=11)
                     cb_z3_ex = fig_z3_ex.colorbar(im_z3_ex, ax=ax_z3_ex, fraction=0.046, pad=0.04)
                     cb_z3_ex.ax.tick_params(colors="white", labelsize=10)
                     fig_z3_ex.tight_layout()
                     st.pyplot(fig_z3_ex, use_container_width=True)
                     plt.close(fig_z3_ex)
-                    st.caption(t["danger_zone"])
+                    st.caption(t["zone_explain"])
 
-                # Row 2: Spray chart + Platoon splits (centered ~60%)
-                _sp3, chart2_left, chart2_right, _sp4 = st.columns([0.5, 2, 2, 0.5])
+                # Row 2: Spray chart + Platoon splits (centered ~37.5% each)
+                _sp3, chart2_left, chart2_right, _sp4 = st.columns([1, 3, 3, 1])
 
                 with chart2_left:
                     st.markdown(f"**{t['spray_chart']}**")
@@ -1253,7 +1298,7 @@ def main():
                     fig_sp_ex.tight_layout()
                     st.pyplot(fig_sp_ex, use_container_width=True)
                     plt.close(fig_sp_ex)
-                    st.caption(t["spray_caption"])
+                    st.caption(t["spray_explain"])
 
                 # Platoon splits
                 with chart2_right:
@@ -1269,6 +1314,7 @@ def main():
                         pm1.metric("AVG", f"{ss_ps['AVG']:.3f}")
                         pm2.metric("OPS", f"{ss_ps['OPS']:.3f}")
                         pm3.metric("K%", f"{ss_ps['K%']:.1f}%")
+                    st.caption(t["platoon_explain"])
 
                 st.caption(
                     "See Tab 2 for full details (5x5 zone, batted ball, count matrix, Whiff%)."
@@ -1376,34 +1422,36 @@ def main():
             angles_plot = angles + [angles[0]]
             mlb_plot = mlb_vals + [mlb_vals[0]]
 
-            fig_radar, ax_radar = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
-                                               facecolor="#0e1117")
-            ax_radar.set_facecolor("#0e1117")
-            ax_radar.plot(angles_plot, mlb_plot, "--", linewidth=1.5, color="#888888",
-                          alpha=0.7, label="MLB avg")
-            ax_radar.fill(angles_plot, mlb_plot, alpha=0.08, color="#888888")
-            ax_radar.plot(angles_plot, values_plot, "o-", linewidth=2, color="#4fc3f7",
-                          label="Team avg" if lang == "EN" else "チーム平均")
-            ax_radar.fill(angles_plot, values_plot, alpha=0.25, color="#4fc3f7")
-            ax_radar.set_thetagrids(np.degrees(angles), categories, color="white", fontsize=12)
-            ax_radar.set_ylim(0, 1)
-            ax_radar.set_yticks([0.25, 0.5, 0.75, 1.0])
-            ax_radar.set_yticklabels(["", "", "", ""], color="white")
-            ax_radar.grid(color="gray", alpha=0.3)
-            ax_radar.spines["polar"].set_color("gray")
-            for angle, val, raw in zip(angles, values, raw_values):
-                ax_radar.annotate(raw, xy=(angle, val), fontsize=12,
-                                  ha="center", va="bottom", color="white", fontweight="bold")
-            leg = ax_radar.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1),
-                                  fontsize=12, facecolor="#0e1117", edgecolor="gray")
-            for txt in leg.get_texts():
-                txt.set_color("white")
-            fig_radar.tight_layout()
-            st.pyplot(fig_radar, use_container_width=True)
-            plt.close(fig_radar)
-            st.caption("Gray dashed = MLB avg. K% inverted (lower = better)."
-                       if lang == "EN" else
-                       "灰色破線=MLB平均。K%は低いほど外側（良い）。")
+            _sl_tr, _cc_tr, _sr_tr = st.columns([1, 4, 1])
+            with _cc_tr:
+                fig_radar, ax_radar = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
+                                                   facecolor="#0e1117")
+                ax_radar.set_facecolor("#0e1117")
+                ax_radar.plot(angles_plot, mlb_plot, "--", linewidth=1.5, color="#888888",
+                              alpha=0.7, label="MLB avg")
+                ax_radar.fill(angles_plot, mlb_plot, alpha=0.08, color="#888888")
+                ax_radar.plot(angles_plot, values_plot, "o-", linewidth=2, color="#4fc3f7",
+                              label="Team avg" if lang == "EN" else "チーム平均")
+                ax_radar.fill(angles_plot, values_plot, alpha=0.25, color="#4fc3f7")
+                ax_radar.set_thetagrids(np.degrees(angles), categories, color="white", fontsize=12)
+                ax_radar.set_ylim(0, 1)
+                ax_radar.set_yticks([0.25, 0.5, 0.75, 1.0])
+                ax_radar.set_yticklabels(["", "", "", ""], color="white")
+                ax_radar.grid(color="gray", alpha=0.3)
+                ax_radar.spines["polar"].set_color("gray")
+                for angle, val, raw in zip(angles, values, raw_values):
+                    ax_radar.annotate(raw, xy=(angle, val), fontsize=12,
+                                      ha="center", va="bottom", color="white", fontweight="bold")
+                leg = ax_radar.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1),
+                                      fontsize=12, facecolor="#0e1117", edgecolor="gray")
+                for txt in leg.get_texts():
+                    txt.set_color("white")
+                fig_radar.tight_layout()
+                st.pyplot(fig_radar, use_container_width=True)
+                plt.close(fig_radar)
+                st.caption("Gray dashed = MLB avg. K% inverted (lower = better)."
+                           if lang == "EN" else
+                           "灰色破線=MLB平均。K%は低いほど外側（良い）。")
 
         st.divider()
 
@@ -1427,17 +1475,29 @@ def main():
             stats = batting_stats(pdf)
 
             # Profile metrics
-            c1, c2, c3, c4 = st.columns(4)
+            c1, c2, c3 = st.columns(3)
             c1.metric(t["team"], player_info["team"])
-            c2.metric(t["pos"], lineup_entry["pos"])
+            c2.metric(t["pos"], pos_full_t2)
             c3.metric(t["bats"], player_info["bats"])
-            c4.metric("OPS", f"{stats['OPS']:.3f}")
 
-            c5, c6, c7, c8 = st.columns(4)
-            c5.metric("AVG", f"{stats['AVG']:.3f}")
-            c6.metric("SLG", f"{stats['SLG']:.3f}")
-            c7.metric("K%", f"{stats['K%']:.1f}%")
-            c8.metric("BB%", f"{stats['BB%']:.1f}%")
+            c4, c5, c6, c7, c8 = st.columns(5)
+            c4.metric("AVG", f"{stats['AVG']:.3f}", delta=f"{stats['AVG'] - 0.243:+.3f}")
+            c5.metric("OBP", f"{stats['OBP']:.3f}", delta=f"{stats['OBP'] - 0.312:+.3f}")
+            c6.metric("SLG", f"{stats['SLG']:.3f}", delta=f"{stats['SLG'] - 0.397:+.3f}")
+            c7.metric("OPS", f"{stats['OPS']:.3f}", delta=f"{stats['OPS'] - 0.709:+.3f}")
+            # Calculate xwOBA from data
+            xwoba_vals = pdf[pdf["estimated_woba_using_speedangle"].notna()]["estimated_woba_using_speedangle"]
+            xwoba = xwoba_vals.mean() if len(xwoba_vals) > 0 else 0
+            c8.metric("xwOBA", f"{xwoba:.3f}", delta=f"{xwoba - 0.311:+.3f}")
+
+            kc1, kc2 = st.columns(2)
+            kc1.metric("K%", f"{stats['K%']:.1f}%")
+            kc2.metric("BB%", f"{stats['BB%']:.1f}%")
+
+            # Stats glossary
+            with st.expander(t.get("glossary_stats_title", "What do these stats mean?")):
+                st.markdown(t["glossary_stats"])
+                st.markdown(t["glossary_pct"])
 
             # Scouting summary
             st.markdown(f"**{t['scouting_summary']}**")
@@ -1469,45 +1529,51 @@ def main():
             p_plot = player_vals + [player_vals[0]]
             m_plot = mlb_vals_r + [mlb_vals_r[0]]
             a_plot = angles_r + [angles_r[0]]
-            fig_pr, ax_pr = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
-                                          facecolor="#0e1117")
-            ax_pr.set_facecolor("#0e1117")
-            ax_pr.plot(a_plot, m_plot, "--", linewidth=1.5, color="#888888",
-                       alpha=0.7, label="MLB avg")
-            ax_pr.fill(a_plot, m_plot, alpha=0.08, color="#888888")
-            ax_pr.plot(a_plot, p_plot, "o-", linewidth=2, color="#4fc3f7",
-                       label=display_name)
-            ax_pr.fill(a_plot, p_plot, alpha=0.25, color="#4fc3f7")
-            ax_pr.set_thetagrids(np.degrees(angles_r), radar_cats, color="white", fontsize=12)
-            ax_pr.set_ylim(0, 1)
-            ax_pr.set_yticks([0.25, 0.5, 0.75, 1.0])
-            ax_pr.set_yticklabels(["", "", "", ""], color="white")
-            ax_pr.grid(color="gray", alpha=0.3)
-            ax_pr.spines["polar"].set_color("gray")
-            for angle, val, raw in zip(angles_r, player_vals, raw_vals_r):
-                ax_pr.annotate(raw, xy=(angle, val), fontsize=12,
-                               ha="center", va="bottom", color="white", fontweight="bold")
-            leg_pr = ax_pr.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
-                                   fontsize=12, facecolor="#0e1117", edgecolor="gray")
-            for txt in leg_pr.get_texts():
-                txt.set_color("white")
-            fig_pr.tight_layout()
-            st.pyplot(fig_pr, use_container_width=True)
-            plt.close(fig_pr)
-            st.caption("Gray dashed = MLB avg (2024). K% is inverted — lower is better."
-                       if lang == "EN" else
-                       "\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747(2024)\u3002K%\u306f\u9006\u8ee2\u2014\u4f4e\u3044\u307b\u3069\u5916\u5074\u3002")
+            _sl_ir, _cc_ir, _sr_ir = st.columns([1, 4, 1])
+            with _cc_ir:
+                fig_pr, ax_pr = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
+                                              facecolor="#0e1117")
+                ax_pr.set_facecolor("#0e1117")
+                ax_pr.plot(a_plot, m_plot, "--", linewidth=1.5, color="#888888",
+                           alpha=0.7, label="MLB avg")
+                ax_pr.fill(a_plot, m_plot, alpha=0.08, color="#888888")
+                ax_pr.plot(a_plot, p_plot, "o-", linewidth=2, color="#4fc3f7",
+                           label=display_name)
+                ax_pr.fill(a_plot, p_plot, alpha=0.25, color="#4fc3f7")
+                ax_pr.set_thetagrids(np.degrees(angles_r), radar_cats, color="white", fontsize=12)
+                ax_pr.set_ylim(0, 1)
+                ax_pr.set_yticks([0.25, 0.5, 0.75, 1.0])
+                ax_pr.set_yticklabels(["", "", "", ""], color="white")
+                ax_pr.grid(color="gray", alpha=0.3)
+                ax_pr.spines["polar"].set_color("gray")
+                for angle, val, raw in zip(angles_r, player_vals, raw_vals_r):
+                    ax_pr.annotate(raw, xy=(angle, val), fontsize=12,
+                                   ha="center", va="bottom", color="white", fontweight="bold")
+                leg_pr = ax_pr.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
+                                       fontsize=12, facecolor="#0e1117", edgecolor="gray")
+                for txt in leg_pr.get_texts():
+                    txt.set_color("white")
+                fig_pr.tight_layout()
+                st.pyplot(fig_pr, use_container_width=True)
+                plt.close(fig_pr)
+                st.caption("Gray dashed = MLB avg (2024). K% is inverted — lower is better."
+                           if lang == "EN" else
+                           "\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747(2024)\u3002K%\u306f\u9006\u8ee2\u2014\u4f4e\u3044\u307b\u3069\u5916\u5074\u3002")
 
-            # --- 3x3 Zone heatmap (BA) — already existed ---
-            st.markdown(f"**{t['zone_3x3']}**")
-            st.caption(t["danger_zone"])
-            fig_z3, ax_z3 = _dark_fig(figsize=(6, 5))
-            im_z3 = draw_zone_3x3(pdf, "ba", t["ba_heatmap"], ax_z3)
-            cb_z3 = fig_z3.colorbar(im_z3, ax=ax_z3, fraction=0.046, pad=0.04)
-            cb_z3.ax.tick_params(colors="white")
-            fig_z3.tight_layout()
-            st.pyplot(fig_z3, use_container_width=True)
-            plt.close(fig_z3)
+            # --- 3x3 Zone heatmap (BA + xwOBA) ---
+            for z3_metric, z3_title in [("ba", t["ba_heatmap"]), ("xwoba", t["xwoba_heatmap"])]:
+                st.markdown(f"**{t['zone_3x3']} — {z3_title}**")
+                z3_cap = t["danger_zone"] if z3_metric == "ba" else t.get("danger_zone_xwoba", t["danger_zone"])
+                st.caption(z3_cap)
+                _sl_z3, _cc_z3, _sr_z3 = st.columns([1, 4, 1])
+                with _cc_z3:
+                    fig_z3, ax_z3 = _dark_fig(figsize=(6, 5))
+                    im_z3 = draw_zone_3x3(pdf, z3_metric, z3_title, ax_z3)
+                    cb_z3 = fig_z3.colorbar(im_z3, ax=ax_z3, fraction=0.046, pad=0.04)
+                    cb_z3.ax.tick_params(colors="white")
+                    fig_z3.tight_layout()
+                    st.pyplot(fig_z3, use_container_width=True)
+                    plt.close(fig_z3)
 
             # --- 5x5 Zone heatmaps (BA + xwOBA) ---
             st.markdown(f"**{t['zone_5x5']}**")
@@ -1516,28 +1582,32 @@ def main():
                 ("xwoba", t["xwoba_heatmap"], t.get("danger_zone_xwoba", t["danger_zone"])),
             ]:
                 st.caption(hm_caption)
-                fig_hm, ax_hm = _dark_fig(figsize=(6, 5))
-                im_hm = draw_zone_heatmap(pdf, hm_metric, hm_title, ax_hm)
-                cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
-                cb_hm.ax.tick_params(colors="white")
-                fig_hm.tight_layout()
-                st.pyplot(fig_hm, use_container_width=True)
-                plt.close(fig_hm)
+                _sl_hm, _cc_hm, _sr_hm = st.columns([1, 4, 1])
+                with _cc_hm:
+                    fig_hm, ax_hm = _dark_fig(figsize=(6, 5))
+                    im_hm = draw_zone_heatmap(pdf, hm_metric, hm_title, ax_hm)
+                    cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
+                    cb_hm.ax.tick_params(colors="white")
+                    fig_hm.tight_layout()
+                    st.pyplot(fig_hm, use_container_width=True)
+                    plt.close(fig_hm)
 
             # --- Spray chart (all hits, LoanDepot Park) ---
             st.markdown(f"**{t['spray_chart']}**")
             st.caption(t["spray_caption"])
-            fig_sp, ax_sp = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
-            ax_sp.set_facecolor("#0e1117")
-            draw_spray_chart(pdf, display_name, ax_sp, stadium="marlins", density=True)
-            fig_sp.tight_layout()
-            st.pyplot(fig_sp, use_container_width=True)
-            plt.close(fig_sp)
+            _sl_sp, _cc_sp, _sr_sp = st.columns([1, 4, 1])
+            with _cc_sp:
+                fig_sp, ax_sp = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
+                ax_sp.set_facecolor("#0e1117")
+                draw_spray_chart(pdf, display_name, ax_sp, stadium="marlins", density=True)
+                fig_sp.tight_layout()
+                st.pyplot(fig_sp, use_container_width=True)
+                plt.close(fig_sp)
 
             # --- Spray chart vs LHP / vs RHP ---
             spray_lhp = "Spray Chart — vs LHP" if lang == "EN" else "\u6253\u7403\u65b9\u5411\u56f3 — vs \u5de6\u6295\u624b"
             spray_rhp = "Spray Chart — vs RHP" if lang == "EN" else "\u6253\u7403\u65b9\u5411\u56f3 — vs \u53f3\u6295\u624b"
-            col_sp_l, col_sp_r = st.columns(2)
+            _sl_slr, col_sp_l, col_sp_r, _sr_slr = st.columns([0.5, 2, 2, 0.5])
             for col_sp, throws_sp, sp_title in [(col_sp_l, "L", spray_lhp), (col_sp_r, "R", spray_rhp)]:
                 with col_sp:
                     split_sp = pdf[pdf["p_throws"] == throws_sp]
@@ -1577,27 +1647,31 @@ def main():
                 chart_data["whiff_val"] = chart_data[t["whiff_pct"]].str.rstrip("%").astype(float)
                 chart_data = chart_data.sort_values("whiff_val", ascending=True)
 
-                fig_pt, ax_pt = _dark_fig(figsize=(8, max(3, len(chart_data) * 0.5)))
-                colors_bar = plt.cm.RdYlGn_r(chart_data["whiff_val"] / max(chart_data["whiff_val"].max(), 1))
-                bars = ax_pt.barh(chart_data[t["pitch_type"]], chart_data["whiff_val"], color=colors_bar)
-                for bar, val in zip(bars, chart_data["whiff_val"]):
-                    ax_pt.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height() / 2,
-                               f"{val:.1f}%", va="center", ha="left", color="white",
-                               fontsize=12, fontweight="bold")
-                ax_pt.set_xlabel(t["whiff_pct"], color="white", fontsize=14)
-                ax_pt.tick_params(colors="white", labelsize=12)
-                ax_pt.set_title(t["whiff_pct"], color="white", fontsize=16, fontweight="bold")
-                x_max = chart_data["whiff_val"].max()
-                ax_pt.set_xlim(0, x_max * 1.25 if x_max > 0 else 10)
-                for spine in ax_pt.spines.values():
-                    spine.set_color("white")
-                fig_pt.tight_layout()
-                st.pyplot(fig_pt, use_container_width=True)
-                plt.close(fig_pt)
+                _sl_wh, _cc_wh, _sr_wh = st.columns([1, 4, 1])
+                with _cc_wh:
+                    fig_pt, ax_pt = _dark_fig(figsize=(8, max(3, len(chart_data) * 0.5)))
+                    colors_bar = plt.cm.RdYlGn_r(chart_data["whiff_val"] / max(chart_data["whiff_val"].max(), 1))
+                    bars = ax_pt.barh(chart_data[t["pitch_type"]], chart_data["whiff_val"], color=colors_bar)
+                    for bar, val in zip(bars, chart_data["whiff_val"]):
+                        ax_pt.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height() / 2,
+                                   f"{val:.1f}%", va="center", ha="left", color="white",
+                                   fontsize=12, fontweight="bold")
+                    ax_pt.set_xlabel(t["whiff_pct"], color="white", fontsize=14)
+                    ax_pt.tick_params(colors="white", labelsize=12)
+                    ax_pt.set_title(t["whiff_pct"], color="white", fontsize=16, fontweight="bold")
+                    x_max = chart_data["whiff_val"].max()
+                    ax_pt.set_xlim(0, x_max * 1.25 if x_max > 0 else 10)
+                    for spine in ax_pt.spines.values():
+                        spine.set_color("white")
+                    fig_pt.tight_layout()
+                    st.pyplot(fig_pt, use_container_width=True)
+                    plt.close(fig_pt)
 
             # --- Platoon splits (vs LHP / vs RHP) ---
             st.markdown(f"**{t['platoon']}**")
-            col_l, col_r = st.columns(2)
+            with st.expander("What are platoon splits?" if lang == "EN" else "左右投手別成績とは？"):
+                st.markdown(t["glossary_platoon"])
+            _sl_pl, col_l, col_r, _sr_pl = st.columns([0.5, 2, 2, 0.5])
 
             for col, throws_val, label in [(col_l, "L", t["vs_lhp"]), (col_r, "R", t["vs_rhp"])]:
                 with col:
@@ -1607,10 +1681,18 @@ def main():
                         st.write(t["no_data"])
                         continue
                     ss = batting_stats(split_df)
-                    m1, m2, m3 = st.columns(3)
+                    m1, m2, m3, m4 = st.columns(4)
                     m1.metric("AVG", f"{ss['AVG']:.3f}")
-                    m2.metric("OPS", f"{ss['OPS']:.3f}")
-                    m3.metric("K%", f"{ss['K%']:.1f}%")
+                    m2.metric("OBP", f"{ss['OBP']:.3f}")
+                    m3.metric("SLG", f"{ss['SLG']:.3f}")
+                    m4.metric("OPS", f"{ss['OPS']:.3f}")
+
+                    # Zone heatmap per platoon side
+                    fig_z_pl, ax_z_pl = _dark_fig(figsize=(5, 4))
+                    draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z_pl)
+                    fig_z_pl.tight_layout()
+                    st.pyplot(fig_z_pl, use_container_width=True)
+                    plt.close(fig_z_pl)
 
             # --- Count-by-count performance table ---
             st.markdown(f"**{t['count_perf']}**")
@@ -1712,6 +1794,8 @@ def main():
             at = arsenal_table(sp_data, t)
             if not at.empty:
                 st.dataframe(at, use_container_width=True, hide_index=True)
+            with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
+                st.markdown(t["arsenal_explain"])
 
             st.divider()
 
@@ -1724,28 +1808,37 @@ def main():
                 spine.set_color("white")
             draw_movement_chart(sp_data, _name_display(PREDICTED_SP, lang), ax_m, density=True)
             fig_m.tight_layout(rect=[0, 0, 0.82, 1])
-            st.pyplot(fig_m, use_container_width=True)
+            _sl_t3_mv, _cc_t3_mv, _sr_t3_mv = st.columns([1, 4, 1])
+            with _cc_t3_mv:
+                st.pyplot(fig_m, use_container_width=True)
             plt.close(fig_m)
 
             st.divider()
 
             # Zone heatmap (pitcher location — usage + opp BA)
             st.subheader(t["zone_heatmap_pitch"])
-            for metric, hm_title in [("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]:
+            for _hm_idx, (metric, hm_title) in enumerate([("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]):
                 fig_hm, ax_hm = _dark_fig(figsize=(6, 5))
                 im_hm = draw_zone_heatmap(sp_data, metric, hm_title, ax_hm)
                 cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
                 cb_hm.ax.tick_params(colors="white")
                 fig_hm.tight_layout()
-                st.pyplot(fig_hm, use_container_width=True)
+                _sl_t3_hm, _cc_t3_hm, _sr_t3_hm = st.columns([1, 4, 1])
+                with _cc_t3_hm:
+                    st.pyplot(fig_hm, use_container_width=True)
+                    if metric == "usage":
+                        st.caption(t["zone_usage_explain"])
+                    else:
+                        st.caption(t["zone_opp_ba_explain"])
                 plt.close(fig_hm)
 
             st.divider()
 
             # Platoon splits (vs LHB / vs RHB)
             st.subheader(t["platoon"])
-            col_l, col_r = st.columns(2)
-            for col, stand, label in [(col_l, "L", t["vs_lhb"]), (col_r, "R", t["vs_rhb"])]:
+            st.caption(t["platoon_pitcher_explain"])
+            _sl_t3_pl, _cl_t3_pl, _cr_t3_pl, _sr_t3_pl = st.columns([0.5, 2, 2, 0.5])
+            for col, stand, label in [(_cl_t3_pl, "L", t["vs_lhb"]), (_cr_t3_pl, "R", t["vs_rhb"])]:
                 with col:
                     st.markdown(f"**{label}**")
                     split_df = sp_data[sp_data["stand"] == stand]
@@ -1801,6 +1894,11 @@ def main():
 
         st.divider()
 
+        # Stats glossary (once, before reliever profiles)
+        with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
+            st.markdown(t["glossary_stats"])
+            st.markdown(t.get("glossary_arsenal_pct", ""))
+
         # Individual reliever profiles
         for reliever_name in KEY_RELIEVERS:
             pitcher_info = PITCHER_BY_NAME.get(reliever_name)
@@ -1840,6 +1938,7 @@ def main():
             rp_arsenal = arsenal_table(rp_data, t)
             if not rp_arsenal.empty:
                 st.markdown(f"**{t['arsenal']}**")
+                st.caption(t["arsenal_explain"])
                 st.dataframe(rp_arsenal, use_container_width=True, hide_index=True)
 
             # Platoon splits
