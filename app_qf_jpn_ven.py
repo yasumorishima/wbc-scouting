@@ -1895,11 +1895,170 @@ def main():
                         pm3.metric("K%", f"{ss_ps['K%']:.1f}%")
                     st.caption(t["platoon_explain"])
 
-                st.caption(
-                    "See Tab 2 for full details (5x5 zone, batted ball, count matrix, Whiff%)."
-                    if lang == "EN" else
-                    "\u8a73\u7d30\u306fTab 2\uff08\u30be\u30fc\u30f3\u30d2\u30fc\u30c8\u30de\u30c3\u30d7\u30fb\u6253\u7403\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb\u30fb\u30ab\u30a6\u30f3\u30c8\u5225\u30fb\u7a7a\u632f\u7387\uff09\u3092\u53c2\u7167\u3002"
-                )
+                # === Pitching Plan (How to get this batter out) ===
+                st.markdown(f"### {t['pitching_plan_title']}")
+                st.caption(t["pitching_plan_explain"])
+                _t1_plan = generate_pitching_plan(pdf_player, stats, player_info, lang)
+                st.success(_t1_plan)
+
+                _t1_vs_l = pdf_player[pdf_player["p_throws"] == "L"]
+                _t1_vs_r = pdf_player[pdf_player["p_throws"] == "R"]
+                _t1_sl, _t1_cl, _t1_cr, _t1_sr = st.columns([0.5, 2, 2, 0.5])
+                with _t1_cl:
+                    st.markdown(f"**{t['pitching_plan_vs_lhp']}**")
+                    if not _t1_vs_l.empty and len(_t1_vs_l) >= 30:
+                        _t1_sl_stats = batting_stats(_t1_vs_l)
+                        st.info(generate_pitching_plan(_t1_vs_l, _t1_sl_stats, player_info, lang))
+                    else:
+                        st.write(t["no_data"])
+                with _t1_cr:
+                    st.markdown(f"**{t['pitching_plan_vs_rhp']}**")
+                    if not _t1_vs_r.empty and len(_t1_vs_r) >= 30:
+                        _t1_sr_stats = batting_stats(_t1_vs_r)
+                        st.info(generate_pitching_plan(_t1_vs_r, _t1_sr_stats, player_info, lang))
+                    else:
+                        st.write(t["no_data"])
+
+                # === Defensive Positioning ===
+                st.markdown(f"### {t['defensive_positioning']}")
+                st.caption(t["defensive_explain"])
+                st.warning(generate_defensive_positioning(pdf_player, player_info, lang))
+
+                # === 5x5 Zone heatmaps ===
+                st.markdown(f"**{t['zone_5x5']}**")
+                for _t1_hm_m, _t1_hm_t, _t1_hm_c in [
+                    ("ba", t["ba_heatmap"], t["danger_zone"]),
+                    ("xwoba", t["xwoba_heatmap"], t.get("danger_zone_xwoba", t["danger_zone"])),
+                ]:
+                    st.caption(_t1_hm_c)
+                    _t1_hsl, _t1_hcc, _t1_hsr = st.columns([1, 4, 1])
+                    with _t1_hcc:
+                        _t1_fh, _t1_ah = _dark_fig(figsize=(6, 5))
+                        _t1_ih = draw_zone_heatmap(pdf_player, _t1_hm_m, _t1_hm_t, _t1_ah, lang=lang)
+                        _t1_cb = _t1_fh.colorbar(_t1_ih, ax=_t1_ah, fraction=0.046, pad=0.04)
+                        _t1_cb.ax.tick_params(colors="white")
+                        _t1_fh.tight_layout()
+                        st.pyplot(_t1_fh, use_container_width=True)
+                        plt.close(_t1_fh)
+
+                # === Spray chart vs LHP / vs RHP ===
+                _t1_spl = "Spray Chart — vs LHP" if lang == "EN" else "打球方向図 — vs 左投手"
+                _t1_spr = "Spray Chart — vs RHP" if lang == "EN" else "打球方向図 — vs 右投手"
+                _t1_ssl, _t1_scl, _t1_scr, _t1_ssr = st.columns([0.5, 2, 2, 0.5])
+                for _t1_col, _t1_throws, _t1_spt in [(_t1_scl, "L", _t1_spl), (_t1_scr, "R", _t1_spr)]:
+                    with _t1_col:
+                        _t1_split_sp = pdf_player[pdf_player["p_throws"] == _t1_throws]
+                        if _t1_split_sp.empty:
+                            st.write(t["no_data"])
+                            continue
+                        _t1_fs, _t1_as = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
+                        _t1_as.set_facecolor("#0e1117")
+                        draw_spray_chart(_t1_split_sp, _t1_spt, _t1_as, stadium="marlins", density=True, lang=lang)
+                        _t1_fs.tight_layout()
+                        st.pyplot(_t1_fs, use_container_width=True)
+                        plt.close(_t1_fs)
+
+                # === Batted Ball Profile ===
+                st.markdown(f"**{t['batted_ball']}**")
+                with st.expander("What do these mean?" if lang == "EN" else "用語の説明を見る"):
+                    st.markdown(t["glossary_batted"])
+                _t1_prof = batted_ball_profile(pdf_player, t)
+                if _t1_prof:
+                    _t1_bbc = st.columns(4)
+                    for _t1_i, (_t1_k, _t1_v) in enumerate(_t1_prof.items()):
+                        _t1_bbc[_t1_i % 4].metric(_t1_k, _t1_v)
+                else:
+                    st.write(t["no_data"])
+
+                # === Pitch type performance ===
+                st.markdown(f"**{t['pitch_type_perf']}**")
+                with st.expander(t["glossary_pitch"] if lang == "EN" else "空振率・チェイス率とは？"):
+                    st.markdown(t["glossary_pitch"])
+                _t1_ptt = pitch_type_table(pdf_player, t)
+                if not _t1_ptt.empty:
+                    st.dataframe(_t1_ptt, use_container_width=True, hide_index=True)
+
+                    _t1_cd = _t1_ptt[[t["pitch_type"], t["whiff_pct"]]].copy()
+                    _t1_cd["wv"] = _t1_cd[t["whiff_pct"]].str.rstrip("%").astype(float)
+                    _t1_cd = _t1_cd.sort_values("wv", ascending=True)
+                    _t1_wsl, _t1_wcc, _t1_wsr = st.columns([1, 4, 1])
+                    with _t1_wcc:
+                        _t1_fw, _t1_aw = _dark_fig(figsize=(8, max(3, len(_t1_cd) * 0.5)))
+                        _t1_clrs = plt.cm.RdYlGn_r(_t1_cd["wv"] / max(_t1_cd["wv"].max(), 1))
+                        _t1_bars = _t1_aw.barh(_t1_cd[t["pitch_type"]], _t1_cd["wv"], color=_t1_clrs)
+                        for _t1_bar, _t1_val in zip(_t1_bars, _t1_cd["wv"]):
+                            _t1_aw.text(_t1_bar.get_width() + 0.5, _t1_bar.get_y() + _t1_bar.get_height() / 2,
+                                        f"{_t1_val:.1f}%", va="center", ha="left", color="white",
+                                        fontsize=12, fontweight="bold")
+                        _t1_aw.set_xlabel(t["whiff_pct"], color="white", fontsize=14)
+                        _t1_aw.tick_params(colors="white", labelsize=12)
+                        _t1_aw.set_title(t["whiff_pct"], color="white", fontsize=16, fontweight="bold")
+                        _t1_xm = _t1_cd["wv"].max()
+                        _t1_aw.set_xlim(0, _t1_xm * 1.25 if _t1_xm > 0 else 10)
+                        for sp in _t1_aw.spines.values():
+                            sp.set_color("white")
+                        _t1_fw.tight_layout()
+                        st.pyplot(_t1_fw, use_container_width=True)
+                        plt.close(_t1_fw)
+
+                # === Platoon zone heatmaps ===
+                st.markdown(f"**{t['platoon']} — {t['zone_heatmap_pitch']}**")
+                _t1_psl, _t1_pcl, _t1_pcr, _t1_psr = st.columns([0.5, 2, 2, 0.5])
+                for _t1_pcol, _t1_pthr, _t1_plbl in [(_t1_pcl, "L", t["vs_lhp"]), (_t1_pcr, "R", t["vs_rhp"])]:
+                    with _t1_pcol:
+                        st.markdown(f"**{_t1_plbl}**")
+                        _t1_sdf = pdf_player[pdf_player["p_throws"] == _t1_pthr]
+                        if _t1_sdf.empty:
+                            st.write(t["no_data"])
+                            continue
+                        _t1_ss = batting_stats(_t1_sdf)
+                        _t1_m1, _t1_m2, _t1_m3, _t1_m4 = st.columns(4)
+                        _t1_m1.metric("AVG", f"{_t1_ss['AVG']:.3f}")
+                        _t1_m2.metric("OBP", f"{_t1_ss['OBP']:.3f}")
+                        _t1_m3.metric("SLG", f"{_t1_ss['SLG']:.3f}")
+                        _t1_m4.metric("OPS", f"{_t1_ss['OPS']:.3f}")
+                        _t1_fz, _t1_az = _dark_fig(figsize=(5, 4))
+                        draw_zone_heatmap(_t1_sdf, "ba", f"{_t1_plbl} — {t['ba_heatmap']}", _t1_az, lang=lang)
+                        _t1_fz.tight_layout()
+                        st.pyplot(_t1_fz, use_container_width=True)
+                        plt.close(_t1_fz)
+
+                # === Count-by-count performance ===
+                st.markdown(f"**{t['count_perf']}**")
+                st.caption(t["count_explain"])
+                _t1_cdf = pdf_player.dropna(subset=["balls", "strikes"]).copy()
+                _t1_cdf["balls"] = _t1_cdf["balls"].astype(int)
+                _t1_cdf["strikes"] = _t1_cdf["strikes"].astype(int)
+                _t1_all_counts = [
+                    (0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (0, 2),
+                    (2, 1), (1, 2), (3, 0), (2, 2), (3, 1), (3, 2),
+                ]
+                _t1_crows = []
+                for _t1_b, _t1_s in _t1_all_counts:
+                    _t1_cat = count_category(_t1_b, _t1_s)
+                    _t1_tag = {"ahead": t["ahead"], "behind": t["behind"], "even": t["even"]}[_t1_cat]
+                    _t1_cdf2 = _t1_cdf[(_t1_cdf["balls"] == _t1_b) & (_t1_cdf["strikes"] == _t1_s)]
+                    if _t1_cdf2.empty:
+                        continue
+                    _t1_cs = batting_stats(_t1_cdf2)
+                    if _t1_cs["PA"] < 5:
+                        continue
+                    _t1_crows.append({
+                        ("Count" if lang == "EN" else "カウント"): f"{_t1_b}-{_t1_s}",
+                        ("Type" if lang == "EN" else "分類"): _t1_tag,
+                        "PA": _t1_cs["PA"], "AVG": _t1_cs["AVG"], "OBP": _t1_cs["OBP"],
+                        "SLG": _t1_cs["SLG"], "OPS": _t1_cs["OPS"],
+                        "K%": _t1_cs["K%"], "BB%": _t1_cs["BB%"],
+                    })
+                if _t1_crows:
+                    _t1_ct = pd.DataFrame(_t1_crows)
+                    st.dataframe(
+                        _t1_ct.style.format({
+                            "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
+                            "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
+                        }).background_gradient(subset=["OPS"], cmap="RdYlGn"),
+                        use_container_width=True, hide_index=True,
+                    )
 
         st.divider()
 
