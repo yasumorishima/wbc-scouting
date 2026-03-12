@@ -656,7 +656,7 @@ def _zone_text_color(val: float, vmin: float, vmax: float) -> str:
     return "white"
 
 
-def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
+def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax, lang: str = "EN"):
     """Draw a 5x5 heatmap over the strike zone."""
     x_bins = np.linspace(-1.5, 1.5, 6)
     z_bins = np.linspace(1.0, 4.0, 6)
@@ -726,12 +726,12 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
     ax.set_ylim(0.5, 4.5)
     ax.set_aspect("equal")
     ax.set_title(title, fontsize=16, fontweight="bold", color="white")
-    ax.set_xlabel("plate_x (ft)", fontsize=14)
-    ax.set_ylabel("plate_z (ft)", fontsize=14)
+    ax.set_xlabel("Horizontal Position (ft)" if lang == "EN" else "横位置 (ft)", fontsize=14, color="white")
+    ax.set_ylabel("Height (ft)" if lang == "EN" else "高さ (ft)", fontsize=14, color="white")
     return im
 
 
-def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
+def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax, lang: str = "EN"):
     """Draw 3x3 zone chart using Statcast zone 1-9."""
     valid = df.dropna(subset=["zone"]).copy()
     valid["zone"] = valid["zone"].astype(int)
@@ -788,13 +788,13 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
     ax.set_ylim(1.0, 4.0)
     ax.set_aspect("equal")
     ax.set_title(title, fontsize=16, fontweight="bold", color="white")
-    ax.set_xlabel("plate_x (ft)", fontsize=14)
-    ax.set_ylabel("plate_z (ft)", fontsize=14)
+    ax.set_xlabel("Horizontal Position (ft)" if lang == "EN" else "横位置 (ft)", fontsize=14, color="white")
+    ax.set_ylabel("Height (ft)" if lang == "EN" else "高さ (ft)", fontsize=14, color="white")
     return im
 
 
 def draw_spray_chart(df: pd.DataFrame, title: str, ax, stadium: str = "marlins",
-                     density: bool = False):
+                     density: bool = False, lang: str = "EN"):
     """Draw spray chart on LoanDepot Park outline."""
     stadium_df = load_stadium_coords()
     coords = stadium_df[stadium_df["team"] == stadium]
@@ -847,9 +847,13 @@ def draw_spray_chart(df: pd.DataFrame, title: str, ax, stadium: str = "marlins",
     ax.set_title(title, fontsize=16, fontweight="bold", color="white")
     ax.axis("off")
 
-    for label, color in [("HR", "#e53935"), ("XBH", "#ff9800"), ("1B", "#4caf50"), ("Out", "#888888")]:
+    if lang == "JA":
+        legend_labels = [("本塁打", "#e53935"), ("長打", "#ff9800"), ("単打", "#4caf50"), ("アウト", "#888888")]
+    else:
+        legend_labels = [("Home Run", "#e53935"), ("Extra-base Hit", "#ff9800"), ("Single", "#4caf50"), ("Out", "#888888")]
+    for label, color in legend_labels:
         ax.scatter([], [], c=color, s=30, label=label)
-    ax.legend(loc="upper right", fontsize=12, framealpha=0.6)
+    ax.legend(loc="upper right", fontsize=10, framealpha=0.6)
 
 
 def draw_movement_chart(df: pd.DataFrame, title: str, ax, density: bool = True):
@@ -1073,19 +1077,6 @@ def main():
 
     st.markdown("""
     <style>
-    /* PC: constrain chart width so they don't stretch across full widescreen */
-    @media (min-width: 769px) {
-        [data-testid="stExpander"] img,
-        [data-testid="stExpander"] [data-testid="stImage"] {
-            max-width: 360px !important;
-        }
-        /* Limit pyplot output inside expanders */
-        [data-testid="stExpander"] .stPlotlyChart,
-        [data-testid="stExpander"] [data-testid="stVegaLiteChart"],
-        [data-testid="stExpander"] .element-container:has(> img) {
-            max-width: 400px !important;
-        }
-    }
     /* Mobile */
     @media (max-width: 768px) {
         [data-testid="stMetric"] { padding: 0.3rem 0.4rem; }
@@ -1253,8 +1244,8 @@ def main():
                     ax_ex.spines["polar"].set_color("gray")
                     for angle_ex, val_ex, raw_ex in zip(angles_ex, player_vals_ex, raw_vals_ex):
                         # Calculate offset direction based on angle to push text outward
-                        dx = np.cos(angle_ex - np.pi / 2) * 18
-                        dy = np.sin(angle_ex - np.pi / 2) * 18
+                        dx = np.cos(angle_ex - np.pi / 2) * 20
+                        dy = np.sin(angle_ex - np.pi / 2) * 20
                         ax_ex.annotate(raw_ex, xy=(angle_ex, val_ex),
                                        xytext=(dx, dy),
                                        textcoords="offset points",
@@ -1274,12 +1265,7 @@ def main():
                 with chart_right:
                     st.markdown(f"**{t['zone_3x3']}**")
                     fig_z3_ex, ax_z3_ex = _dark_fig(figsize=(4, 3.5))
-                    im_z3_ex = draw_zone_3x3(pdf_player, "ba", t["ba_heatmap"], ax_z3_ex)
-                    # Override axis labels with human-readable names
-                    zone_xlabel = "Horizontal Position (ft)" if lang == "EN" else "\u6a2a\u4f4d\u7f6e (ft)"
-                    zone_ylabel = "Height (ft)" if lang == "EN" else "\u9ad8\u3055 (ft)"
-                    ax_z3_ex.set_xlabel(zone_xlabel, color="white", fontsize=11)
-                    ax_z3_ex.set_ylabel(zone_ylabel, color="white", fontsize=11)
+                    im_z3_ex = draw_zone_3x3(pdf_player, "ba", t["ba_heatmap"], ax_z3_ex, lang=lang)
                     cb_z3_ex = fig_z3_ex.colorbar(im_z3_ex, ax=ax_z3_ex, fraction=0.046, pad=0.04)
                     cb_z3_ex.ax.tick_params(colors="white", labelsize=10)
                     fig_z3_ex.tight_layout()
@@ -1294,7 +1280,7 @@ def main():
                     st.markdown(f"**{t['spray_chart']}**")
                     fig_sp_ex, ax_sp_ex = plt.subplots(figsize=(4, 4), facecolor="#0e1117")
                     ax_sp_ex.set_facecolor("#0e1117")
-                    draw_spray_chart(pdf_player, display_name, ax_sp_ex, stadium="marlins", density=True)
+                    draw_spray_chart(pdf_player, display_name, ax_sp_ex, stadium="marlins", density=True, lang=lang)
                     fig_sp_ex.tight_layout()
                     st.pyplot(fig_sp_ex, use_container_width=True)
                     plt.close(fig_sp_ex)
@@ -1434,14 +1420,18 @@ def main():
                               label="Team avg" if lang == "EN" else "チーム平均")
                 ax_radar.fill(angles_plot, values_plot, alpha=0.25, color="#4fc3f7")
                 ax_radar.set_thetagrids(np.degrees(angles), categories, color="white", fontsize=12)
-                ax_radar.set_ylim(0, 1)
+                ax_radar.set_ylim(0, 1.2)
                 ax_radar.set_yticks([0.25, 0.5, 0.75, 1.0])
                 ax_radar.set_yticklabels(["", "", "", ""], color="white")
                 ax_radar.grid(color="gray", alpha=0.3)
                 ax_radar.spines["polar"].set_color("gray")
                 for angle, val, raw in zip(angles, values, raw_values):
-                    ax_radar.annotate(raw, xy=(angle, val), fontsize=12,
-                                      ha="center", va="bottom", color="white", fontweight="bold")
+                    dx = np.cos(angle - np.pi / 2) * 20
+                    dy = np.sin(angle - np.pi / 2) * 20
+                    ax_radar.annotate(raw, xy=(angle, val),
+                                      xytext=(dx, dy), textcoords="offset points",
+                                      fontsize=12, ha="center", va="center",
+                                      color="white", fontweight="bold")
                 leg = ax_radar.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1),
                                       fontsize=12, facecolor="#0e1117", edgecolor="gray")
                 for txt in leg.get_texts():
@@ -1541,14 +1531,18 @@ def main():
                            label=display_name)
                 ax_pr.fill(a_plot, p_plot, alpha=0.25, color="#4fc3f7")
                 ax_pr.set_thetagrids(np.degrees(angles_r), radar_cats, color="white", fontsize=12)
-                ax_pr.set_ylim(0, 1)
+                ax_pr.set_ylim(0, 1.2)
                 ax_pr.set_yticks([0.25, 0.5, 0.75, 1.0])
                 ax_pr.set_yticklabels(["", "", "", ""], color="white")
                 ax_pr.grid(color="gray", alpha=0.3)
                 ax_pr.spines["polar"].set_color("gray")
                 for angle, val, raw in zip(angles_r, player_vals, raw_vals_r):
-                    ax_pr.annotate(raw, xy=(angle, val), fontsize=12,
-                                   ha="center", va="bottom", color="white", fontweight="bold")
+                    dx = np.cos(angle - np.pi / 2) * 20
+                    dy = np.sin(angle - np.pi / 2) * 20
+                    ax_pr.annotate(raw, xy=(angle, val),
+                                   xytext=(dx, dy), textcoords="offset points",
+                                   fontsize=12, ha="center", va="center",
+                                   color="white", fontweight="bold")
                 leg_pr = ax_pr.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
                                        fontsize=12, facecolor="#0e1117", edgecolor="gray")
                 for txt in leg_pr.get_texts():
@@ -1568,7 +1562,7 @@ def main():
                 _sl_z3, _cc_z3, _sr_z3 = st.columns([1, 4, 1])
                 with _cc_z3:
                     fig_z3, ax_z3 = _dark_fig(figsize=(6, 5))
-                    im_z3 = draw_zone_3x3(pdf, z3_metric, z3_title, ax_z3)
+                    im_z3 = draw_zone_3x3(pdf, z3_metric, z3_title, ax_z3, lang=lang)
                     cb_z3 = fig_z3.colorbar(im_z3, ax=ax_z3, fraction=0.046, pad=0.04)
                     cb_z3.ax.tick_params(colors="white")
                     fig_z3.tight_layout()
@@ -1585,7 +1579,7 @@ def main():
                 _sl_hm, _cc_hm, _sr_hm = st.columns([1, 4, 1])
                 with _cc_hm:
                     fig_hm, ax_hm = _dark_fig(figsize=(6, 5))
-                    im_hm = draw_zone_heatmap(pdf, hm_metric, hm_title, ax_hm)
+                    im_hm = draw_zone_heatmap(pdf, hm_metric, hm_title, ax_hm, lang=lang)
                     cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
                     cb_hm.ax.tick_params(colors="white")
                     fig_hm.tight_layout()
@@ -1599,7 +1593,7 @@ def main():
             with _cc_sp:
                 fig_sp, ax_sp = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
                 ax_sp.set_facecolor("#0e1117")
-                draw_spray_chart(pdf, display_name, ax_sp, stadium="marlins", density=True)
+                draw_spray_chart(pdf, display_name, ax_sp, stadium="marlins", density=True, lang=lang)
                 fig_sp.tight_layout()
                 st.pyplot(fig_sp, use_container_width=True)
                 plt.close(fig_sp)
@@ -1616,7 +1610,7 @@ def main():
                         continue
                     fig_sps, ax_sps = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
                     ax_sps.set_facecolor("#0e1117")
-                    draw_spray_chart(split_sp, sp_title, ax_sps, stadium="marlins", density=True)
+                    draw_spray_chart(split_sp, sp_title, ax_sps, stadium="marlins", density=True, lang=lang)
                     fig_sps.tight_layout()
                     st.pyplot(fig_sps, use_container_width=True)
                     plt.close(fig_sps)
@@ -1689,7 +1683,7 @@ def main():
 
                     # Zone heatmap per platoon side
                     fig_z_pl, ax_z_pl = _dark_fig(figsize=(5, 4))
-                    draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z_pl)
+                    draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z_pl, lang=lang)
                     fig_z_pl.tight_layout()
                     st.pyplot(fig_z_pl, use_container_width=True)
                     plt.close(fig_z_pl)
@@ -1819,7 +1813,7 @@ def main():
             st.subheader(t["zone_heatmap_pitch"])
             for _hm_idx, (metric, hm_title) in enumerate([("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]):
                 fig_hm, ax_hm = _dark_fig(figsize=(6, 5))
-                im_hm = draw_zone_heatmap(sp_data, metric, hm_title, ax_hm)
+                im_hm = draw_zone_heatmap(sp_data, metric, hm_title, ax_hm, lang=lang)
                 cb_hm = fig_hm.colorbar(im_hm, ax=ax_hm, fraction=0.046, pad=0.04)
                 cb_hm.ax.tick_params(colors="white")
                 fig_hm.tight_layout()
@@ -1854,7 +1848,7 @@ def main():
 
                     # Zone heatmap per platoon side
                     fig_z, ax_z = _dark_fig(figsize=(5, 4))
-                    draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z)
+                    draw_zone_heatmap(split_df, "ba", f"{label} — {t['ba_heatmap']}", ax_z, lang=lang)
                     fig_z.tight_layout()
                     st.pyplot(fig_z, use_container_width=True)
                     plt.close(fig_z)
@@ -1952,10 +1946,11 @@ def main():
                         st.write(t["no_data"])
                         continue
                     ss = pitching_stats(split_df)
-                    sm1, sm2, sm3 = st.columns(3)
+                    sm1, sm2, sm3, sm4 = st.columns(4)
                     sm1.metric(t["opp_avg"], f"{ss['Opp AVG']:.3f}")
-                    sm2.metric(t["k_pct"], f"{ss['K%']:.1f}%")
-                    sm3.metric(t["bb_pct"], f"{ss['BB%']:.1f}%")
+                    sm2.metric(t["opp_slg"], f"{ss['Opp SLG']:.3f}")
+                    sm3.metric(t["k_pct"], f"{ss['K%']:.1f}%")
+                    sm4.metric(t["bb_pct"], f"{ss['BB%']:.1f}%")
 
 
 if __name__ == "__main__":
