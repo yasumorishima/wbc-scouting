@@ -1665,68 +1665,253 @@ def main():
 
     st.markdown("""
     <style>
-    /* Mobile */
-    @media (max-width: 768px) {
-        [data-testid="stMetric"] { padding: 0.3rem 0.4rem; }
-        [data-testid="stMetricLabel"] { font-size: 0.75rem !important; }
-        [data-testid="stMetricValue"] { font-size: 1.1rem !important; }
-        [data-testid="stHorizontalBlock"] { gap: 0.3rem !important; }
-        .stDataFrame td, .stDataFrame th { font-size: 0.8rem !important; }
+    /* ============================================
+       WBC 2026 QF — Premium Dark Theme
+       ============================================ */
+
+    /* --- Global --- */
+    .stApp { background-color: #0a0a1a; }
+
+    /* --- Metric Cards --- */
+    [data-testid="stMetric"] {
+        background: linear-gradient(145deg, #141428 0%, #1a1a35 100%);
+        border: 1px solid #2a2a4a;
+        border-radius: 10px;
+        padding: 14px 16px;
+        transition: border-color 0.2s ease;
     }
-    /* Player card header */
+    [data-testid="stMetric"]:hover {
+        border-color: #e94560;
+    }
+    [data-testid="stMetricLabel"] {
+        color: #8892b0 !important;
+        font-size: 0.8rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    [data-testid="stMetricValue"] {
+        color: #ccd6f6 !important;
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+    }
+
+    /* --- Tabs --- */
+    [data-testid="stTabs"] > div:first-child {
+        background: linear-gradient(90deg, #0f0f23, #141432, #0f0f23);
+        border-radius: 12px;
+        padding: 4px;
+        gap: 4px;
+    }
+    [data-testid="stTabs"] button {
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        padding: 8px 20px !important;
+        color: #8892b0 !important;
+        transition: all 0.2s ease !important;
+    }
+    [data-testid="stTabs"] button[aria-selected="true"] {
+        background: linear-gradient(135deg, #e94560, #c23152) !important;
+        color: #ffffff !important;
+    }
+    [data-testid="stTabs"] button:hover:not([aria-selected="true"]) {
+        background: #1a1a35 !important;
+        color: #ccd6f6 !important;
+    }
+
+    /* --- Expanders --- */
+    [data-testid="stExpander"] {
+        border: 1px solid #2a2a4a;
+        border-radius: 10px;
+        background: #0e0e20;
+        margin-bottom: 8px;
+    }
+    [data-testid="stExpander"] summary {
+        font-weight: 600;
+        padding: 10px 14px;
+    }
+    [data-testid="stExpander"] summary:hover {
+        color: #e94560 !important;
+    }
+
+    /* --- DataFrames --- */
+    .stDataFrame { border-radius: 8px; overflow: hidden; }
+
+    /* --- Selectbox --- */
+    [data-testid="stSelectbox"] > div > div {
+        border-color: #2a2a4a !important;
+        border-radius: 8px !important;
+        background: #141428 !important;
+    }
+
+    /* --- Dividers --- */
+    hr { border-color: #1a1a35 !important; }
+
+    /* --- Sidebar --- */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0a0a1a 0%, #0f0f23 100%) !important;
+        border-right: 1px solid #1a1a35;
+    }
+
+    /* --- Player card header --- */
     .player-card-header {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        background: linear-gradient(135deg, #141432 0%, #1a1a40 40%, #0f3460 100%);
         border-left: 4px solid #e94560;
-        border-radius: 8px;
-        padding: 12px 18px;
-        margin: 18px 0 8px 0;
+        border-radius: 10px;
+        padding: 14px 20px;
+        margin: 20px 0 6px 0;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 16px;
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.08);
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .player-card-header:hover {
+        box-shadow: 0 6px 25px rgba(233, 69, 96, 0.15);
+        transform: translateY(-1px);
     }
     .player-card-header .order-badge {
-        background: #e94560;
+        background: linear-gradient(135deg, #e94560, #c23152);
         color: white;
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 900;
-        width: 44px;
-        height: 44px;
+        width: 46px;
+        height: 46px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(233, 69, 96, 0.3);
     }
     .player-card-header .player-name {
         font-size: 1.25rem;
         font-weight: 700;
-        color: #ffffff;
+        color: #e6f1ff;
         margin: 0;
-        line-height: 1.2;
+        line-height: 1.3;
     }
     .player-card-header .player-meta {
-        font-size: 0.9rem;
-        color: #a0aec0;
-        margin: 2px 0 0 0;
-    }
-    /* Glossary section styling */
-    .glossary-section {
-        background: #1a1a2e;
-        border: 1px solid #2d3748;
-        border-radius: 8px;
-        padding: 10px 16px;
-        margin: 6px 0;
-    }
-    .glossary-section summary {
-        color: #a0aec0 !important;
         font-size: 0.85rem;
+        color: #8892b0;
+        margin: 3px 0 0 0;
+        letter-spacing: 0.02em;
     }
-    /* Section divider */
+
+    /* --- Hero banner --- */
+    .hero-banner {
+        background: linear-gradient(135deg, #0f0f23 0%, #141432 30%, #1a1a40 60%, #0f3460 100%);
+        border: 1px solid #2a2a4a;
+        border-radius: 14px;
+        padding: 28px 32px;
+        text-align: center;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-banner::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #e94560, #4fc3f7, #e94560);
+    }
+    .hero-banner .hero-flags {
+        font-size: 3.5rem;
+        margin-bottom: 8px;
+        letter-spacing: 16px;
+    }
+    .hero-banner .hero-title {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #e6f1ff;
+        margin: 8px 0 4px 0;
+    }
+    .hero-banner .hero-sub {
+        font-size: 0.95rem;
+        color: #8892b0;
+        margin: 0;
+    }
+    .hero-banner .hero-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #e94560, #c23152);
+        color: white;
+        padding: 4px 16px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: 10px;
+        letter-spacing: 0.05em;
+    }
+
+    /* --- Section header --- */
+    .section-header {
+        background: linear-gradient(90deg, #141432, transparent);
+        border-left: 3px solid #4fc3f7;
+        border-radius: 0 8px 8px 0;
+        padding: 10px 18px;
+        margin: 20px 0 14px 0;
+    }
+    .section-header h3 {
+        color: #e6f1ff;
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .section-header p {
+        color: #8892b0;
+        font-size: 0.8rem;
+        margin: 3px 0 0 0;
+    }
+
+    /* --- Section divider --- */
     .section-label {
         background: linear-gradient(90deg, #e94560, transparent);
         height: 2px;
-        margin: 24px 0 12px 0;
+        margin: 28px 0 14px 0;
         border-radius: 2px;
+    }
+
+    /* --- Tab content header --- */
+    .tab-header {
+        background: linear-gradient(135deg, #0f0f23, #141432);
+        border: 1px solid #2a2a4a;
+        border-radius: 12px;
+        padding: 18px 24px;
+        margin-bottom: 18px;
+    }
+    .tab-header h2 {
+        color: #e6f1ff;
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin: 0 0 4px 0;
+    }
+    .tab-header .tab-sub {
+        color: #8892b0;
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    /* --- Info/Success/Warning box overrides --- */
+    [data-testid="stAlert"] {
+        border-radius: 10px !important;
+        border-left-width: 4px !important;
+    }
+
+    /* --- Mobile responsive --- */
+    @media (max-width: 768px) {
+        [data-testid="stMetric"] { padding: 8px 10px; }
+        [data-testid="stMetricLabel"] { font-size: 0.7rem !important; }
+        [data-testid="stMetricValue"] { font-size: 1.05rem !important; }
+        [data-testid="stHorizontalBlock"] { gap: 4px !important; }
+        .stDataFrame td, .stDataFrame th { font-size: 0.78rem !important; }
+        .hero-banner { padding: 18px 16px; }
+        .hero-banner .hero-flags { font-size: 2.5rem; letter-spacing: 10px; }
+        .hero-banner .hero-title { font-size: 1.2rem; }
+        .player-card-header { padding: 10px 14px; gap: 12px; }
+        .player-card-header .order-badge { width: 38px; height: 38px; font-size: 1.2rem; }
+        .player-card-header .player-name { font-size: 1.05rem; }
+        [data-testid="stTabs"] button { font-size: 0.8rem !important; padding: 6px 12px !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -1735,8 +1920,16 @@ def main():
     lang = st.sidebar.radio("Language / 言語", ["JA", "EN"], horizontal=True)
     t = TEXTS[lang]
 
-    st.sidebar.markdown(f"# \U0001F1EF\U0001F1F5 vs \U0001F1FB\U0001F1EA")
+    st.sidebar.markdown("""
+    <div style="text-align:center; padding: 16px 0 8px 0;">
+        <div style="font-size:2.4rem; letter-spacing:8px;">🇯🇵 ⚔️ 🇻🇪</div>
+        <div style="font-size:1.1rem; font-weight:700; color:#e6f1ff; margin-top:6px;">
+            WBC 2026 Quarterfinal
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     st.sidebar.caption(t["subtitle"])
+    st.sidebar.markdown("---")
 
     # Load data
     df_bat_all = load_batter_data()
@@ -1750,28 +1943,34 @@ def main():
     df_bat = filter_season(df_bat_all, season)
     df_pit = filter_season(df_pit_all, season)
 
-    # -- Main content --
-    st.title(t["main_title"])
-    st.caption(t["subtitle"])
-    st.caption(
-        "All statistics: MLB Statcast 2024-2025 Regular Season"
-        if lang == "EN" else
-        "全成績データ: MLB Statcast 2024-2025レギュラーシーズン"
-    )
+    st.sidebar.markdown("---")
+    st.sidebar.caption("Data: MLB Statcast via Baseball Savant")
+
+    # -- Hero Banner --
+    _data_label = "MLB Statcast 2024-2025 Regular Season" if lang == "EN" else "MLB Statcast 2024-2025レギュラーシーズン"
+    _qf_label = "Quarterfinal" if lang == "EN" else "準々決勝"
+    st.markdown(f"""<div class="hero-banner">
+        <div class="hero-flags">🇯🇵 🇻🇪</div>
+        <p class="hero-title">{t['main_title']}</p>
+        <p class="hero-sub">{t['subtitle']}</p>
+        <span class="hero-badge">📊 {_data_label}</span>
+    </div>""", unsafe_allow_html=True)
 
     tab1, tab2, tab3, tab4 = st.tabs([
-        f"\U0001F3AF {t['tab1']}",
-        f"\u2694\uFE0F {t['tab2']}",
-        f"\U0001F3B1 {t['tab3']}",
-        f"\U0001F525 {t['tab4']}",
+        f"🎯 {t['tab1']}",
+        f"⚔️ {t['tab2']}",
+        f"🎱 {t['tab3']}",
+        f"🔥 {t['tab4']}",
     ])
 
     # ===================================================================
     # TAB 1: Matchup Overview
     # ===================================================================
     with tab1:
-        st.header(t["predicted_lineup"])
-        st.markdown(f"**{t['pool_d_record']}**")
+        st.markdown(f"""<div class="tab-header">
+            <h2>🎯 {t['predicted_lineup']}</h2>
+            <p class="tab-sub">{t['pool_d_record']} | {_data_label}</p>
+        </div>""", unsafe_allow_html=True)
 
         # Lineup table
         lineup_rows = []
@@ -2134,13 +2333,23 @@ def main():
         st.divider()
 
         # Predicted SP card
-        st.subheader(t["predicted_sp"])
-        sp_info = PITCHER_BY_NAME.get(PREDICTED_SP, {})
-        sp_cols = st.columns(4)
-        sp_cols[0].metric(t["player"], _name_display(PREDICTED_SP, lang))
-        sp_cols[1].metric(t["team"], sp_info.get("team", "—"))
-        sp_cols[2].metric(t["throws"], sp_info.get("throws", "—"))
-        sp_cols[3].metric(t["role"], t["sp_label"])
+        st.markdown('<div class="section-label"></div>', unsafe_allow_html=True)
+        _t1_sp_info = PITCHER_BY_NAME.get(PREDICTED_SP, {})
+        _t1_sp_display = _name_display(PREDICTED_SP, lang)
+        _t1_sp_throws = _t1_sp_info.get("throws", "—")
+        _t1_sp_team = _t1_sp_info.get("team", "—")
+        st.markdown(f"""<div class="player-card-header">
+            <div class="order-badge">SP</div>
+            <div>
+                <p class="player-name">{_t1_sp_display}</p>
+                <p class="player-meta">{t['sp_label']} | {_t1_sp_team} | {'投: ' + _t1_sp_throws if lang == 'JA' else 'Throws: ' + _t1_sp_throws}</p>
+            </div>
+        </div>""", unsafe_allow_html=True)
+        sp_info = _t1_sp_info
+        sp_cols = st.columns(3)
+        sp_cols[0].metric(t["team"], sp_info.get("team", "—"))
+        sp_cols[1].metric(t["throws"], sp_info.get("throws", "—"))
+        sp_cols[2].metric(t["role"], t["sp_label"])
 
         # SP MLB stats from Statcast
         sp_data = df_pit[df_pit["pitcher"] == sp_info.get("mlbam_id", -1)]
@@ -2283,7 +2492,10 @@ def main():
     # ===================================================================
     with tab2:
         season_label = f"{season} MLB Season (Statcast)" if lang == "EN" else f"{season}年 MLBシーズン（Statcast）"
-        st.header(f"\u2694\uFE0F {t['tab2']} — {season_label}")
+        st.markdown(f"""<div class="tab-header">
+            <h2>⚔️ {t['tab2']}</h2>
+            <p class="tab-sub">{season_label}</p>
+        </div>""", unsafe_allow_html=True)
 
         # Team batting radar chart (using predicted lineup)
         lineup_stats_list = []
@@ -2299,7 +2511,8 @@ def main():
                 lineup_stats_list.append({"name": p["name"], **s})
 
         if lineup_stats_list:
-            st.subheader(t["team_radar_title"])
+            _team_radar_sub = "スタメン9名の平均をMLB平均と比較" if lang == "JA" else "Starting 9 average vs MLB average"
+            st.markdown(f"""<div class="section-header"><h3>📡 {t['team_radar_title']}</h3><p>{_team_radar_sub}</p></div>""", unsafe_allow_html=True)
             avg_avg = np.mean([ps["AVG"] for ps in lineup_stats_list])
             avg_obp = np.mean([ps["OBP"] for ps in lineup_stats_list])
             avg_slg = np.mean([ps["SLG"] for ps in lineup_stats_list])
@@ -2372,7 +2585,9 @@ def main():
         # ---------------------------------------------------------------
         # All-batters summary table + selectbox for individual report
         # ---------------------------------------------------------------
-        st.subheader("🇻🇪 " + ("打者一覧（全ロースター）" if lang == "JA" else "All Batters (Full Roster)"))
+        _bat_roster_title = "打者一覧（全ロースター）" if lang == "JA" else "All Batters (Full Roster)"
+        _bat_roster_sub = "スタメン9名 ＋ 控え選手。選手を選択すると詳細分析が表示されます。" if lang == "JA" else "Starting 9 + bench. Select a player for detailed analysis."
+        st.markdown(f"""<div class="section-header"><h3>🇻🇪 {_bat_roster_title}</h3><p>{_bat_roster_sub}</p></div>""", unsafe_allow_html=True)
 
         # Build lineup lookup for quick order retrieval
         _lineup_order = {le["name"]: le["order"] for le in PREDICTED_LINEUP}
@@ -2435,8 +2650,15 @@ def main():
         pos_str = _lineup_pos.get(sel_batter_key, player_info["pos"])
         pos_full_t2 = POS_LABELS[lang].get(pos_str, pos_str)
 
-        st.markdown("---")
-        st.subheader(f"{order_label} {display_name} — {pos_str} ({pos_full_t2})")
+        _t2_badge = order_label.lstrip("#") if order_label.startswith("#") else order_label
+        _t2_bats_label = f"打席: {player_info['bats']}" if lang == "JA" else f"Bats: {player_info['bats']}"
+        st.markdown(f"""<div class="player-card-header">
+            <div class="order-badge">{_t2_badge}</div>
+            <div>
+                <p class="player-name">{display_name}</p>
+                <p class="player-meta">{pos_str} ({pos_full_t2}) | {player_info.get('team', '')} | {_t2_bats_label}</p>
+            </div>
+        </div>""", unsafe_allow_html=True)
 
         if pdf.empty:
             st.warning(t["no_data"])
@@ -2731,18 +2953,29 @@ def main():
     # ===================================================================
     with tab3:
         season_label = f"{season} MLB Season (Statcast)" if lang == "EN" else f"{season}年 MLBシーズン（Statcast）"
-        st.header(f"\U0001F3B1 {t['tab3']} — {season_label}")
+        st.markdown(f"""<div class="tab-header">
+            <h2>🎱 {t['tab3']}</h2>
+            <p class="tab-sub">{season_label}</p>
+        </div>""", unsafe_allow_html=True)
 
         sp_info = PITCHER_BY_NAME.get(PREDICTED_SP, {})
         sp_data = df_pit[df_pit["pitcher"] == sp_info.get("mlbam_id", -1)]
 
-        # Profile card
-        st.subheader(_name_display(PREDICTED_SP, lang))
-        pc1, pc2, pc3, pc4 = st.columns(4)
-        pc1.metric(t["team"], sp_info.get("team", "—"))
-        pc2.metric(t["throws"], sp_info.get("throws", "—"))
+        # Profile card — rich header
+        _sp_display = _name_display(PREDICTED_SP, lang)
+        _sp_throws = sp_info.get("throws", "—")
+        _sp_team = sp_info.get("team", "—")
+        st.markdown(f"""<div class="player-card-header">
+            <div class="order-badge">SP</div>
+            <div>
+                <p class="player-name">{_sp_display}</p>
+                <p class="player-meta">{t['sp_label']} | {_sp_team} | {'投: ' + _sp_throws if lang == 'JA' else 'Throws: ' + _sp_throws}</p>
+            </div>
+        </div>""", unsafe_allow_html=True)
+        pc1, pc2, pc3 = st.columns(3)
+        pc1.metric(t["team"], _sp_team)
+        pc2.metric(t["throws"], _sp_throws)
         pc3.metric(t["role"], t["sp_label"])
-        pc4.metric("MLB ID" if lang == "EN" else "選手ID", sp_info.get("mlbam_id", "—"))
 
         if sp_data.empty:
             st.warning(t["no_data"])
@@ -2936,14 +3169,15 @@ def main():
     # ===================================================================
     with tab4:
         season_label = f"{season} MLB Season (Statcast)" if lang == "EN" else f"{season}年 MLBシーズン（Statcast）"
-        st.header(f"\U0001F525 {t['tab4']} — {season_label}")
+        st.markdown(f"""<div class="tab-header">
+            <h2>🔥 {t['tab4']}</h2>
+            <p class="tab-sub">{season_label}</p>
+        </div>""", unsafe_allow_html=True)
 
         # Bullpen usage overview
-        st.subheader(t["bullpen_overview"])
         st.info(t["bullpen_text"])
 
-        # Stats glossary (once, before reliever profiles)
-        with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
+        with st.expander("📖 " + ("Stats glossary" if lang == "EN" else "指標の説明")):
             st.markdown(t["glossary_stats"])
             st.markdown(t.get("glossary_arsenal_pct", ""))
 
@@ -2979,7 +3213,9 @@ def main():
         # Key relievers first, then others
         rp_rows.sort(key=lambda x: (0 if x["_is_key"] else 1, x["name"]))
 
-        st.subheader("🇻🇪 " + ("投手一覧（先発除く）" if lang == "JA" else "All Pitchers (excl. Starter)"))
+        _pit_roster_title = "投手一覧（先発除く）" if lang == "JA" else "All Pitchers (excl. Starter)"
+        _pit_roster_sub = "主力リリーバー ＋ 控え投手。選手を選択すると詳細分析が表示されます。" if lang == "JA" else "Key relievers + bench. Select a pitcher for detailed analysis."
+        st.markdown(f"""<div class="section-header"><h3>🇻🇪 {_pit_roster_title}</h3><p>{_pit_roster_sub}</p></div>""", unsafe_allow_html=True)
         rp_sum_df = pd.DataFrame(rp_rows)
         rp_col_map = {"tag": "役割" if lang == "JA" else "Role",
                       "name": "選手名" if lang == "JA" else "Name",
@@ -3007,13 +3243,22 @@ def main():
         pitcher_info = PITCHER_BY_NAME[reliever_name]
         rp_data = df_pit[df_pit["pitcher"] == pitcher_info["mlbam_id"]]
 
-        st.markdown("---")
-        st.subheader(f"{t['reliever_profile']}: {_name_display(reliever_name, lang)}")
+        _rp_display = _name_display(reliever_name, lang)
+        _rp_throws = pitcher_info.get("throws", "—")
+        _rp_team = pitcher_info.get("team", "—")
+        _rp_role = pitcher_info.get("role", "RP")
+        st.markdown(f"""<div class="player-card-header">
+            <div class="order-badge">RP</div>
+            <div>
+                <p class="player-name">{_rp_display}</p>
+                <p class="player-meta">{_rp_role} | {_rp_team} | {'投: ' + _rp_throws if lang == 'JA' else 'Throws: ' + _rp_throws}</p>
+            </div>
+        </div>""", unsafe_allow_html=True)
 
         rpc1, rpc2, rpc3 = st.columns(3)
-        rpc1.metric(t["team"], pitcher_info.get("team", "—"))
-        rpc2.metric(t["throws"], pitcher_info.get("throws", "—"))
-        rpc3.metric(t["role"], pitcher_info.get("role", "RP"))
+        rpc1.metric(t["team"], _rp_team)
+        rpc2.metric(t["throws"], _rp_throws)
+        rpc3.metric(t["role"], _rp_role)
 
         if rp_data.empty:
             st.warning(t["no_data"])
