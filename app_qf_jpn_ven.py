@@ -1,8 +1,8 @@
 """WBC 2026 Quarterfinal: Japan vs Venezuela — Scouting Dashboard.
 
 A unified scouting report for Japan's coaching staff, covering Venezuela's
-predicted lineup, starting pitcher (Ranger Suarez), and bullpen usage from
-Pool D. All analysis is based on Venezuela players' MLB Statcast data.
+predicted lineup, starting pitcher (Ranger Suárez), and bullpen.
+All analysis is based on Venezuela players' MLB Statcast data (2024-2025).
 """
 
 import pathlib
@@ -54,29 +54,18 @@ PITCH_COLORS = {
 }
 
 PREDICTED_LINEUP = [
-    {"order": 1, "name": "Ronald Acuña Jr.", "pos": "RF", "note_en": "Locked-in leadoff — started every game", "note_ja": "不動の1番・全試合スタメン"},
-    {"order": 2, "name": "Maikel Garcia", "pos": "3B", "note_en": "#2 spot in 3 of 4 games", "note_ja": "2番3回起用"},
-    {"order": 3, "name": "Luis Arráez", "pos": "1B", "note_en": "Fixed #3 hitter", "note_ja": "3番固定"},
-    {"order": 4, "name": "Willson Contreras", "pos": "DH", "note_en": "Cleanup in 3 games", "note_ja": "4番3回起用"},
-    {"order": 5, "name": "Gleyber Torres", "pos": "2B", "note_en": "Mid-to-lower order", "note_ja": "中軸〜下位で起用"},
-    {"order": 6, "name": "Salvador Perez", "pos": "C", "note_en": "DH / Catcher", "note_ja": "指名打者/捕手"},
-    {"order": 7, "name": "William Contreras", "pos": "C", "note_en": "Catcher / DH", "note_ja": "捕手/DH"},
-    {"order": 8, "name": "Wilyer Abreu", "pos": "LF", "note_en": "Fixed in left field", "note_ja": "左翼固定"},
-    {"order": 9, "name": "Ezequiel Tovar", "pos": "SS", "note_en": "Fixed at shortstop", "note_ja": "遊撃固定"},
+    {"order": 1, "name": "Ronald Acuña Jr.", "pos": "RF", "note_en": "Elite speed + power, leadoff threat", "note_ja": "俊足強打のリードオフ"},
+    {"order": 2, "name": "Luis Arráez", "pos": "1B", "note_en": "Best contact hitter in MLB, batting title contender", "note_ja": "MLB最高のコンタクトヒッター、首位打者候補"},
+    {"order": 3, "name": "William Contreras", "pos": "C", "note_en": "Switch hitter with power, lineup anchor", "note_ja": "スイッチヒッターの強打の捕手"},
+    {"order": 4, "name": "Salvador Perez", "pos": "DH", "note_en": "Veteran power bat, 200+ career HR", "note_ja": "通算200本塁打超のベテラン強打者"},
+    {"order": 5, "name": "Jackson Chourio", "pos": "CF", "note_en": "Young star, 5-tool talent", "note_ja": "若き5ツールプレイヤー"},
+    {"order": 6, "name": "Andrés Giménez", "pos": "2B", "note_en": "Gold Glove 2B, LHB with speed", "note_ja": "ゴールドグラブ二塁手、俊足左打者"},
+    {"order": 7, "name": "Gleyber Torres", "pos": "SS", "note_en": "Power from middle infield", "note_ja": "中距離パワーの内野手"},
+    {"order": 8, "name": "Maikel Garcia", "pos": "3B", "note_en": "Speed + contact, versatile defender", "note_ja": "俊足コンタクト、守備範囲広い"},
+    {"order": 9, "name": "Wilyer Abreu", "pos": "LF", "note_en": "Solid LHB, strong defense", "note_ja": "堅実な左打者、好守備"},
 ]
 
 PREDICTED_SP = "Ranger Suárez"
-
-WBC_PITCHING_STATS = [
-    {"name": "E. Rodríguez", "full": "Eduardo Rodríguez", "games": "vs Dominican Republic (starter)", "games_ja": "vsドミニカ(先発)", "era": "10.13", "ip": "2.2", "pitches": "53", "result": "L"},
-    {"name": "R. Suárez", "full": "Ranger Suárez", "games": "vs Netherlands (starter)", "games_ja": "vsオランダ(先発)", "era": "4.50", "ip": "2.0", "pitches": "43", "result": "W"},
-    {"name": "Y. Gómez", "full": "Yoendrys Gómez", "games": "vs Nicaragua (starter)", "games_ja": "vsニカラグア(先発)", "era": "0.00", "ip": "2.0", "pitches": "—", "result": "W"},
-    {"name": "E. De Jesus", "full": "Enmanuel De Jesus", "games": "vs Israel (starter)", "games_ja": "vsイスラエル(先発)", "era": "1.80", "ip": "5.0", "pitches": "63", "result": "W"},
-    {"name": "E. Bazardo", "full": "Eduard Bazardo", "games": "Relief (3 games)", "games_ja": "リリーフ(3試合)", "era": "—", "ip": "—", "pitches": "—", "result": "—"},
-    {"name": "J. Buttó", "full": "José Buttó", "games": "Relief (4 games)", "games_ja": "リリーフ(4試合)", "era": "0.00", "ip": "—", "pitches": "—", "result": "—"},
-    {"name": "L. Ávila", "full": "Luinder Ávila", "games": "Relief (1 game)", "games_ja": "リリーフ(1試合)", "era": "0.00", "ip": "2.0", "pitches": "44", "result": "H"},
-    {"name": "D. Palencia", "full": "Daniel Palencia", "games": "Relief (2 games)", "games_ja": "リリーフ(2試合)", "era": "0.00", "ip": "2.0", "pitches": "—", "result": "—"},
-]
 
 KEY_RELIEVERS = ["José Buttó", "Eduard Bazardo", "Daniel Palencia", "Luinder Ávila"]
 
@@ -115,17 +104,15 @@ TEXTS = {
         "season": "Season",
         "predicted_lineup": "Venezuela Predicted Starting Lineup",
         "predicted_sp": "Predicted Starting Pitcher",
-        "pool_d_record": "Pool D Record: 3W-1L",
-        "pool_d_summary": "Pool D Pitching Summary",
-        "key_tendencies": "Key Tendencies from Pool D",
+        "pool_d_record": "Data Source: MLB Statcast (2024-2025 Regular Season)",
+        "key_tendencies": "Team Characteristics",
         "tendency_text": (
-            "Venezuela went 3-1 in Pool D, losing only to the Dominican Republic. "
-            "Their lineup is anchored by Ronald Acuna Jr. at leadoff and Luis Arraez in the #3 hole. "
-            "The top of the order (1-4) was remarkably consistent across all 4 games. "
-            "The lower order rotated between Salvador Perez and William Contreras at C/DH. "
-            "Pitching strategy: short starts (2-5 IP) with heavy bullpen usage — "
-            "Jose Butto appeared in all 4 games. "
-            "Predicted QF starter: Ranger Suarez (LHP), who earned the win vs Netherlands."
+            "Venezuela's lineup is anchored by Ronald Acuña Jr. at leadoff and Luis Arráez in the #2 hole — "
+            "elite speed paired with the best contact hitter in MLB. "
+            "The middle of the order features Salvador Perez and William Contreras providing power. "
+            "Jackson Chourio adds youth and athleticism in center field. "
+            "Andrés Giménez brings left-handed balance and Gold Glove defense at 2B. "
+            "All analysis is based on MLB Statcast data (2024-2025 regular season)."
         ),
         "order": "#", "pos": "Pos", "player": "Player", "note": "Note",
         "team": "Team", "bats": "Bats", "throws": "Throws", "role": "Role",
@@ -166,16 +153,14 @@ TEXTS = {
         ),
         "bullpen_overview": "Bullpen Usage Pattern",
         "bullpen_text": (
-            "Venezuela relied heavily on their bullpen throughout Pool D. "
-            "Jose Butto appeared in all 4 games — he is the high-leverage reliever. "
-            "Eduard Bazardo was used in 3 games as a multi-inning bridge option. "
-            "Daniel Palencia appeared in 2 games. Luinder Avila had one strong outing (2 IP, 0 ER). "
-            "Expect similar usage: short start from Suarez (3-4 IP), "
-            "then Bazardo/Avila to bridge, Butto for high-leverage spots."
+            "Venezuela's bullpen features a mix of power arms and multi-inning options. "
+            "José Buttó (RHP, Giants) is a high-leverage reliever with swing-and-miss stuff. "
+            "Eduard Bazardo (RHP, Mariners) serves as a multi-inning bridge option. "
+            "Daniel Palencia (RHP, Cubs) adds depth with power stuff. "
+            "Luinder Ávila (RHP, Royals) is a replacement call-up. "
+            "All stats below are from MLB Statcast (2024-2025 regular season)."
         ),
         "reliever_profile": "Reliever Profile",
-        "games_col": "Games", "era_col": "ERA", "ip_col": "IP",
-        "pitches_col": "Pitches", "result_col": "Result",
         "sp_label": "Starter", "rp_label": "Reliever",
         "glossary_stats": (
             "- **AVG** = Batting Average\n"
@@ -274,16 +259,15 @@ TEXTS = {
         "season": "シーズン",
         "predicted_lineup": "ベネズエラ 予想スタメン",
         "predicted_sp": "予想先発投手",
-        "pool_d_record": "プールD成績: 3勝1敗",
-        "pool_d_summary": "プールD 投手起用一覧",
-        "key_tendencies": "プールDから見える傾向",
+        "pool_d_record": "データ出典: MLB Statcast（2024-2025レギュラーシーズン）",
+        "key_tendencies": "チームの特徴",
         "tendency_text": (
-            "ベネズエラはプールDを3勝1敗で通過。唯一の敗戦はドミニカ共和国戦。"
-            "打線はアクーニャJr.が1番に固定、アラエスが3番に座る。"
-            "1〜4番は4試合を通じてほぼ固定。下位はペレスとW.コントレラスが捕手/DHで併用。"
-            "投手運用: 先発は2〜5イニングの短いイニングで、ブルペン多投。"
-            "ホセ・ブットは4試合全てに登板。"
-            "準々決勝の予想先発: レンジャー・スアレス（左腕）— オランダ戦で勝利投手。"
+            "ベネズエラ打線はアクーニャJr.のリードオフとアラエスの2番で構成 — "
+            "俊足とMLB最高のコンタクト力の組み合わせ。"
+            "中軸はサルバドール・ペレスとウィリアム・コントレラスのパワー。"
+            "ジャクソン・チュリオがセンターで若さと身体能力を加える。"
+            "アンドレス・ヒメネスは左打者のバランスとゴールドグラブ級の二塁守備。"
+            "全ての分析はMLB Statcastデータ（2024-2025レギュラーシーズン）に基づいています。"
         ),
         "order": "#", "pos": "守備", "player": "選手", "note": "備考",
         "team": "チーム", "bats": "打席", "throws": "投", "role": "役割",
@@ -323,16 +307,14 @@ TEXTS = {
         ),
         "bullpen_overview": "ブルペン運用パターン",
         "bullpen_text": (
-            "ベネズエラはプールDを通じてブルペンを多投。"
-            "ホセ・ブットは4試合全てに登板 — ハイレバレッジの切り札。"
-            "エドゥアルド・バサルドは3試合に登板、イニング跨ぎの中継ぎ。"
-            "ダニエル・パレンシアは2試合登板。ルインデル・アビラは1試合（2回無失点）。"
-            "準々決勝もスアレスの短いイニング（3〜4回）→ バサルド/アビラの中継ぎ → "
-            "ブットがハイレバレッジで登板、という運用が予想される。"
+            "ベネズエラのブルペンはパワーアームとイニング跨ぎが可能な中継ぎで構成。"
+            "ホセ・ブット（右腕、ジャイアンツ）はハイレバレッジの切り札。"
+            "エドゥアルド・バサルド（右腕、マリナーズ）はイニング跨ぎの中継ぎ。"
+            "ダニエル・パレンシア（右腕、カブス）はパワーピッチャー。"
+            "ルインデル・アビラ（右腕、ロイヤルズ）は代替招集。"
+            "以下の成績は全てMLB Statcast（2024-2025レギュラーシーズン）のデータです。"
         ),
         "reliever_profile": "リリーフ投手プロフィール",
-        "games_col": "登板", "era_col": "防御率", "ip_col": "投球回",
-        "pitches_col": "球数", "result_col": "結果",
         "sp_label": "先発", "rp_label": "リリーフ",
         "glossary_stats": (
             "- **AVG（打率）** = 安打数 / 打数\n"
@@ -1715,6 +1697,11 @@ def main():
     # -- Main content --
     st.title(t["main_title"])
     st.caption(t["subtitle"])
+    st.caption(
+        "All statistics: MLB Statcast 2024-2025 Regular Season"
+        if lang == "EN" else
+        "全成績データ: MLB Statcast 2024-2025レギュラーシーズン"
+    )
 
     tab1, tab2, tab3, tab4 = st.tabs([
         f"\U0001F3AF {t['tab1']}",
@@ -1934,24 +1921,8 @@ def main():
             sc3.metric(t["bb_pct"], f"{sp_stats['BB%']:.1f}%")
             sc4.metric(t["whiff_pct"], f"{sp_stats['Whiff%']:.1f}%")
             if sp_stats["Avg Velo"]:
-                st.caption(f"Avg Velo: {sp_stats['Avg Velo']:.1f} mph ({sp_stats['Avg Velo'] * 1.609:.0f} km/h)")
-
-        st.divider()
-
-        # Pool D pitching summary table
-        st.subheader(t["pool_d_summary"])
-        wbc_rows = []
-        for row in WBC_PITCHING_STATS:
-            games = row["games_ja"] if lang == "JA" else row["games"]
-            wbc_rows.append({
-                t["player"]: row["name"],
-                t["games_col"]: games,
-                t["era_col"]: row["era"],
-                t["ip_col"]: row["ip"],
-                t["pitches_col"]: row["pitches"],
-                t["result_col"]: row["result"],
-            })
-        st.dataframe(pd.DataFrame(wbc_rows), use_container_width=True, hide_index=True)
+                velo_label = "平均球速" if lang == "JA" else "Avg Velo"
+                st.caption(f"{velo_label}: {sp_stats['Avg Velo']:.1f} mph ({sp_stats['Avg Velo'] * 1.609:.0f} km/h)")
 
         st.divider()
 
@@ -2032,8 +2003,8 @@ def main():
                 "- Against RHB: the changeup down and away generates whiffs but hangs when elevated. Lay off the low change, punish mistakes up.\n"
                 "- Against LHB: his sinker runs arm-side. Look for pitches over the inner half.\n\n"
                 "**vs Bullpen:**\n"
-                "- Jos\u00e9 Butt\u00f3 appeared in ALL 4 Pool D games \u2014 potential fatigue. If he enters, "
-                "look for diminished velocity and hanging offspeed.\n"
+                "- Jos\u00e9 Butt\u00f3 is their high-leverage reliever. If he enters in a tight spot, "
+                "be patient \u2014 look for hangers when he falls behind in count.\n"
                 "- Bazardo is a multi-inning bridge \u2014 be aggressive early in his outings before he settles."
             )
         else:
@@ -2043,8 +2014,8 @@ def main():
                 "- \u53f3\u6253\u8005: \u5916\u89d2\u4f4e\u3081\u306e\u30c1\u30a7\u30f3\u30b8\u30a2\u30c3\u30d7\u306f\u7a7a\u632f\u308a\u3092\u53d6\u308c\u308b\u304c\u3001\u9ad8\u3081\u306b\u6d6e\u304f\u3068\u6253\u3066\u308b\u3002\u4f4e\u3081\u306f\u898b\u9003\u3057\u3001\u9ad8\u3081\u3092\u72d9\u3046\u3002\n"
                 "- \u5de6\u6253\u8005: \u30b7\u30f3\u30ab\u30fc\u304c\u30a2\u30fc\u30e0\u5074\u306b\u9003\u3052\u308b\u3002\u30a4\u30f3\u30b3\u30fc\u30b9\u306e\u7403\u306b\u72d9\u3044\u3092\u7d5e\u308b\u3002\n\n"
                 "**vs \u30d6\u30eb\u30da\u30f3:**\n"
-                "- \u30db\u30bb\u30fb\u30d6\u30c3\u30c8\u306f\u30d7\u30fc\u30ebD\u51684\u8a66\u5408\u306b\u767b\u677f \u2014 \u75b2\u52b4\u306e\u53ef\u80fd\u6027\u5927\u3002"
-                "\u767b\u677f\u6642\u306f\u7403\u901f\u4f4e\u4e0b\u3084\u5909\u5316\u7403\u306e\u629c\u3051\u3092\u898b\u9003\u3055\u306a\u3044\u3002\n"
+                "- \u30db\u30bb\u30fb\u30d6\u30c3\u30c8\u306f\u30cf\u30a4\u30ec\u30d0\u30ec\u30c3\u30b8\u306e\u5207\u308a\u672d\u3002"
+                "\u767b\u677f\u6642\u306f\u30ab\u30a6\u30f3\u30c8\u4e0d\u5229\u3067\u7518\u304f\u306a\u308b\u7403\u3092\u898b\u9003\u3055\u306a\u3044\u3002\n"
                 "- \u30d0\u30b5\u30eb\u30c9\u306f\u30a4\u30cb\u30f3\u30b0\u8de8\u304e\u306e\u4e2d\u7d99\u304e\u3002\u767b\u677f\u5e8f\u76e4\u306b\u7a4d\u6975\u7684\u306b\u4ed5\u639b\u3051\u308b\u3002"
             )
 
@@ -2080,7 +2051,7 @@ def main():
     # TAB 2: Venezuela Lineup Scouting
     # ===================================================================
     with tab2:
-        season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+        season_label = f"{season} MLB Season (Statcast)" if lang == "EN" else f"{season}年 MLBシーズン（Statcast）"
         st.header(f"\u2694\uFE0F {t['tab2']} — {season_label}")
 
         # Team batting radar chart (using predicted lineup)
@@ -2163,7 +2134,7 @@ def main():
                 plt.close(fig_radar)
                 st.caption("Gray dashed = MLB avg. K% inverted (lower = better)."
                            if lang == "EN" else
-                           "灰色破線=MLB平均。K%は低いほど外側（良い）。")
+                           "灰色の破線 = MLB平均。K%（三振率）は低いほど外側 = 良い。")
 
         st.divider()
 
@@ -2307,7 +2278,7 @@ def main():
                 plt.close(fig_pr)
                 st.caption("Gray dashed = MLB avg (2024). K% is inverted — lower is better."
                            if lang == "EN" else
-                           "\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747(2024)\u3002K%\u306f\u9006\u8ee2\u2014\u4f4e\u3044\u307b\u3069\u5916\u5074\u3002")
+                           "灰色の破線 = MLB平均（2024年）。K%（三振率）は低いほど外側 = 良い。")
 
             # --- 3x3 Zone heatmap (BA + xwOBA) ---
             for z3_metric, z3_title in [("ba", t["ba_heatmap"]), ("xwoba", t["xwoba_heatmap"])]:
@@ -2495,7 +2466,7 @@ def main():
     # TAB 3: Ranger Suarez Analysis
     # ===================================================================
     with tab3:
-        season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+        season_label = f"{season} MLB Season (Statcast)" if lang == "EN" else f"{season}年 MLBシーズン（Statcast）"
         st.header(f"\U0001F3B1 {t['tab3']} — {season_label}")
 
         sp_info = PITCHER_BY_NAME.get(PREDICTED_SP, {})
@@ -2507,7 +2478,7 @@ def main():
         pc1.metric(t["team"], sp_info.get("team", "—"))
         pc2.metric(t["throws"], sp_info.get("throws", "—"))
         pc3.metric(t["role"], t["sp_label"])
-        pc4.metric("MLB ID", sp_info.get("mlbam_id", "—"))
+        pc4.metric("MLB ID" if lang == "EN" else "選手ID", sp_info.get("mlbam_id", "—"))
 
         if sp_data.empty:
             st.warning(t["no_data"])
@@ -2700,30 +2671,12 @@ def main():
     # TAB 4: Bullpen Scouting
     # ===================================================================
     with tab4:
-        season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+        season_label = f"{season} MLB Season (Statcast)" if lang == "EN" else f"{season}年 MLBシーズン（Statcast）"
         st.header(f"\U0001F525 {t['tab4']} — {season_label}")
 
         # Bullpen usage overview
         st.subheader(t["bullpen_overview"])
         st.info(t["bullpen_text"])
-
-        # Pool D usage table (relievers only)
-        reliever_wbc = [r for r in WBC_PITCHING_STATS if r["full"] in KEY_RELIEVERS]
-        if reliever_wbc:
-            rp_rows = []
-            for row in reliever_wbc:
-                games = row["games_ja"] if lang == "JA" else row["games"]
-                rp_rows.append({
-                    t["player"]: _name_display(row["full"], lang),
-                    t["games_col"]: games,
-                    t["era_col"]: row["era"],
-                    t["ip_col"]: row["ip"],
-                    t["pitches_col"]: row["pitches"],
-                    t["result_col"]: row["result"],
-                })
-            st.dataframe(pd.DataFrame(rp_rows), use_container_width=True, hide_index=True)
-
-        st.divider()
 
         # Stats glossary (once, before reliever profiles)
         with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
@@ -2759,7 +2712,8 @@ def main():
             rm3.metric(t["bb_pct"], f"{rp_stats['BB%']:.1f}%")
             rm4.metric(t["whiff_pct"], f"{rp_stats['Whiff%']:.1f}%")
             if rp_stats["Avg Velo"]:
-                st.caption(f"Avg Velo: {rp_stats['Avg Velo']:.1f} mph ({rp_stats['Avg Velo'] * 1.609:.0f} km/h)")
+                velo_label = "平均球速" if lang == "JA" else "Avg Velo"
+                st.caption(f"{velo_label}: {rp_stats['Avg Velo']:.1f} mph ({rp_stats['Avg Velo'] * 1.609:.0f} km/h)")
 
             # Scouting summary
             rp_summary = generate_pitcher_summary(rp_stats, rp_data, pitcher_info, lang)
