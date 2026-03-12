@@ -27,6 +27,21 @@ from players import (
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+POS_LABELS = {
+    "EN": {
+        "C": "Catcher", "1B": "First Base", "2B": "Second Base",
+        "3B": "Third Base", "SS": "Shortstop", "LF": "Left Field",
+        "CF": "Center Field", "RF": "Right Field", "DH": "Designated Hitter",
+        "P": "Pitcher", "SP": "Starting Pitcher", "RP": "Relief Pitcher",
+    },
+    "JA": {
+        "C": "捕手", "1B": "一塁手", "2B": "二塁手",
+        "3B": "三塁手", "SS": "遊撃手", "LF": "左翼手",
+        "CF": "中堅手", "RF": "右翼手", "DH": "指名打者",
+        "P": "投手", "SP": "先発投手", "RP": "救援投手",
+    },
+}
+
 PITCH_LABELS = {
     "FF": "4-Seam", "SI": "Sinker", "FC": "Cutter", "SL": "Slider",
     "CU": "Curveball", "CH": "Changeup", "FS": "Splitter",
@@ -1078,16 +1093,156 @@ def main():
         for p in PREDICTED_LINEUP:
             note = p["note_ja"] if lang == "JA" else p["note_en"]
             player_info = PLAYER_BY_NAME.get(p["name"], {})
+            pos_full = POS_LABELS[lang].get(p["pos"], p["pos"])
+            pos_display = f"{p['pos']} ({pos_full})"
             lineup_rows.append({
                 t["order"]: p["order"],
                 t["player"]: _name_display(p["name"], lang),
-                t["pos"]: p["pos"],
+                t["pos"]: pos_display,
                 t["team"]: player_info.get("team", "—"),
                 t["bats"]: player_info.get("bats", "—"),
                 t["note"]: note,
             })
         lineup_df = pd.DataFrame(lineup_rows)
         st.dataframe(lineup_df, use_container_width=True, hide_index=True)
+
+        # Position abbreviation legend
+        with st.expander(
+            "Position abbreviations" if lang == "EN" else "守備ポジション略称の説明"
+        ):
+            pos_legend = POS_LABELS[lang]
+            pos_order = ["C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH"]
+            for abbr in pos_order:
+                st.markdown(f"- **{abbr}** = {pos_legend[abbr]}")
+
+        # Stats glossary for beginners
+        with st.expander(
+            "Stats glossary (what do AVG, OPS, etc. mean?)" if lang == "EN"
+            else "成績用語の説明（AVG・OPS等の意味）"
+        ):
+            st.markdown(t["glossary_stats"])
+
+        # --- Interactive player cards (click to expand) ---
+        for p in PREDICTED_LINEUP:
+            player_info = PLAYER_BY_NAME.get(p["name"])
+            if not player_info:
+                continue
+            pdf_player = df_bat[df_bat["batter"] == player_info["mlbam_id"]]
+            display_name = _name_display(p["name"], lang)
+            pos_full = POS_LABELS[lang].get(p["pos"], p["pos"])
+            expander_label = f"#{p['order']} {display_name} — {p['pos']} ({pos_full}) | {player_info.get('team', '')}"
+
+            with st.expander(expander_label):
+                if pdf_player.empty:
+                    st.warning(t["no_data"])
+                    continue
+
+                stats = batting_stats(pdf_player)
+
+                # Key metrics row
+                mc1, mc2, mc3, mc4, mc5, mc6 = st.columns(6)
+                mc1.metric("AVG", f"{stats['AVG']:.3f}")
+                mc2.metric("OBP", f"{stats['OBP']:.3f}")
+                mc3.metric("SLG", f"{stats['SLG']:.3f}")
+                mc4.metric("OPS", f"{stats['OPS']:.3f}")
+                mc5.metric("K%", f"{stats['K%']:.1f}%")
+                mc6.metric("BB%", f"{stats['BB%']:.1f}%")
+
+                # Scouting summary
+                summary = generate_player_summary(stats, pdf_player, player_info, lang)
+                st.info(summary)
+
+                # Radar chart (AVG/OBP/SLG/K%/BB% vs MLB avg)
+                _MLB_AVG_EX = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
+                radar_cats_ex = ["AVG", "OBP", "SLG",
+                                 "K%" if lang == "EN" else "\u4e09\u632f\u7387",
+                                 "BB%" if lang == "EN" else "\u56db\u7403\u7387"]
+                player_vals_ex = [
+                    min(stats["AVG"] / 0.300, 1.0),
+                    min(stats["OBP"] / 0.380, 1.0),
+                    min(stats["SLG"] / 0.500, 1.0),
+                    1.0 - min(stats["K%"] / 35.0, 1.0),
+                    min(stats["BB%"] / 15.0, 1.0),
+                ]
+                mlb_vals_ex = [
+                    min(_MLB_AVG_EX["AVG"] / 0.300, 1.0),
+                    min(_MLB_AVG_EX["OBP"] / 0.380, 1.0),
+                    min(_MLB_AVG_EX["SLG"] / 0.500, 1.0),
+                    1.0 - min(_MLB_AVG_EX["K%"] / 35.0, 1.0),
+                    min(_MLB_AVG_EX["BB%"] / 15.0, 1.0),
+                ]
+                raw_vals_ex = [f"{stats['AVG']:.3f}", f"{stats['OBP']:.3f}", f"{stats['SLG']:.3f}",
+                               f"{stats['K%']:.1f}%", f"{stats['BB%']:.1f}%"]
+                angles_ex = np.linspace(0, 2 * np.pi, len(radar_cats_ex), endpoint=False).tolist()
+                p_plot_ex = player_vals_ex + [player_vals_ex[0]]
+                m_plot_ex = mlb_vals_ex + [mlb_vals_ex[0]]
+                a_plot_ex = angles_ex + [angles_ex[0]]
+
+                fig_ex, ax_ex = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
+                                              facecolor="#0e1117")
+                ax_ex.set_facecolor("#0e1117")
+                ax_ex.plot(a_plot_ex, m_plot_ex, "--", linewidth=1.5, color="#888888",
+                           alpha=0.7, label="MLB avg")
+                ax_ex.fill(a_plot_ex, m_plot_ex, alpha=0.08, color="#888888")
+                ax_ex.plot(a_plot_ex, p_plot_ex, "o-", linewidth=2, color="#4fc3f7",
+                           label=display_name)
+                ax_ex.fill(a_plot_ex, p_plot_ex, alpha=0.25, color="#4fc3f7")
+                ax_ex.set_thetagrids(np.degrees(angles_ex), radar_cats_ex, color="white", fontsize=12)
+                ax_ex.set_ylim(0, 1)
+                ax_ex.set_yticks([0.25, 0.5, 0.75, 1.0])
+                ax_ex.set_yticklabels(["", "", "", ""], color="white")
+                ax_ex.grid(color="gray", alpha=0.3)
+                ax_ex.spines["polar"].set_color("gray")
+                for angle_ex, val_ex, raw_ex in zip(angles_ex, player_vals_ex, raw_vals_ex):
+                    ax_ex.annotate(raw_ex, xy=(angle_ex, val_ex), fontsize=12,
+                                   ha="center", va="bottom", color="white", fontweight="bold")
+                leg_ex = ax_ex.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),
+                                       fontsize=12, facecolor="#0e1117", edgecolor="gray")
+                for txt_ex in leg_ex.get_texts():
+                    txt_ex.set_color("white")
+                fig_ex.tight_layout()
+                st.pyplot(fig_ex, use_container_width=True)
+                plt.close(fig_ex)
+                st.caption("Gray dashed = MLB avg (2024). K% is inverted — lower is better."
+                           if lang == "EN" else
+                           "\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747(2024)\u3002K%\u306f\u9006\u8ee2\u2014\u4f4e\u3044\u307b\u3069\u5916\u5074\u3002")
+
+                # 3x3 Zone heatmap
+                fig_z3_ex, ax_z3_ex = _dark_fig(figsize=(6, 5))
+                im_z3_ex = draw_zone_3x3(pdf_player, "ba", t["ba_heatmap"], ax_z3_ex)
+                cb_z3_ex = fig_z3_ex.colorbar(im_z3_ex, ax=ax_z3_ex, fraction=0.046, pad=0.04)
+                cb_z3_ex.ax.tick_params(colors="white")
+                fig_z3_ex.tight_layout()
+                st.pyplot(fig_z3_ex, use_container_width=True)
+                plt.close(fig_z3_ex)
+
+                # Spray chart (LoanDepot Park)
+                fig_sp_ex, ax_sp_ex = plt.subplots(figsize=(5, 5), facecolor="#0e1117")
+                ax_sp_ex.set_facecolor("#0e1117")
+                draw_spray_chart(pdf_player, display_name, ax_sp_ex, stadium="marlins", density=True)
+                fig_sp_ex.tight_layout()
+                st.pyplot(fig_sp_ex, use_container_width=True)
+                plt.close(fig_sp_ex)
+
+                # Platoon splits (compact)
+                st.markdown(f"**{t['platoon']}**")
+                ps_l, ps_r = st.columns(2)
+                for ps_col, ps_throws, ps_label in [(ps_l, "L", t["vs_lhp"]), (ps_r, "R", t["vs_rhp"])]:
+                    with ps_col:
+                        st.markdown(f"**{ps_label}**")
+                        split_ps = pdf_player[pdf_player["p_throws"] == ps_throws]
+                        if split_ps.empty:
+                            st.write(t["no_data"])
+                            continue
+                        ss_ps = batting_stats(split_ps)
+                        st.metric("AVG", f"{ss_ps['AVG']:.3f}")
+                        st.metric("OPS", f"{ss_ps['OPS']:.3f}")
+
+                st.caption(
+                    "See Tab 2 for full details (5x5 zone, batted ball, count matrix, Whiff%)."
+                    if lang == "EN" else
+                    "\u8a73\u7d30\u306fTab 2\uff08\u30be\u30fc\u30f3\u30d2\u30fc\u30c8\u30de\u30c3\u30d7\u30fb\u6253\u7403\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb\u30fb\u30ab\u30a6\u30f3\u30c8\u5225\u30fb\u7a7a\u632f\u7387\uff09\u3092\u53c2\u7167\u3002"
+                )
 
         st.divider()
 
@@ -1230,7 +1385,8 @@ def main():
             st.markdown("---")
             order_label = f"#{lineup_entry['order']}"
             display_name = _name_display(lineup_entry["name"], lang)
-            st.subheader(f"{order_label} {display_name} ({lineup_entry['pos']})")
+            pos_full_t2 = POS_LABELS[lang].get(lineup_entry["pos"], lineup_entry["pos"])
+            st.subheader(f"{order_label} {display_name} — {lineup_entry['pos']} ({pos_full_t2})")
 
             if pdf.empty:
                 st.warning(t["no_data"])
