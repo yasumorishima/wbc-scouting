@@ -2832,46 +2832,45 @@ def main():
 
         if high_k_batters:
             if lang == "EN":
-                st.markdown(f"**High K% batters (target with strikeout pitching):** {', '.join(high_k_batters)}")
+                st.markdown("**High K% batters (target with strikeout pitching):**\n" + "\n".join(f"- {b}" for b in high_k_batters))
             else:
-                st.markdown(f"**\u4e09\u632f\u7387\u306e\u9ad8\u3044\u6253\u8005\uff08\u4e09\u632f\u3092\u72d9\u3048\u308b\uff09:** {', '.join(high_k_batters)}")
+                st.markdown("**三振率の高い打者（三振を狙える）:**\n" + "\n".join(f"- {b}" for b in high_k_batters))
 
         if low_bb_batters:
             if lang == "EN":
-                st.markdown(f"**Aggressive batters (low BB%, expand the zone):** {', '.join(low_bb_batters)}")
+                st.markdown("**Aggressive batters (low BB%, expand the zone):**\n" + "\n".join(f"- {b}" for b in low_bb_batters))
             else:
-                st.markdown(f"**\u7a4d\u6975\u7684\u306a\u6253\u8005\uff08\u56db\u7403\u7387\u304c\u4f4e\u3044\uff1d\u30be\u30fc\u30f3\u5916\u3092\u632f\u308a\u3084\u3059\u3044\uff09:** {', '.join(low_bb_batters)}")
+                st.markdown("**積極的な打者（四球率が低い＝ゾーン外を振りやすい）:**\n" + "\n".join(f"- {b}" for b in low_bb_batters))
 
         if platoon_weak_batters:
             if lang == "EN":
-                st.markdown(f"**Platoon vulnerabilities (exploit with matchups):** {', '.join(platoon_weak_batters)}")
+                st.markdown("**Platoon vulnerabilities (exploit with matchups):**\n" + "\n".join(f"- {b}" for b in platoon_weak_batters))
             else:
-                st.markdown(f"**\u5de6\u53f3\u5dee\u304c\u5927\u304d\u3044\u6253\u8005\uff08\u30de\u30c3\u30c1\u30a2\u30c3\u30d7\u3067\u653b\u3081\u308b\uff09:** {', '.join(platoon_weak_batters)}")
+                st.markdown("**左右差が大きい打者（マッチアップで攻める）:**\n" + "\n".join(f"- {b}" for b in platoon_weak_batters))
 
         # Batting strategy
         st.subheader(t["game_plan_batting"])
         if lang == "EN":
             st.success(
-                "**vs Ranger Su\u00e1rez (LHP starter):**\n"
-                "- Be patient early \u2014 he is a pitch-to-contact pitcher (low K%). "
-                "Force him to throw strikes and wait for the pitch to drive.\n"
-                "- Against RHB: the changeup down and away generates whiffs but hangs when elevated. Lay off the low change, punish mistakes up.\n"
-                "- Against LHB: his sinker runs arm-side. Look for pitches over the inner half.\n\n"
+                "**vs Ranger Suárez (LHP starter):**\n"
+                "- Be patient early — pitch-to-contact pitcher (low K%)\n"
+                "- Force him to throw strikes, wait for the pitch to drive\n"
+                "- **RHB:** Changeup down and away generates whiffs but hangs when elevated → lay off low, punish up\n"
+                "- **LHB:** Sinker runs arm-side → sit on pitches over the inner half\n\n"
                 "**vs Bullpen:**\n"
-                "- Jos\u00e9 Butt\u00f3 is their high-leverage reliever. If he enters in a tight spot, "
-                "be patient \u2014 look for hangers when he falls behind in count.\n"
-                "- Bazardo is a multi-inning bridge \u2014 be aggressive early in his outings before he settles."
+                "- **Buttó:** High-leverage reliever → be patient, look for hangers when he falls behind\n"
+                "- **Bazardo:** Multi-inning bridge → be aggressive early before he settles"
             )
         else:
             st.success(
-                "**vs \u30ec\u30f3\u30b8\u30e3\u30fc\u30fb\u30b9\u30a2\u30ec\u30b9\uff08\u5de6\u8155\u5148\u767a\uff09:**\n"
-                "- \u65e9\u3044\u30ab\u30a6\u30f3\u30c8\u3067\u7121\u7406\u306b\u4ed5\u639b\u3051\u306a\u3044\u3002\u596a\u4e09\u632f\u7387\u304c\u4f4e\u3044\u6295\u624b\u306a\u306e\u3067\u3001\u7518\u3044\u7403\u3092\u5f85\u3064\u3002\n"
-                "- \u53f3\u6253\u8005: \u5916\u89d2\u4f4e\u3081\u306e\u30c1\u30a7\u30f3\u30b8\u30a2\u30c3\u30d7\u306f\u7a7a\u632f\u308a\u3092\u53d6\u308c\u308b\u304c\u3001\u9ad8\u3081\u306b\u6d6e\u304f\u3068\u6253\u3066\u308b\u3002\u4f4e\u3081\u306f\u898b\u9003\u3057\u3001\u9ad8\u3081\u3092\u72d9\u3046\u3002\n"
-                "- \u5de6\u6253\u8005: \u30b7\u30f3\u30ab\u30fc\u304c\u30a2\u30fc\u30e0\u5074\u306b\u9003\u3052\u308b\u3002\u30a4\u30f3\u30b3\u30fc\u30b9\u306e\u7403\u306b\u72d9\u3044\u3092\u7d5e\u308b\u3002\n\n"
-                "**vs \u30d6\u30eb\u30da\u30f3:**\n"
-                "- \u30db\u30bb\u30fb\u30d6\u30c3\u30c8\u306f\u30cf\u30a4\u30ec\u30d0\u30ec\u30c3\u30b8\u306e\u5207\u308a\u672d\u3002"
-                "\u767b\u677f\u6642\u306f\u30ab\u30a6\u30f3\u30c8\u4e0d\u5229\u3067\u7518\u304f\u306a\u308b\u7403\u3092\u898b\u9003\u3055\u306a\u3044\u3002\n"
-                "- \u30d0\u30b5\u30eb\u30c9\u306f\u30a4\u30cb\u30f3\u30b0\u8de8\u304e\u306e\u4e2d\u7d99\u304e\u3002\u767b\u677f\u5e8f\u76e4\u306b\u7a4d\u6975\u7684\u306b\u4ed5\u639b\u3051\u308b\u3002"
+                "**vs レンジャー・スアレス（左腕先発）:**\n"
+                "- 早いカウントで無理に仕掛けない（奪三振率が低い投手）\n"
+                "- 甘い球を待ち、カウントを有利に進める\n"
+                "- **右打者:** 外角低めチェンジアップは空振りを取れるが、高めに浮くと打てる → 低めは見逃し、高めを狙う\n"
+                "- **左打者:** シンカーがアーム側に逃げる → インコースの球に狙いを絞る\n\n"
+                "**vs ブルペン:**\n"
+                "- **ブット:** ハイレバレッジの切り札 → カウント不利で甘くなる球を見逃さない\n"
+                "- **バサルド:** イニング跨ぎの中継ぎ → 登板序盤に積極的に仕掛ける"
             )
 
         # Pitching strategy
@@ -2879,27 +2878,24 @@ def main():
         if lang == "EN":
             st.success(
                 "**Top of Order (1-4):**\n"
-                "- Acu\u00f1a Jr.: Elite talent. Don't let him beat you \u2014 pitch carefully, "
-                "use offspeed away. If he's struggling, still don't give in.\n"
-                "- Arr\u00e1ez: Best contact hitter in MLB. Do NOT give him anything in the zone "
-                "early in counts. Live with walks if necessary.\n"
-                "- Contreras (W.): Power threat. Attack with elevated fastballs and breaking balls down.\n\n"
+                "- **Acuña Jr.:** Elite talent → pitch carefully, use offspeed away, don't give in even if he's struggling\n"
+                "- **Arráez:** MLB's best contact hitter → do NOT throw in the zone early. Live with walks if necessary\n"
+                "- **Contreras (W.):** Power threat → attack with elevated fastballs + breaking balls down\n\n"
                 "**Middle/Bottom (5-9):**\n"
-                "- Torres, Tovar: Can expand the zone \u2014 use slider/sweeper glove-side.\n"
-                "- S. Perez: Aggressive swinger, low BB%. Throw strikes early, expand late.\n"
-                "- Abreu: Solid but not elite \u2014 compete in the zone with good stuff."
+                "- **Torres, Tovar:** Expand the zone → slider/sweeper glove-side\n"
+                "- **S. Perez:** Aggressive swinger (low BB%) → strikes early, expand late\n"
+                "- **Abreu:** Solid but not elite → compete in the zone with best stuff"
             )
         else:
             st.success(
-                "**\u4e0a\u4f4d\u6253\u7dda (1\u301c4\u756a):**\n"
-                "- \u30a2\u30af\u30fc\u30cb\u30e3Jr.: \u30a8\u30ea\u30fc\u30c8\u3002\u30b9\u30c8\u30ec\u30fc\u30c8\u52dd\u8ca0\u3092\u907f\u3051\u3001\u5909\u5316\u7403\u3067\u5916\u3059\u3002\u6253\u305f\u308c\u3066\u3082\u5358\u6253\u306b\u6291\u3048\u308b\u3002\n"
-                "- \u30a2\u30e9\u30a8\u30b9: MLB\u6700\u9ad8\u306e\u30b3\u30f3\u30bf\u30af\u30c8\u30d2\u30c3\u30bf\u30fc\u3002\u5e8f\u76e4\u306b\u30be\u30fc\u30f3\u5185\u3092\u6295\u3052\u306a\u3044\u3002"
-                "\u56db\u7403\u3092\u6050\u308c\u305a\u3001\u6253\u305f\u305b\u3066\u53d6\u308b\u7403\u3092\u5fb9\u5e95\u3002\n"
-                "- W.\u30b3\u30f3\u30c8\u30ec\u30e9\u30b9: \u30d1\u30ef\u30fc\u30d2\u30c3\u30bf\u30fc\u3002\u9ad8\u3081\u306e\u901f\u7403\u3068\u4f4e\u3081\u306e\u5909\u5316\u7403\u3067\u653b\u3081\u308b\u3002\n\n"
-                "**\u4e2d\u8ef8\u301c\u4e0b\u4f4d (5\u301c9\u756a):**\n"
-                "- \u30c8\u30fc\u30ec\u30b9\u3001\u30c8\u30d0\u30fc: \u30be\u30fc\u30f3\u5916\u3092\u632f\u308b\u50be\u5411\u3002\u30b9\u30e9\u30a4\u30c0\u30fc\u30fb\u30b9\u30a6\u30a3\u30fc\u30d1\u30fc\u3067\u30b0\u30e9\u30d6\u5074\u306b\u653b\u3081\u308b\u3002\n"
-                "- S.\u30da\u30ec\u30b9: \u7a4d\u6975\u7684\u6253\u8005\uff08\u56db\u7403\u7387\u4f4e\u3044\uff09\u3002\u5e8f\u76e4\u30b9\u30c8\u30e9\u30a4\u30af\u5148\u884c\u3001\u8ffd\u3044\u8fbc\u3093\u3067\u304b\u3089\u5916\u3059\u3002\n"
-                "- \u30a2\u30d6\u30ec\u30a6: \u5b89\u5b9a\u578b\u3060\u304c\u30a8\u30ea\u30fc\u30c8\u3067\u306f\u306a\u3044\u3002\u7403\u5a01\u3067\u52dd\u8ca0\u3057\u3066\u69cb\u308f\u306a\u3044\u3002"
+                "**上位打線 (1〜4番):**\n"
+                "- **アクーニャJr.:** エリート → ストレート勝負を避け、変化球で外す。打たれても単打に抑える\n"
+                "- **アラエス:** MLB最高のコンタクトヒッター → 序盤にゾーン内を投げない。四球を恐れず打たせて取る\n"
+                "- **W.コントレラス:** パワーヒッター → 高めの速球と低めの変化球で攻める\n\n"
+                "**中軸〜下位 (5〜9番):**\n"
+                "- **トーレス、トバー:** ゾーン外を振る傾向 → スライダー・スウィーパーでグラブ側に攻める\n"
+                "- **S.ペレス:** 積極的打者（四球率低い） → 序盤ストライク先行、追い込んでから外す\n"
+                "- **アブレウ:** 安定型だがエリートではない → 球威で勝負して構わない"
             )
 
     # ===================================================================
