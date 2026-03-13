@@ -175,8 +175,8 @@ TEXTS = {
         "avg_velo": "Avg Velo (mph / km/h)",
         "max_velo": "Max Velo (mph / km/h)",
         "avg_spin": "Avg Spin (rpm)",
-        "h_break": "H-Break (in)",
-        "v_break": "V-Break (in)",
+        "h_break": "Horizontal Break (inches)",
+        "v_break": "Vertical Break (inches)",
         "put_away_pct": "Put Away%",
         "movement_chart": "Pitch Movement Chart",
         "movement_note": "Each dot = 1 pitch. Horizontal axis = glove-side break, vertical = induced vertical break.",
@@ -226,28 +226,34 @@ TEXTS = {
         "spray_caption": "Shows where each batted ball landed on the field",
         "batted_ball": "Batted Ball Profile",
         "density_map": "Hit Density Map",
-        "pull_pct": "Pull%",
+        "pull_pct": "Pull% (to batter's strong side)",
         "cent_pct": "Center%",
-        "oppo_pct": "Oppo%",
-        "gb_pct": "GB%",
-        "ld_pct": "LD%",
-        "fb_pct": "FB%",
-        "avg_ev": "Avg EV (mph)",
-        "avg_la": "Avg LA (deg)",
+        "oppo_pct": "Oppo% (opposite field)",
+        "gb_pct": "GB% (ground balls)",
+        "ld_pct": "LD% (line drives)",
+        "fb_pct": "FB% (fly balls)",
+        "avg_ev": "Avg Exit Velocity (mph)",
+        "avg_la": "Avg Launch Angle (deg)",
         "count_perf": "Performance by Count",
         "count_explain": (
-            "Ahead = ball count > strike count (e.g. 2-1, 3-0). "
-            "Behind = strike count > ball count (e.g. 0-2, 1-2). "
-            "Even = same count (e.g. 1-1, 2-2)."
+            "Counts are written as **Balls-Strikes** (e.g. 3-1 means 3 balls, 1 strike).\n\n"
+            "🟢 **Hitter Ahead** = more balls than strikes (e.g. 2-1, 3-0, 3-1). "
+            "The pitcher must throw strikes to avoid a walk, so the batter can be selective and wait for a good pitch.\n\n"
+            "🔴 **Hitter Behind** = more strikes than balls (e.g. 0-2, 1-2). "
+            "The batter is closer to striking out and must protect the plate, giving the pitcher an advantage.\n\n"
+            "🟡 **Even** = balls and strikes are equal (e.g. 1-1, 2-2). Neither side has a clear advantage."
         ),
-        "ahead": "Hitter Ahead (B > S)",
-        "behind": "Hitter Behind (S > B)",
-        "even": "Even (B = S)",
+        "ahead": "Hitter Ahead (Balls > Strikes)",
+        "behind": "Hitter Behind (Strikes > Balls)",
+        "even": "Even (Balls = Strikes)",
         "danger_zone_xwoba": "xwOBA = Expected Weighted On-Base Average — estimates true hitting quality from exit velocity & launch angle, removing luck. MLB avg ≈ .311. Red = high xwOBA (danger), Blue = low xwOBA (attack)",
         "glossary_batted": (
-            "- **Pull%** = Hit to batter's pull side\n"
-            "- **GB%** = Ground ball rate\n- **LD%** = Line drive rate\n- **FB%** = Fly ball rate\n"
-            "- **Avg EV** = Average exit velocity (mph)\n- **Avg LA** = Average launch angle (degrees)"
+            "- **Pull%** = Percentage of batted balls hit to the batter's strong side (left field for right-handed batters)\n"
+            "- **GB%** = Ground ball rate — balls hit on the ground toward infielders\n"
+            "- **LD%** = Line drive rate — hard, flat hits that often become base hits\n"
+            "- **FB%** = Fly ball rate — balls hit high into the air toward outfielders\n"
+            "- **Avg Exit Velocity (EV)** = How hard the ball comes off the bat (mph). Higher = more power\n"
+            "- **Avg Launch Angle (LA)** = The angle the ball leaves the bat (degrees). 10-25° is ideal for hits"
         ),
         "glossary_pct": "- **K%** = Strikeout rate (strikeouts / plate appearances)\n- **BB%** = Walk rate (walks / plate appearances)",
         "glossary_stats_title": "What do these stats mean?",
@@ -266,12 +272,16 @@ TEXTS = {
             "- **Put Away%** = Strikeout rate on this pitch"
         ),
         "pitch_selection_by_count": "Pitch Selection by Count",
-        "pitch_selection_explain": "Shows what pitch types the pitcher throws in different count situations. Use this to predict what pitch is coming.",
-        "count_ahead_pitcher": "Pitcher Ahead (S > B)",
-        "count_behind_pitcher": "Pitcher Behind (B > S)",
-        "count_even_pitcher": "Even Count (B = S)",
+        "pitch_selection_explain": (
+            "Shows what pitch types the pitcher throws in different count situations. "
+            "When the pitcher is ahead, expect more breaking balls and off-speed pitches. "
+            "When behind, expect more fastballs — the pitcher needs a strike."
+        ),
+        "count_ahead_pitcher": "Pitcher Ahead (Strikes > Balls)",
+        "count_behind_pitcher": "Pitcher Behind (Balls > Strikes)",
+        "count_even_pitcher": "Even Count (Balls = Strikes)",
         "count_first_pitch": "First Pitch (0-0)",
-        "count_two_strikes": "Two Strikes (x-2)",
+        "count_two_strikes": "Two Strikes (0-2, 1-2, 2-2, 3-2 — all counts with 2 strikes)",
         "game_plan": "Game Plan: How Japan Wins",
         "game_plan_batting": "Batting Strategy vs Venezuela Pitching",
         "game_plan_pitching": "Pitching Strategy vs Venezuela Lineup",
@@ -330,8 +340,8 @@ TEXTS = {
         "avg_velo": "平均球速 (mph / km/h)",
         "max_velo": "最高球速 (mph / km/h)",
         "avg_spin": "平均回転数 (rpm)",
-        "h_break": "横変化 (in)",
-        "v_break": "縦変化 (in)",
+        "h_break": "横変化（インチ）",
+        "v_break": "縦変化（インチ）",
         "put_away_pct": "決め球率",
         "movement_chart": "変化量チャート",
         "movement_note": "各ドット = 1球。横軸 = グラブ側への曲がり、縦軸 = 重力に逆らう縦の変化量。",
@@ -380,28 +390,34 @@ TEXTS = {
         "spray_caption": "打球がフィールドのどこに飛んだかの分布図",
         "batted_ball": "打球傾向",
         "density_map": "打球密度マップ",
-        "pull_pct": "プル%（引っ張り）",
-        "cent_pct": "センター%",
-        "oppo_pct": "逆方向%（流し打ち）",
-        "gb_pct": "ゴロ%",
-        "ld_pct": "ライナー%",
-        "fb_pct": "フライ%",
-        "avg_ev": "平均打球速度 (mph)",
-        "avg_la": "平均打球角度 (度)",
+        "pull_pct": "プル%（引っ張り＝自分の力が入る方向への打球）",
+        "cent_pct": "センター%（中堅方向への打球）",
+        "oppo_pct": "逆方向%（流し打ち＝バットに当てて逆側へ運ぶ打球）",
+        "gb_pct": "ゴロ%（地面を転がる打球）",
+        "ld_pct": "ライナー%（低い弾道で鋭く飛ぶ打球）",
+        "fb_pct": "フライ%（高く上がる打球）",
+        "avg_ev": "平均打球速度（mph＝マイル毎時）",
+        "avg_la": "平均打球角度（度）",
         "count_perf": "カウント別パフォーマンス",
         "count_explain": (
-            "有利カウント = ボール数 > ストライク数（例: 2-1, 3-0）。"
-            "不利カウント = ストライク数 > ボール数（例: 0-2, 1-2）。"
-            "イーブン = 同数（例: 1-1, 2-2）。"
+            "カウントは **ボール数-ストライク数** の順で表記します（例: 3-1 = 3ボール1ストライク）。\n\n"
+            "🟢 **打者有利** = ボールがストライクより多い状態（例: 2-1, 3-0, 3-1）。"
+            "投手は四球を避けるためにストライクを投げなければならず、打者は甘い球を待てます。\n\n"
+            "🔴 **打者不利** = ストライクがボールより多い状態（例: 0-2, 1-2）。"
+            "打者は三振が近いため、多少のボール球にも手を出さざるを得ず、投手が有利です。\n\n"
+            "🟡 **イーブン** = ボールとストライクが同数（例: 1-1, 2-2）。どちらにも明確な有利はありません。"
         ),
-        "ahead": "有利カウント (B > S)",
-        "behind": "不利カウント (S > B)",
-        "even": "イーブン (B = S)",
+        "ahead": "打者有利（ボール > ストライク）",
+        "behind": "打者不利（ストライク > ボール）",
+        "even": "イーブン（ボール = ストライク）",
         "danger_zone_xwoba": "xwOBA（期待加重出塁率）= 打球速度と角度から算出した「運を排除した」打撃の質。MLB平均 ≈ .311。赤 = 高xwOBA（危険）、青 = 低xwOBA（攻めるゾーン）",
         "glossary_batted": (
-            "- **プル%** = 引っ張り方向への打球割合\n"
-            "- **ゴロ%** = ゴロの割合\n- **ライナー%** = ライナーの割合\n- **フライ%** = フライの割合\n"
-            "- **平均打球速度** = 打球のスピード（mph）\n- **平均打球角度** = 打球の打ち出し角度"
+            "- **プル%** = 引っ張り方向（右打者なら左翼方向、左打者なら右翼方向）への打球割合\n"
+            "- **ゴロ%** = 地面を転がる打球の割合。内野ゴロになりやすい\n"
+            "- **ライナー%** = 低い弾道で鋭く飛ぶ打球の割合。最もヒットになりやすい打球\n"
+            "- **フライ%** = 高く上がる打球の割合。本塁打か外野フライになりやすい\n"
+            "- **平均打球速度（EV）** = バットから飛び出す打球の速さ（mph＝マイル毎時）。速いほどパワーがある\n"
+            "- **平均打球角度（LA）** = 打球が飛び出す角度。10〜25°がヒットになりやすい最適角度"
         ),
         "glossary_pct": "- **K%（三振率）** = 打席に対する三振の割合\n- **BB%（四球率）** = 打席に対する四球の割合",
         "glossary_stats_title": "これらの指標の意味は？",
@@ -420,12 +436,16 @@ TEXTS = {
             "- **決め球率（Put Away%）** = この球種で三振を奪う割合"
         ),
         "pitch_selection_by_count": "カウント別球種選択",
-        "pitch_selection_explain": "カウント状況ごとに投手がどの球種を投げるかの分布。打席でどの球を予測すべきかの参考に。",
-        "count_ahead_pitcher": "投手有利 (S > B)",
-        "count_behind_pitcher": "投手不利 (B > S)",
-        "count_even_pitcher": "イーブン (B = S)",
+        "pitch_selection_explain": (
+            "カウント状況ごとに投手がどの球種を投げるかの分布です。"
+            "投手有利では変化球・落ちる球が増え、投手不利ではストレート系が増える傾向があります。"
+            "打席でどの球を予測すべきかの参考にしてください。"
+        ),
+        "count_ahead_pitcher": "投手有利（ストライク > ボール）",
+        "count_behind_pitcher": "投手不利（ボール > ストライク）",
+        "count_even_pitcher": "イーブン（ボール = ストライク）",
         "count_first_pitch": "初球 (0-0)",
-        "count_two_strikes": "2ストライク (x-2)",
+        "count_two_strikes": "2ストライク（0-2, 1-2, 2-2, 3-2 — 2ストライクの全カウント）",
         "game_plan": "ゲームプラン: 日本の勝ち方",
         "game_plan_batting": "打撃戦略 — ベネズエラ投手陣攻略",
         "game_plan_pitching": "投手戦略 — ベネズエラ打線対策",
@@ -1124,13 +1144,13 @@ def count_category(balls: int, strikes: int) -> str:
 
 
 def _style_count_type(val, t):
-    """Return CSS for count category cell (subtle background tint)."""
+    """Return CSS for count category cell — clean, corporate-style color coding."""
     if val == t["ahead"]:
-        return "background-color: rgba(76, 175, 80, 0.25); color: #a5d6a7;"  # green — hitter favorable
+        return "background-color: rgba(56, 142, 60, 0.50); color: #e8f5e9; font-weight: bold;"
     elif val == t["behind"]:
-        return "background-color: rgba(244, 67, 54, 0.25); color: #ef9a9a;"  # red — hitter unfavorable
+        return "background-color: rgba(211, 47, 47, 0.50); color: #ffebee; font-weight: bold;"
     elif val == t["even"]:
-        return "background-color: rgba(255, 193, 7, 0.18); color: #ffe082;"  # amber — neutral
+        return "background-color: rgba(245, 166, 35, 0.45); color: #fff8e1; font-weight: bold;"
     return ""
 
 
@@ -2552,7 +2572,9 @@ def main():
                             _t1_ct.style.format({
                                 "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                                 "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-                            }).background_gradient(subset=["OPS"], cmap="RdYlGn"
+                            }).background_gradient(subset=["AVG"], cmap="YlOrRd", vmin=0.150, vmax=0.350
+                            ).background_gradient(subset=["OPS"], cmap="YlOrRd", vmin=0.400, vmax=1.000
+                            ).background_gradient(subset=["K%"], cmap="YlOrRd_r", vmin=10, vmax=40
                             ).map(lambda v: _style_count_type(v, t), subset=[_t1_type_col]),
                             use_container_width=True, hide_index=True,
                         )
@@ -2745,7 +2767,9 @@ def main():
                                 t["k_pct"]: "{:.1f}",
                                 t["bb_pct"]: "{:.1f}",
                                 t["whiff_pct"]: "{:.1f}",
-                            }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"
+                            }).background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.150, vmax=0.350
+                            ).background_gradient(subset=[t["k_pct"]], cmap="YlOrRd", vmin=10, vmax=40
+                            ).background_gradient(subset=[t["whiff_pct"]], cmap="YlOrRd", vmin=15, vmax=45
                             ).map(lambda v: _style_count_type(v, t), subset=[_t1_pit_type_col]),
                             use_container_width=True,
                             hide_index=True,
@@ -3019,7 +3043,8 @@ def main():
         disp_df = sum_df[disp_cols].rename(columns=col_map)
         st.dataframe(
             disp_df.style.format({"AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}", "OPS": "{:.3f}"}
-                                 ).background_gradient(subset=["OPS"], cmap="RdYlGn", vmin=0.500, vmax=0.900),
+                                 ).background_gradient(subset=["AVG"], cmap="YlOrRd", vmin=0.200, vmax=0.320
+                                 ).background_gradient(subset=["OPS"], cmap="YlOrRd", vmin=0.500, vmax=0.900),
             use_container_width=True, hide_index=True, height=min(520, 38 + 35 * len(batter_rows)),
         )
 
@@ -3385,7 +3410,9 @@ def main():
                         count_table.style.format({
                             "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                             "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-                        }).background_gradient(subset=["OPS"], cmap="RdYlGn"
+                        }).background_gradient(subset=["AVG"], cmap="YlOrRd", vmin=0.150, vmax=0.350
+                        ).background_gradient(subset=["OPS"], cmap="YlOrRd", vmin=0.400, vmax=1.000
+                        ).background_gradient(subset=["K%"], cmap="YlOrRd_r", vmin=10, vmax=40
                         ).map(lambda v: _style_count_type(v, t), subset=[_ct_type_col]),
                         use_container_width=True, hide_index=True,
                     )
@@ -3613,7 +3640,9 @@ def main():
                                 t["k_pct"]: "{:.1f}",
                                 t["bb_pct"]: "{:.1f}",
                                 t["whiff_pct"]: "{:.1f}",
-                            }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"
+                            }).background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.150, vmax=0.350
+                            ).background_gradient(subset=[t["k_pct"]], cmap="YlOrRd", vmin=10, vmax=40
+                            ).background_gradient(subset=[t["whiff_pct"]], cmap="YlOrRd", vmin=15, vmax=45
                             ).map(lambda v: _style_count_type(v, t), subset=[_pit_type_col]),
                             use_container_width=True,
                             hide_index=True,
@@ -3685,7 +3714,10 @@ def main():
         rp_disp_df = rp_sum_df[rp_disp_cols].rename(columns=rp_col_map)
         st.dataframe(
             rp_disp_df.style.format({t["opp_avg"]: "{:.3f}", t["k_pct"]: "{:.1f}",
-                                      t["bb_pct"]: "{:.1f}", t["whiff_pct"]: "{:.1f}"}),
+                                      t["bb_pct"]: "{:.1f}", t["whiff_pct"]: "{:.1f}"}
+                                    ).background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.180, vmax=0.300
+                                    ).background_gradient(subset=[t["k_pct"]], cmap="YlOrRd", vmin=15, vmax=35
+                                    ).background_gradient(subset=[t["whiff_pct"]], cmap="YlOrRd", vmin=18, vmax=40),
             use_container_width=True, hide_index=True, height=min(520, 38 + 35 * len(rp_rows)),
         )
 
@@ -3890,7 +3922,9 @@ def main():
                                 t["k_pct"]: "{:.1f}",
                                 t["bb_pct"]: "{:.1f}",
                                 t["whiff_pct"]: "{:.1f}",
-                            }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"
+                            }).background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.150, vmax=0.350
+                            ).background_gradient(subset=[t["k_pct"]], cmap="YlOrRd", vmin=10, vmax=40
+                            ).background_gradient(subset=[t["whiff_pct"]], cmap="YlOrRd", vmin=15, vmax=45
                             ).map(lambda v: _style_count_type(v, t), subset=[_rp_type_col]),
                             use_container_width=True,
                             hide_index=True,
