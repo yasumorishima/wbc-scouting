@@ -55,20 +55,27 @@ PITCH_COLORS = {
 
 PREDICTED_LINEUP = [
     {"order": 1, "name": "Ronald Acuña Jr.", "pos": "RF", "note_en": "Elite speed + power, leadoff threat", "note_ja": "俊足強打のリードオフ"},
-    {"order": 2, "name": "Jackson Chourio", "pos": "CF", "note_en": "Young star, 5-tool talent", "note_ja": "若き5ツールプレイヤー"},
-    {"order": 3, "name": "Luis Arráez", "pos": "1B", "note_en": "Best contact hitter in MLB, batting title contender", "note_ja": "MLB最高のコンタクトヒッター、首位打者候補"},
-    {"order": 4, "name": "Willson Contreras", "pos": "DH", "note_en": "Power bat, veteran catcher as DH", "note_ja": "パワー打者、ベテラン捕手のDH起用"},
-    {"order": 5, "name": "Eugenio Suárez", "pos": "3B", "note_en": "Corner infield utility (3B/1B)", "note_ja": "コーナー内野ユーティリティ（三塁/一塁）"},
-    {"order": 6, "name": "Wilyer Abreu", "pos": "LF", "note_en": "Solid LHB, strong defense", "note_ja": "堅実な左打者、好守備"},
-    {"order": 7, "name": "William Contreras", "pos": "C", "note_en": "Switch hitter, starting catcher", "note_ja": "スイッチヒッター、正捕手"},
-    {"order": 8, "name": "Gleyber Torres", "pos": "2B", "note_en": "Power from middle infield", "note_ja": "中距離パワーの内野手"},
-    {"order": 9, "name": "Andrés Giménez", "pos": "SS", "note_en": "Elite defensive SS, switch hitter", "note_ja": "守備の名手、スイッチヒッター"},
+    {"order": 2, "name": "Luis Arráez", "pos": "1B", "note_en": "Best contact hitter in MLB, batting title contender", "note_ja": "MLB最高のコンタクトヒッター、首位打者候補"},
+    {"order": 3, "name": "Eugenio Suárez", "pos": "3B", "note_en": "Corner infield power (3B), veteran slugger", "note_ja": "コーナー内野のパワーヒッター（三塁）"},
+    {"order": 4, "name": "William Contreras", "pos": "C", "note_en": "Switch hitter, starting catcher", "note_ja": "スイッチヒッター、正捕手"},
+    {"order": 5, "name": "Salvador Perez", "pos": "DH", "note_en": "Veteran power bat, 3x All-Star catcher as DH", "note_ja": "ベテランパワー打者、3度のオールスター捕手のDH起用"},
+    {"order": 6, "name": "Jackson Chourio", "pos": "CF", "note_en": "Young star, 5-tool talent", "note_ja": "若き5ツールプレイヤー"},
+    {"order": 7, "name": "Andrés Giménez", "pos": "2B", "note_en": "Gold Glove defense at 2B, switch hitter", "note_ja": "ゴールドグラブ級二塁守備、スイッチヒッター"},
+    {"order": 8, "name": "Wilyer Abreu", "pos": "LF", "note_en": "Solid LHB, strong defense", "note_ja": "堅実な左打者、好守備"},
+    {"order": 9, "name": "Ezequiel Tovar", "pos": "SS", "note_en": "Athletic SS, power potential", "note_ja": "身体能力の高い遊撃手、パワーも秘める"},
 ]
-# Maikel Garcia — 途中出場（括弧なし＝スタメン外）
+
+# Bench / Pinch-hit candidates
+BENCH_PLAYERS = [
+    {"name": "Willson Contreras", "role_en": "LHB pinch-hit option (3x All-Star catcher)", "role_ja": "左打ちの代打要員（元3度オールスター捕手）"},
+    {"name": "Maikel Garcia", "role_en": "Hot bat off the bench (.286/16HR/23SB, Gold Glove — 4-for-4 vs Dominican Republic)", "role_ja": "途中出場の切り札（.286/16HR/23SB/GG、ドミニカ戦4打数4安打）"},
+    {"name": "Gleyber Torres", "role_en": "Utility infielder (2B/SS), former starter", "role_ja": "ユーティリティ内野手（二塁/遊撃）、元スタメン"},
+    {"name": "Javier Sanoha", "role_en": "Pinch-hit HR in pool play — power off the bench", "role_ja": "1次ラウンドで代打本塁打 — ベンチからのパワー"},
+]
 
 PREDICTED_SP = "Ranger Suárez"
 
-KEY_RELIEVERS = ["José Buttó", "Eduard Bazardo", "Daniel Palencia", "Luinder Ávila"]
+KEY_RELIEVERS = ["José Buttó", "Eduard Bazardo", "Daniel Palencia", "Keider Montero", "Luinder Ávila"]
 
 # MLB average benchmarks (2024 season)
 _MLB_AVG_BAT = {"AVG": .243, "OBP": .312, "SLG": .397, "OPS": .709, "K%": 22.4, "BB%": 8.3, "xwOBA": .311}
@@ -149,9 +156,10 @@ TEXTS = {
         "key_tendencies": "Team Characteristics",
         "tendency_text": (
             "- **Top of Order:** Acuña Jr. (leadoff) + Arráez (#2) — elite speed paired with MLB's best contact hitter\n"
-            "- **Middle Order:** Salvador Perez & William Contreras provide power from the heart of the lineup\n"
-            "- **Youth Factor:** Jackson Chourio — young 5-tool talent in center field\n"
-            "- **LHB Balance:** Andrés Giménez — Gold Glove defense at 2B, switch hitter\n"
+            "- **Middle Order:** E. Suárez (#3) + William Contreras (#4, C) + Salvador Perez (#5, DH) — power-loaded 3-4-5\n"
+            "- **Youth Factor:** Jackson Chourio (#6, CF) — young 5-tool talent dropped to 6th for lineup balance\n"
+            "- **Defense Up the Middle:** Giménez (#7, 2B) + Tovar (#9, SS) — athletic double-play combo\n"
+            "- **Bench Weapons:** Willson Contreras (LHB pinch-hit), Maikel Garcia (4-for-4 vs DR), Torres (utility)\n"
             "- **Data Source:** All analysis based on MLB Statcast (2024-2025 regular season)"
         ),
         "order": "#", "pos": "Pos", "player": "Player", "note": "Note",
@@ -183,19 +191,15 @@ TEXTS = {
         "k_pct": "K%", "bb_pct": "BB%",
         "xwoba": "xwOBA",
         "where_to_attack": "Where to Attack",
-        "attack_text_suarez": (
-            "- **Type:** Soft-contact LHP — sinker + changeup dominant, low K rate\n"
-            "- **vs RHB:** Changeup down and away generates whiffs, but vulnerable when elevated — lay off low, punish up\n"
-            "- **vs LHB:** Sinker runs arm-side — sit on pitches over the inner half\n"
-            "- **Key:** Be patient early. Force him to elevate or fall behind in counts"
-        ),
         "bullpen_overview": "Bullpen Usage Pattern",
         "bullpen_text": (
-            "- **José Buttó** (RHP, Giants) — High-leverage closer, swing-and-miss stuff\n"
+            "- **Daniel Palencia** (RHP, Cubs) — Closer candidate: ERA 2.91, 22 SV, avg 99.6 mph\n"
+            "- **José Buttó** (RHP, Giants) — High-leverage arm, swing-and-miss stuff\n"
             "- **Eduard Bazardo** (RHP, Mariners) — Multi-inning bridge option\n"
-            "- **Daniel Palencia** (RHP, Cubs) — Power arm, depth piece\n"
-            "- **Luinder Ávila** (RHP, Royals) — Replacement call-up\n"
-            "- All stats from MLB Statcast (2024-2025 regular season)"
+            "- **Keider Montero** (RHP, Tigers) — 3 scoreless IP vs Nicaragua in pool play\n"
+            "- **Luinder Ávila** (RHP, Royals) — Depth piece\n"
+            "- ⚠️ **Andrés Machado** (RHP, Orix Buffaloes) — 28 saves in NPB, knows Japanese hitters well. No Statcast data (NPB player)\n"
+            "- All stats from MLB Statcast (2024-2025 regular season) except Machado (NPB)"
         ),
         "reliever_profile": "Reliever Profile",
         "sp_label": "Starter", "rp_label": "Reliever",
@@ -295,9 +299,18 @@ TEXTS = {
         "infield_shift": "Infield",
         "outfield_shift": "Outfield",
         "tab_gameplan": "Game Plan",
-        "gp_inning_1_3": "1st-3rd Inning: vs Suárez (1st Time Through)",
-        "gp_inning_4_5": "4th-5th Inning: vs Suárez (2nd Time Through)",
-        "gp_inning_6_plus": "6th Inning+: Bullpen Phase",
+        "machado_warning": (
+            "⚠️ **Warning: Andrés Machado (RHP, Orix Buffaloes — NPB)**\n\n"
+            "- 28 saves in NPB — knows Japanese hitters' weaknesses from facing them in Japan\n"
+            "- **No Statcast data available** (NPB player — not in MLB database)\n"
+            "- Likely deployed in high-leverage late innings\n"
+            "- NPB/KBO players are excluded from Statcast-based analysis in this app"
+        ),
+        "bench_title": "Bench / Pinch-Hit Candidates",
+        "gp_inning_1_3": "1st-3rd Inning: vs Suárez (Starter)",
+        "gp_inning_4_5": "4th-5th Inning: SP Continuation or Bullpen Transition",
+        "gp_inning_6_plus": "6th Inning+: Bullpen Back (High-Leverage)",
+        "gp_pinch_hit": "Pinch-Hit Matchups (6th Inning+)",
         "gp_batting": "Batting Strategy",
         "gp_pitching": "Pitching Strategy",
         "gp_team_weakness": "Venezuela Team Weaknesses",
@@ -317,9 +330,10 @@ TEXTS = {
         "key_tendencies": "チームの特徴",
         "tendency_text": (
             "- **上位打線:** アクーニャJr.（1番）+ アラエス（2番） — 俊足とMLB最高のコンタクト力\n"
-            "- **中軸:** S.ペレス & W.コントレラス — パワーで打線の核を形成\n"
-            "- **若さ:** ジャクソン・チュリオ — センターの5ツールプレイヤー\n"
-            "- **左打バランス:** A.ヒメネス — ゴールドグラブ級の二塁守備、スイッチヒッター\n"
+            "- **中軸:** E.スアレス（3番）+ W.コントレラス（4番・捕手）+ S.ペレス（5番・DH） — パワー満載の3-4-5番\n"
+            "- **若さ:** チュリオ（6番・CF） — 若き5ツールプレイヤー、打線バランスのため6番に\n"
+            "- **二遊間の守備力:** ヒメネス（7番・2B）+ トバー（9番・SS） — 運動能力の高い二遊間コンビ\n"
+            "- **ベンチの武器:** Willsonコントレラス（左打代打）、M.ガルシア（DR戦4打数4安打）、トーレス（ユーティリティ）\n"
             "- **データソース:** 全分析はMLB Statcast（2024-2025レギュラーシーズン）に基づく"
         ),
         "order": "#", "pos": "守備", "player": "選手", "note": "備考",
@@ -351,19 +365,15 @@ TEXTS = {
         "k_pct": "奪三振率", "bb_pct": "与四球率",
         "xwoba": "xwOBA",
         "where_to_attack": "攻略ポイント",
-        "attack_text_suarez": (
-            "- **タイプ:** ソフトコンタクト型の左腕 — シンカー＋チェンジアップ主体、低い奪三振率\n"
-            "- **対右打者:** 外角低めチェンジアップで空振りを取るが、高めに浮くと打てる — 低めは見逃し、高めを叩く\n"
-            "- **対左打者:** シンカーがアーム側に動く — インコースの球に狙いを絞る\n"
-            "- **攻略の鍵:** 早打ちしない。カウントを有利にして甘い球を待つ"
-        ),
         "bullpen_overview": "ブルペン運用パターン",
         "bullpen_text": (
-            "- **ホセ・ブット**（右腕、ジャイアンツ） — ハイレバレッジの切り札\n"
+            "- **ダニエル・パレンシア**（右腕、カブス） — 抑え候補: 防御率2.91、22セーブ、平均球速99.6mph\n"
+            "- **ホセ・ブット**（右腕、ジャイアンツ） — 勝負どころの切り札\n"
             "- **エドゥアルド・バサルド**（右腕、マリナーズ） — イニング跨ぎの中継ぎ\n"
-            "- **ダニエル・パレンシア**（右腕、カブス） — パワーアーム\n"
-            "- **ルインデル・アビラ**（右腕、ロイヤルズ） — 代替招集\n"
-            "- 成績は全てMLB Statcast（2024-2025レギュラーシーズン）のデータ"
+            "- **ケイダー・モンテロ**（右腕、タイガース） — ニカラグア戦3回無失点の実績\n"
+            "- **ルインデル・アビラ**（右腕、ロイヤルズ） — 控え要員\n"
+            "- ⚠️ **アンドレス・マチャド**（右腕、オリックス・バファローズ） — NPBで28セーブ、日本の打者を熟知。Statcastデータなし（NPB所属）\n"
+            "- 成績は全てMLB Statcast（2024-2025レギュラーシーズン）のデータ（マチャドを除く）"
         ),
         "reliever_profile": "リリーフ投手プロフィール",
         "sp_label": "先発", "rp_label": "リリーフ",
@@ -463,9 +473,18 @@ TEXTS = {
         "infield_shift": "内野",
         "outfield_shift": "外野",
         "tab_gameplan": "ゲームプラン",
-        "gp_inning_1_3": "1〜3回: vs スアレス（1巡目）",
-        "gp_inning_4_5": "4〜5回: vs スアレス（2巡目）",
-        "gp_inning_6_plus": "6回以降: ブルペン戦",
+        "machado_warning": (
+            "⚠️ **注意: アンドレス・マチャド（右腕、オリックス・バファローズ — NPB）**\n\n"
+            "- NPBで28セーブ — 日本の打者の弱点を熟知する「日本キラー」\n"
+            "- **Statcastデータなし**（NPB所属のためMLBデータベースに存在しない）\n"
+            "- 終盤の勝負どころで登板の可能性大\n"
+            "- NPB/KBO所属選手はStatcast分析の対象外です"
+        ),
+        "bench_title": "控え・代打候補",
+        "gp_inning_1_3": "1〜3回: vs スアレス（先発）",
+        "gp_inning_4_5": "4〜5回: 先発続投 or 中継ぎ移行",
+        "gp_inning_6_plus": "6回以降: ブルペン後半（勝ちパターン）",
+        "gp_pinch_hit": "代打マッチアップ（6回以降）",
         "gp_batting": "打撃戦略",
         "gp_pitching": "投球戦略",
         "gp_team_weakness": "ベネズエラ打線の弱点",
@@ -596,6 +615,147 @@ def pitching_stats(df: pd.DataFrame) -> dict:
         "xwOBA": round(xwoba, 3) if not pd.isna(xwoba) else None,
         "Avg Velo": round(avg_velo, 1) if avg_velo and not pd.isna(avg_velo) else None,
     }
+
+
+def generate_sp_pitch_analysis(df: pd.DataFrame, lang: str) -> str:
+    """Generate data-driven pitch usage analysis by count and batter side.
+
+    Returns markdown text showing:
+    - Overall pitch mix with usage %
+    - Count-specific usage (first pitch, ahead, behind, 2-strike)
+    - vs RHB / vs LHB zone + pitch tendencies
+    """
+    if df.empty or "pitch_type" not in df.columns:
+        return ""
+
+    lines = []
+    total = len(df)
+
+    # --- Overall pitch mix ---
+    pt_counts = df["pitch_type"].dropna().value_counts()
+    pt_total = pt_counts.sum()
+    if pt_total == 0:
+        return ""
+
+    mix_items = []
+    for pt, cnt in pt_counts.head(5).items():
+        label = PITCH_LABELS.get(pt, pt)
+        pct = cnt / pt_total * 100
+        pt_df = df[df["pitch_type"] == pt]
+        # whiff rate
+        swing_events = {"hit_into_play", "foul", "swinging_strike",
+                        "swinging_strike_blocked", "foul_tip",
+                        "hit_into_play_score", "hit_into_play_no_out"}
+        swings = pt_df[pt_df["description"].isin(swing_events)]
+        whiffs = pt_df[pt_df["description"].isin({"swinging_strike", "swinging_strike_blocked"})]
+        w_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
+        # batting average against this pitch type
+        pt_evts = pt_df.dropna(subset=["events"])
+        pt_ab = pt_evts[pt_evts["events"].isin(_AB_EVENTS)]
+        pt_hits = pt_evts[pt_evts["events"].isin(_HIT_EVENTS)]
+        ba_str = f".{int(len(pt_hits) / len(pt_ab) * 1000):03d}" if len(pt_ab) >= 10 else "—"
+        if lang == "EN":
+            mix_items.append(f"  - {label}: {pct:.0f}% usage, whiff {w_pct:.0f}%, opp BA {ba_str}")
+        else:
+            mix_items.append(f"  - {label}: 使用率{pct:.0f}%, 空振率{w_pct:.0f}%, 被打率{ba_str}")
+
+    header = "**Pitch Mix (overall):**" if lang == "EN" else "**球種配分（全体）:**"
+    lines.append(header)
+    lines.extend(mix_items)
+
+    # --- Count-specific usage ---
+    if "balls" in df.columns and "strikes" in df.columns:
+        def _count_mix(subset, label_text):
+            if subset.empty:
+                return None
+            sub_counts = subset["pitch_type"].dropna().value_counts()
+            sub_total = sub_counts.sum()
+            if sub_total < 10:
+                return None
+            items = []
+            for pt, cnt in sub_counts.head(3).items():
+                lbl = PITCH_LABELS.get(pt, pt)
+                items.append(f"{lbl} {cnt / sub_total * 100:.0f}%")
+            return f"- **{label_text}:** {', '.join(items)} (n={sub_total})"
+
+        first_pitch = df[(df["balls"] == 0) & (df["strikes"] == 0)]
+        ahead = df[df["strikes"] > df["balls"]]
+        behind = df[df["balls"] > df["strikes"]]
+        two_strikes = df[df["strikes"] == 2]
+
+        count_header = "**Count-specific pitch selection:**" if lang == "EN" else "**カウント別の球種選択:**"
+        lines.append("")
+        lines.append(count_header)
+
+        fp_label = "First pitch (0-0)" if lang == "EN" else "初球 (0-0)"
+        ah_label = "Pitcher ahead (S>B)" if lang == "EN" else "投手有利 (S>B)"
+        bh_label = "Pitcher behind (B>S)" if lang == "EN" else "投手不利 (B>S)"
+        ts_label = "2 strikes" if lang == "EN" else "2ストライク"
+
+        for subset, lbl in [(first_pitch, fp_label), (ahead, ah_label),
+                            (behind, bh_label), (two_strikes, ts_label)]:
+            line = _count_mix(subset, lbl)
+            if line:
+                lines.append(line)
+
+    # --- vs RHB / vs LHB ---
+    if "stand" in df.columns:
+        for side, side_label_en, side_label_ja in [("R", "vs RHB", "vs 右打者"), ("L", "vs LHB", "vs 左打者")]:
+            side_df = df[df["stand"] == side]
+            if len(side_df) < 20:
+                continue
+
+            # Overall opp BA for this side
+            side_evts = side_df.dropna(subset=["events"])
+            side_ab = side_evts[side_evts["events"].isin(_AB_EVENTS)]
+            side_hits = side_evts[side_evts["events"].isin(_HIT_EVENTS)]
+            side_ba = f".{int(len(side_hits) / len(side_ab) * 1000):03d}" if len(side_ab) >= 10 else "—"
+
+            side_pt = side_df["pitch_type"].dropna().value_counts()
+            side_total = side_pt.sum()
+            if side_total < 20:
+                continue
+
+            # Top 3 pitches with usage % and per-pitch opp BA
+            top3 = []
+            for pt, cnt in side_pt.head(3).items():
+                lbl = PITCH_LABELS.get(pt, pt)
+                usage_pct = cnt / side_total * 100
+                # per-pitch BA against this side
+                pt_side = side_df[side_df["pitch_type"] == pt]
+                pt_side_evts = pt_side.dropna(subset=["events"])
+                pt_side_ab = pt_side_evts[pt_side_evts["events"].isin(_AB_EVENTS)]
+                pt_side_hits = pt_side_evts[pt_side_evts["events"].isin(_HIT_EVENTS)]
+                pt_ba = f".{int(len(pt_side_hits) / len(pt_side_ab) * 1000):03d}" if len(pt_side_ab) >= 5 else "—"
+                top3.append(f"{lbl} {usage_pct:.0f}%(BA {pt_ba})")
+
+            # Zone tendency (inner/outer/high/low)
+            zone_text = ""
+            if "plate_x" in side_df.columns and "plate_z" in side_df.columns:
+                valid = side_df.dropna(subset=["plate_x", "plate_z"])
+                if len(valid) >= 20:
+                    if side == "R":
+                        inner = valid[valid["plate_x"] < -0.3]
+                        outer = valid[valid["plate_x"] > 0.3]
+                    else:
+                        inner = valid[valid["plate_x"] > 0.3]
+                        outer = valid[valid["plate_x"] < -0.3]
+                    high = valid[valid["plate_z"] > 2.8]
+                    low = valid[valid["plate_z"] < 2.0]
+                    inner_pct = len(inner) / len(valid) * 100
+                    outer_pct = len(outer) / len(valid) * 100
+                    high_pct = len(high) / len(valid) * 100
+                    low_pct = len(low) / len(valid) * 100
+                    if lang == "EN":
+                        zone_text = f"\n  Zone: inner {inner_pct:.0f}%, outer {outer_pct:.0f}%, high {high_pct:.0f}%, low {low_pct:.0f}%"
+                    else:
+                        zone_text = f"\n  コース: 内角{inner_pct:.0f}%, 外角{outer_pct:.0f}%, 高め{high_pct:.0f}%, 低め{low_pct:.0f}%"
+
+            side_label = side_label_en if lang == "EN" else side_label_ja
+            ba_label = "Opp BA" if lang == "EN" else "被打率"
+            lines.append(f"- **{side_label}** ({ba_label} {side_ba}, n={len(side_ab)}): {', '.join(top3)}{zone_text}")
+
+    return "\n".join(lines)
 
 
 def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
@@ -1439,7 +1599,7 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, la
                 lines.append(f"- **2-strike approach:** High K rate with 2 strikes ({two_strike_stats['K%']:.1f}%). "
                            f"Use best put-away pitch aggressively.")
             else:
-                lines.append(f"- **2ストライク後:** 三振率が高い（{two_strike_stats['K%']:.1f}%）。決め球を大胆に使え")
+                lines.append(f"- **2ストライク後:** 三振率が高い（{two_strike_stats['K%']:.1f}%）。決め球が有効")
         elif two_strike_stats["K%"] < 20:
             if lang == "EN":
                 lines.append(f"- **2-strike approach:** Very hard to strike out ({two_strike_stats['K%']:.1f}% K rate). "
@@ -1648,7 +1808,7 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
                            + ("Aggressive on first pitch can pay off." if fp_strike_pct >= 60 else "Patient approach recommended — he misses often."))
             else:
                 lines.append(f"- **初球:** {label} が {top_fp_pct:.0f}%。ストライク率: {fp_strike_pct:.0f}%。"
-                           + ("初球から積極的に狙える。" if fp_strike_pct >= 60 else "初球は様子を見るのが得策 — ボールになることが多い。"))
+                           + ("ストライク率が高く初球から勝負球が来る傾向。" if fp_strike_pct >= 60 else "初球ボール率が高い。"))
 
     # 5. Platoon recommendation
     vs_l = pdf[pdf["stand"] == "L"]
@@ -1672,7 +1832,7 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
         if lang == "EN":
             return "- Balanced pitcher with no extreme vulnerabilities. Compete at the plate and be ready to adjust."
         else:
-            return "- 極端な弱点のないバランス型投手。打席で積極的に対応し、試合の中で調整せよ。"
+            return "- データ上、極端な弱点は検出されず。バランス型の投手。"
 
     return "\n".join(lines)
 
@@ -2191,6 +2351,24 @@ def main():
             })
         lineup_df = pd.DataFrame(lineup_rows)
         st.dataframe(lineup_df, use_container_width=True, hide_index=True)
+
+        # Machado NPB warning
+        st.warning(t["machado_warning"])
+
+        # Bench / Pinch-hit candidates
+        st.subheader(t["bench_title"])
+        bench_rows = []
+        for bp in BENCH_PLAYERS:
+            bp_info = PLAYER_BY_NAME.get(bp["name"], {})
+            role = bp["role_ja"] if lang == "JA" else bp["role_en"]
+            bench_rows.append({
+                t["player"]: _name_display(bp["name"], lang),
+                t["team"]: bp_info.get("team", "—"),
+                t["bats"]: bp_info.get("bats", "—"),
+                t["note"]: role,
+            })
+        bench_df = pd.DataFrame(bench_rows)
+        st.dataframe(bench_df, use_container_width=True, hide_index=True)
 
         # Glossary — compact, visually distinct from player cards
         _gl_col1, _gl_col2 = st.columns(2)
@@ -2894,8 +3072,7 @@ def main():
                             + "MLB avg K% = 22.4%. These batters are above average — use put-away pitches aggressively with 2 strikes.\n"
                             + "\n".join(f"- {b}" for b in high_k_batters))
             else:
-                st.markdown("**三振率の高い打者 — 三振を狙える:**\n"
-                            + "MLB平均K% = 22.4%。これらの打者は平均以上 — 2ストライク後は決め球を大胆に使う。\n"
+                st.markdown("**三振率がMLB平均（22.4%）以上の打者:**\n"
                             + "\n".join(f"- {b}" for b in high_k_batters))
 
         if low_bb_batters:
@@ -2904,8 +3081,7 @@ def main():
                             + "MLB avg BB% = 8.3%. These batters swing at pitches outside the zone more often — use offspeed away to induce weak contact or chases.\n"
                             + "\n".join(f"- {b}" for b in low_bb_batters))
             else:
-                st.markdown("**積極的な打者 — ゾーン外で勝負:**\n"
-                            + "MLB平均BB% = 8.3%。これらの打者はゾーン外を振りやすい — 変化球を外角に集め、凡打やチェイスを誘う。\n"
+                st.markdown("**四球率がMLB平均（8.3%）未満の打者（ゾーン外を振る傾向）:**\n"
                             + "\n".join(f"- {b}" for b in low_bb_batters))
 
         if platoon_weak_batters:
@@ -2914,8 +3090,7 @@ def main():
                             + "OPS drops 80+ points against one side — use bullpen matchups to target this weakness in key at-bats.\n"
                             + "\n".join(f"- {b}" for b in platoon_weak_batters))
             else:
-                st.markdown("**左右差が大きい打者 — マッチアップで攻める:**\n"
-                            + "一方の投手に対してOPSが80ポイント以上低下 — 勝負所でブルペンの左右を使い分けて弱い側を突く。\n"
+                st.markdown("**左右別OPSに80ポイント以上の差がある打者:**\n"
                             + "\n".join(f"- {b}" for b in platoon_weak_batters))
 
         st.divider()
@@ -2930,24 +3105,20 @@ def main():
         st.markdown(f"**{t['gp_batting']}**")
         if lang == "EN":
             st.success(
-                f"**vs Ranger Suárez (LHP) — 1st time through the order:**\n"
+                f"**vs Ranger Suárez (LHP) — 60-65 pitch target, max 80 (QF rule):**\n"
                 f"- K% {_sp_k}%, BB% {_sp_bb}%, Whiff% {_sp_whiff}%, Avg Velo {_sp_velo} mph\n"
-                f"- Pitch mix: {_pitch_usage_str_en}\n"
-                "- Suárez is freshest here — breaking balls are sharpest. 1st time through order historically sees lowest OPS\n"
-                "- **Strategy:** Be patient, take pitches, identify his release point and pitch mix\n"
-                "- **RHB:** Lay off low changeup — it looks hittable but drops late. Wait for pitches up in the zone\n"
-                "- **LHB:** Sinker runs away from you — protect the outer half, look for pitches arm-side that stay over the plate"
+                "- Pool play: 2 IP only, 3 H, 1 ER. Pitch count determines 2-4 innings"
             )
         else:
             st.success(
-                f"**vs レンジャー・スアレス（左腕） — 1巡目:**\n"
-                f"- 奪三振率 {_sp_k}%, 与四球率 {_sp_bb}%, 空振率 {_sp_whiff}%, 平均球速 {_sp_velo} mph\n"
-                f"- 球種配分: {_pitch_usage_str_ja}\n"
-                "- スアレスは立ち上がりが最も安定 — 変化球のキレが最大。1巡目は統計的にOPSが最も低い\n"
-                "- **戦略:** 早打ちせず球数を投げさせる。リリースポイントと球種パターンを見極める\n"
-                "- **右打者:** 低めチェンジアップを見逃す — 打てそうに見えるが最後に落ちる。高めの甘い球を待つ\n"
-                "- **左打者:** シンカーが外に逃げる — 外角をカバーし、アーム側でプレート上に残る球を狙う"
+                f"**vs レンジャー・スアレス（左腕） — 目安60-65球、最大80球（準々決勝規定）:**\n"
+                f"- 奪三振率 {_sp_k}%（MLB平均22.4%）, 与四球率 {_sp_bb}%, 空振率 {_sp_whiff}%（MLB平均25%）, 平均球速 {_sp_velo} mph\n"
+                "- 1次ラウンドの登板: 2回のみ（球数が多く早期降板）。球数次第で2-4回の幅"
             )
+        # Data-driven pitch analysis from Statcast
+        _gp_sp_analysis = generate_sp_pitch_analysis(_gp_sp_data, lang)
+        if _gp_sp_analysis:
+            st.info(_gp_sp_analysis)
 
         st.markdown(f"**{t['gp_pitching']}**")
 
@@ -2983,49 +3154,63 @@ def main():
             )
         else:
             st.info(
-                "**1巡目: ゲームプランを確立し、ゾーンを攻め、早めにカウントを有利に**\n\n"
-                "**上位打線 (#1-3) — 最警戒:**\n"
-                + _batter_line(_top_order, "JA") + "\n"
-                "- 卓越したコンタクト力と出塁能力。ゾーンを大胆に攻める — ボール先行は出塁を許す\n"
-                "- アクーニャ: インコースを積極的に攻め、腕を伸ばして打たせない\n\n"
-                "**中軸 (#4-6) — パワー警戒:**\n"
-                + _batter_line(_mid_order, "JA") + "\n"
-                "- 一発で流れを変えるパワーヒッター。ストレートでコマンドを確立してから変化球で広げる\n\n"
-                "**下位打線 (#7-9) — 制御された攻め:**\n"
-                + _batter_line(_bot_order, "JA") + "\n"
-                "- 目的を持ってゾーンを攻める。0-1と有利にし、拡大ゾーンを活用する"
+                "**1巡目の打者別データ:**\n\n"
+                "**上位打線 (#1-3):**\n"
+                + _batter_line(_top_order, "JA") + "\n\n"
+                "**中軸 (#4-6):**\n"
+                + _batter_line(_mid_order, "JA") + "\n\n"
+                "**下位打線 (#7-9):**\n"
+                + _batter_line(_bot_order, "JA")
             )
 
         st.divider()
 
-        # ===== Section C: 4-5回 (2nd Time Through Order) =====
+        # ===== Section C: 4-5回 (Bullpen Front — Bridge Relievers) =====
         st.subheader(t["gp_inning_4_5"])
+
+        # Build bridge reliever stats (Bazardo, Montero — inning-eater types)
+        _bridge_names = ["Eduard Bazardo", "Keider Montero"]
+        _bridge_stats_en = []
+        _bridge_stats_ja = []
+        for rp_name in _bridge_names:
+            rp_s = _gp_bp_stats.get(rp_name)
+            if not rp_s:
+                continue
+            velo_str = f"{rp_s['Avg Velo']:.1f}" if rp_s.get("Avg Velo") else "?"
+            _bridge_stats_en.append(
+                f"- **{rp_name}:** K% {rp_s['K%']:.1f}%, BB% {rp_s['BB%']:.1f}%, "
+                f"Whiff% {rp_s['Whiff%']:.1f}%, Velo {velo_str} mph"
+            )
+            _bridge_stats_ja.append(
+                f"- **{_name_display(rp_name, 'JA')}:** 奪三振率 {rp_s['K%']:.1f}%, "
+                f"与四球率 {rp_s['BB%']:.1f}%, 空振率 {rp_s['Whiff%']:.1f}%, 球速 {velo_str} mph"
+            )
 
         st.markdown(f"**{t['gp_batting']}**")
         if lang == "EN":
             st.success(
-                "**vs Suárez — 2nd time through the order:**\n"
-                "- 2nd time through: batters gain familiarity advantage. MLB-wide, pitchers allow ~15-20% higher OPS 2nd time through\n"
-                "- Start hunting specific pitches — if he's relying heavily on sinker/changeup, sit on one and drive it\n"
-                "- Watch for fatigue cues: velocity drop from initial readings, pitch count > 75, breaking ball flattening out\n"
-                f"- Track his velo — if it drops from {_sp_velo} mph baseline, he's tiring. Attack fastballs that lose life\n"
-                "- **RHB:** He may start doubling up on changeup — look for the pattern and sit on it\n"
-                "- **LHB:** Sinker command may loosen — look for pitches that catch the middle of the plate"
+                "**vs Bridge Relievers (Bazardo, Montero, etc.) — first bullpen wave:**\n"
+                + "\n".join(_bridge_stats_en) + "\n"
+                "- Suárez is out after ~3 innings. New pitchers = new timing adjustment needed\n"
+                "- **1st pitch from new pitcher:** Take it. Adjust to the new release point and velocity\n"
+                "- Bridge relievers often lack elite put-away stuff — be aggressive once you have the count\n"
+                "- Montero: 3 scoreless IP vs Nicaragua in pool play — don't underestimate\n"
+                "- **Key:** This is the window to score. Bridge relievers are the weakest link before closers arrive"
             )
         else:
             st.success(
-                "**vs スアレス — 2巡目:**\n"
-                "- 2巡目は打者に慣れの優位性。MLB全体で投手は2巡目にOPSが15-20%上昇する傾向\n"
-                "- 特定の球種を狙い始める — シンカー/チェンジアップに依存しているなら、片方に狙いを絞って叩く\n"
-                f"- 疲労の兆候を見逃さない: 初期の{_sp_velo} mphからの球速低下、球数75球超え、変化球の曲がりの鈍化\n"
-                "- 球速が落ちたらストレート系を積極的に攻める — キレが落ちた直球は格好の的\n"
-                "- **右打者:** チェンジアップを連投してくる可能性 — パターンを読んで狙い撃つ\n"
-                "- **左打者:** シンカーのコマンドが乱れ始める — プレート中央に残る球を逃さない"
+                "**スアレス続投の場合（2巡目）:**\n"
+                "- MLB統計: 2巡目は投手の被OPSが15-20%上昇する傾向\n"
+                f"- スアレスの球種配分: {_pitch_usage_str_ja}\n\n"
+                "**中継ぎ移行の場合:**\n"
+                + "\n".join(_bridge_stats_ja) + "\n"
+                "- モンテロ: 1次ラウンド ニカラグア戦3回無失点\n"
+                "- スアレスの1次ラウンド登板: 2回のみ（球数が多く早期降板）"
             )
 
         st.markdown(f"**{t['gp_pitching']}**")
 
-        # Identify high-K and low-K batters for 2nd time through approach
+        # Identify high-K and low-K batters for mid-game approach
         _high_k_names = [p["name"] for p in PREDICTED_LINEUP
                          if _gp_batter_stats.get(p["name"], {}).get("K%", 0) >= 22.0]
         _patient_names = [p["name"] for p in PREDICTED_LINEUP
@@ -3036,10 +3221,10 @@ def main():
 
         if lang == "EN":
             st.info(
-                "**2nd time through: Venezuela hitters have seen your stuff**\n\n"
-                "- Mix sequences differently from 1st at-bat — don't repeat the same approach\n"
-                "- Change eye levels: if you went fastball-up/slider-down in the 1st AB, reverse it\n"
-                "- Use your 3rd/4th pitch options more — give them a different look\n\n"
+                "**Mid-game pitching: 2nd time through the order for Venezuela**\n\n"
+                "- Venezuela hitters have seen your stuff once — mix sequences differently\n"
+                "- Change eye levels: if you went fastball-up/slider-down in 1st AB, reverse it\n"
+                "- Use 3rd/4th pitch options more — give them a different look\n\n"
                 f"**High-K batters (still attackable):** {_high_k_display}\n"
                 "- These batters still swing and miss — stay aggressive with 2-strike put-away pitches\n\n"
                 f"**Patient batters (careful):** {_patient_display}\n"
@@ -3047,44 +3232,45 @@ def main():
             )
         else:
             st.info(
-                "**2巡目: ベネズエラ打線は既に球を見ている**\n\n"
-                "- 1打席目と違う配球パターンで攻める — 同じアプローチの繰り返しは通用しない\n"
-                "- 目線を変える: 1打席目でストレート高め→スライダー低めなら、2打席目は逆の組み立て\n"
-                "- 3番手・4番手の球種を増やす — 違う見せ方で翻弄する\n\n"
-                f"**高三振率の打者（引き続き攻めれる）:** {_high_k_display}\n"
-                "- これらの打者は空振りが多い — 2ストライク後の決め球を積極的に使い続ける\n\n"
-                f"**選球眼の良い打者（注意）:** {_patient_display}\n"
-                "- カウントを稼ぐのが上手い打者 — ボール先行を避ける。初球ストライクが最重要"
+                "**2巡目のデータ傾向:**\n"
+                "- MLB全体の統計: 2巡目は投手の被OPSが15-20%上昇する傾向\n\n"
+                f"**三振率の高い打者（K% ≥ 22.4% = MLB平均以上）:** {_high_k_display}\n"
+                "- 2ストライク後の決め球がデータ上有効\n\n"
+                f"**四球率の高い打者（BB% ≥ 9.0%）:** {_patient_display}\n"
+                "- 初球ストライク率が重要（MLB統計: 初球ストライク後の被打率は大幅低下）"
             )
 
         st.divider()
 
-        # ===== Section D: 6回+ (Bullpen Phase) =====
+        # ===== Section D: 6回+ (High-Leverage Bullpen) =====
         st.subheader(t["gp_inning_6_plus"])
 
         st.markdown(f"**{t['gp_batting']}**")
 
-        # Build bullpen approach lines
+        # Build high-leverage reliever approach (Palencia closer, Buttó, Machado warning)
+        _hlev_names = ["Daniel Palencia", "José Buttó"]
         _bp_approach_en = []
         _bp_approach_ja = []
-        for rp_name, rp_s in _gp_bp_stats.items():
-            rp_disp_en = rp_name
+        for rp_name in _hlev_names:
+            rp_s = _gp_bp_stats.get(rp_name)
+            if not rp_s:
+                continue
             rp_disp_ja = _name_display(rp_name, "JA")
             velo_str = f"{rp_s['Avg Velo']:.1f}" if rp_s.get("Avg Velo") else "?"
             chase_str = f"{rp_s['Chase%']:.1f}" if rp_s.get("Chase%") else "?"
 
             if rp_s["K%"] >= 25.0:
                 approach_en = "HIGH K-RATE — patient approach, don't chase. Protect with 2 strikes."
-                approach_ja = "高三振率 — 辛抱強く、ボール球を振らない。2ストライク後はファウルで粘る。"
+                approach_ja = "三振率が高い投手"
             elif rp_s["BB%"] >= 10.0:
                 approach_en = "WALKS HITTERS — take pitches early, work the count, draw walks."
-                approach_ja = "四球が多い — 早いカウントは見ていく。カウントを進め、四球を選ぶ。"
+                approach_ja = "四球率が高い投手"
             else:
                 approach_en = "CONTACT PITCHER — jump on early-count fastballs, be aggressive."
-                approach_ja = "コンタクト型 — 早いカウントのストレートを叩く。積極的に。"
+                approach_ja = "三振率・四球率ともに低い投手"
 
             _bp_approach_en.append(
-                f"- **{rp_disp_en}:** K% {rp_s['K%']:.1f}%, Whiff% {rp_s['Whiff%']:.1f}%, "
+                f"- **{rp_name}:** K% {rp_s['K%']:.1f}%, Whiff% {rp_s['Whiff%']:.1f}%, "
                 f"Chase% {chase_str}%, Velo {velo_str} mph — {approach_en}"
             )
             _bp_approach_ja.append(
@@ -3094,21 +3280,21 @@ def main():
 
         if lang == "EN":
             st.success(
-                "**vs Bullpen — reliever-by-reliever approach:**\n"
-                + "\n".join(_bp_approach_en) + "\n\n"
-                "**General bullpen strategy:**\n"
-                "- New pitcher = new timing. Take the first pitch to adjust\n"
-                "- Relievers throw harder but have less command — sit on the fastball\n"
-                "- If they fall behind in the count, look for a hittable fastball"
+                "**vs High-Leverage Arms (Palencia closer, Buttó setup):**\n"
+                + "\n".join(_bp_approach_en) + "\n"
+                "- **Palencia** is the closer candidate: ERA 2.91, 22 SV, avg 99.6 mph — elite velocity\n"
+                "- ⚠️ **Machado (Orix, NPB)** may appear here — no Statcast data. 28 saves in NPB, knows Japanese hitters\n\n"
+                "**High-leverage approach:**\n"
+                "- These are the best arms — shorten your swing, battle\n"
+                "- Against 99+ mph: choke up, focus on contact over power\n"
+                "- If they fall behind in the count, that's your only chance — be ready for a hittable fastball"
             )
         else:
             st.success(
-                "**vs ブルペン — リリーフ投手別アプローチ:**\n"
-                + "\n".join(_bp_approach_ja) + "\n\n"
-                "**ブルペン全般の戦略:**\n"
-                "- 新しい投手 = 新しいタイミング。初球は見てアジャストする\n"
-                "- リリーフは球は速いがコマンドは劣る — ストレート狙い\n"
-                "- カウントが不利になればストレートが来る — それを逃さない"
+                "**vs 勝ちパターン投手:**\n"
+                + "\n".join(_bp_approach_ja) + "\n"
+                "- **パレンシア**: 防御率2.91、22セーブ、平均球速99.6mph\n"
+                "- ⚠️ **マチャド（オリックス・NPB）**: NPBで28セーブ — Statcastデータなし"
             )
 
         st.markdown(f"**{t['gp_pitching']}**")
@@ -3166,21 +3352,54 @@ def main():
                 "**Per-batter scouting (3rd time through or pinch-hit):**\n"
                 + "\n".join(_late_bat_en) + "\n\n"
                 "**Key principles:**\n"
-                "- 3rd time through the order: if starter is still in, have the bullpen warm and ready\n"
                 "- Use platoon advantage aggressively — match handedness for key outs\n"
                 "- Shorten the game: get ground balls for double plays in high-leverage spots"
             )
         else:
             st.info(
-                "**終盤の投球戦略: リードを守る / 試合を締める**\n\n"
-                "**ブルペンで活用すべきプラトーンマッチアップ:**\n"
+                "**終盤の打者別データ:**\n\n"
+                "**左右別OPSに差がある打者:**\n"
                 + _platoon_block + "\n\n"
-                "**打者別スカウティング（3巡目または代打）:**\n"
-                + "\n".join(_late_bat_ja) + "\n\n"
-                "**基本方針:**\n"
-                "- 3巡目: 先発がまだ投げている場合、ブルペンを準備しておく\n"
-                "- プラトーンの優位性を積極的に使う — 重要な打席では投打の左右を合わせる\n"
-                "- 試合を短くする: ハイレバレッジの場面ではゴロを打たせて併殺を狙う"
+                "**打者別成績一覧（3巡目 or 代打想定）:**\n"
+                + "\n".join(_late_bat_ja)
+            )
+
+        # ===== Section E: Pinch-Hit Matchups =====
+        st.divider()
+        st.subheader(t["gp_pinch_hit"])
+
+        # Build pinch-hit candidate lines with stats from data
+        _ph_lines_en = []
+        _ph_lines_ja = []
+        for bp in BENCH_PLAYERS:
+            bp_info = PLAYER_BY_NAME.get(bp["name"])
+            if not bp_info:
+                _ph_lines_en.append(f"- **{bp['name']}:** {bp['role_en']}")
+                _ph_lines_ja.append(f"- **{_name_display(bp['name'], 'JA')}:** {bp['role_ja']}")
+                continue
+            bp_data = df_bat[df_bat["batter"] == bp_info["mlbam_id"]]
+            if bp_data.empty:
+                _ph_lines_en.append(f"- **{bp['name']}:** {bp['role_en']}")
+                _ph_lines_ja.append(f"- **{_name_display(bp['name'], 'JA')}:** {bp['role_ja']}")
+                continue
+            bp_s = batting_stats(bp_data)
+            stat_tag = f"AVG .{int(bp_s['AVG']*1000):03d}, OPS .{int(bp_s['OPS']*1000):03d}, K% {bp_s['K%']:.1f}%"
+            _ph_lines_en.append(f"- **{bp['name']}:** {stat_tag} — {bp['role_en']}")
+            _ph_lines_ja.append(f"- **{_name_display(bp['name'], 'JA')}:** {stat_tag} — {bp['role_ja']}")
+
+        if lang == "EN":
+            st.info(
+                "**Watch for these pinch-hitters from the 6th inning:**\n"
+                + "\n".join(_ph_lines_en) + "\n\n"
+                "**Matchup considerations:**\n"
+                "- Willson Contreras: LHB — expect him vs RHP in high-leverage spots\n"
+                "- Maikel Garcia: Was 4-for-4 vs Dominican Republic — hot bat, dangerous late\n"
+                "- Sanoha: Pool play pinch-hit HR — power threat off the bench"
+            )
+        else:
+            st.info(
+                "**代打候補の成績データ:**\n"
+                + "\n".join(_ph_lines_ja)
             )
 
     # ===================================================================
@@ -3785,9 +4004,11 @@ def main():
                     else:
                         st.write(t["no_data"])
 
-                # Where to attack (belongs with hitting plan)
+                # Where to attack — data-driven pitch analysis
                 st.markdown(f"### {t['where_to_attack']}")
-                st.success(t["attack_text_suarez"])
+                _sp_analysis = generate_sp_pitch_analysis(sp_data, lang)
+                if _sp_analysis:
+                    st.success(_sp_analysis)
 
             # --- Expander 2: Arsenal & Movement ---
             with st.expander("⚾ " + (t["arsenal"] + " & " + t["movement_chart"]), expanded=False):
