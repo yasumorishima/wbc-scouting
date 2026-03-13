@@ -2848,6 +2848,42 @@ def main():
                 with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
                     st.markdown(t["arsenal_explain"])
 
+                # Pitch usage pie chart
+                _t1_pt_counts = sp_data["pitch_type"].dropna().value_counts()
+                if len(_t1_pt_counts) > 0:
+                    _t1_pt_total = _t1_pt_counts.sum()
+                    _t1_pie_labels = [PITCH_LABELS.get(pt, pt) for pt in _t1_pt_counts.index]
+                    _t1_pie_vals = _t1_pt_counts.values
+                    _t1_pie_colors = [PITCH_COLORS.get(pt, "#999999") for pt in _t1_pt_counts.index]
+                    _t1_sl_pie, _t1_cc_pie, _t1_sr_pie = st.columns([1, 2, 1])
+                    with _t1_cc_pie:
+                        _t1_fig_pie, _t1_ax_pie = plt.subplots(figsize=(4, 4), facecolor="#0e1117")
+                        _t1_wedges, _, _ = _t1_ax_pie.pie(
+                            _t1_pie_vals, labels=None, autopct="",
+                            colors=_t1_pie_colors, startangle=90,
+                            wedgeprops=dict(width=0.45, edgecolor="#0e1117", linewidth=1.5),
+                        )
+                        for i, (w, pct_val) in enumerate(zip(_t1_wedges, _t1_pie_vals / _t1_pt_total * 100)):
+                            if pct_val >= 5:
+                                ang = (w.theta2 + w.theta1) / 2
+                                x = 0.75 * np.cos(np.radians(ang))
+                                y = 0.75 * np.sin(np.radians(ang))
+                                _t1_ax_pie.text(x, y, f"{pct_val:.0f}%", ha="center", va="center",
+                                                fontsize=11, color="white", fontweight="bold")
+                        _t1_pie_title = "Pitch Usage" if lang == "EN" else "球種使用率"
+                        _t1_ax_pie.set_title(f"{_t1_pie_title} (n={_t1_pt_total})", color="white",
+                                             fontsize=14, fontweight="bold", pad=10)
+                        _t1_legend = _t1_ax_pie.legend(
+                            _t1_wedges, _t1_pie_labels, loc="center left",
+                            bbox_to_anchor=(1.0, 0.5), fontsize=11,
+                            facecolor="#0e1117", edgecolor="gray",
+                        )
+                        for txt in _t1_legend.get_texts():
+                            txt.set_color("white")
+                        _t1_fig_pie.tight_layout()
+                        st.pyplot(_t1_fig_pie, use_container_width=True)
+                        plt.close(_t1_fig_pie)
+
                 st.divider()
 
                 st.markdown(f"**{t['movement_chart']}**")
@@ -3996,6 +4032,42 @@ def main():
                 with st.expander("Stats glossary" if lang == "EN" else "指標の説明"):
                     st.markdown(t["arsenal_explain"])
 
+                # Pitch usage pie chart
+                _sp_pt_counts = sp_data["pitch_type"].dropna().value_counts()
+                if len(_sp_pt_counts) > 0:
+                    _sp_pt_total = _sp_pt_counts.sum()
+                    _sp_pie_labels = [PITCH_LABELS.get(pt, pt) for pt in _sp_pt_counts.index]
+                    _sp_pie_vals = _sp_pt_counts.values
+                    _sp_pie_colors = [PITCH_COLORS.get(pt, "#999999") for pt in _sp_pt_counts.index]
+                    _sl_pie, _cc_pie, _sr_pie = st.columns([1, 2, 1])
+                    with _cc_pie:
+                        fig_pie_sp, ax_pie_sp = plt.subplots(figsize=(4, 4), facecolor="#0e1117")
+                        wedges, texts, autotexts = ax_pie_sp.pie(
+                            _sp_pie_vals, labels=None, autopct="",
+                            colors=_sp_pie_colors, startangle=90,
+                            wedgeprops=dict(width=0.45, edgecolor="#0e1117", linewidth=1.5),
+                        )
+                        for i, (w, pct_val) in enumerate(zip(wedges, _sp_pie_vals / _sp_pt_total * 100)):
+                            if pct_val >= 5:
+                                ang = (w.theta2 + w.theta1) / 2
+                                x = 0.75 * np.cos(np.radians(ang))
+                                y = 0.75 * np.sin(np.radians(ang))
+                                ax_pie_sp.text(x, y, f"{pct_val:.0f}%", ha="center", va="center",
+                                               fontsize=11, color="white", fontweight="bold")
+                        pie_title = "Pitch Usage" if lang == "EN" else "球種使用率"
+                        ax_pie_sp.set_title(f"{pie_title} (n={_sp_pt_total})", color="white",
+                                            fontsize=14, fontweight="bold", pad=10)
+                        legend = ax_pie_sp.legend(
+                            wedges, _sp_pie_labels, loc="center left",
+                            bbox_to_anchor=(1.0, 0.5), fontsize=11,
+                            facecolor="#0e1117", edgecolor="gray",
+                        )
+                        for txt in legend.get_texts():
+                            txt.set_color("white")
+                        fig_pie_sp.tight_layout()
+                        st.pyplot(fig_pie_sp, use_container_width=True)
+                        plt.close(fig_pie_sp)
+
                 st.divider()
 
                 # Movement chart
@@ -4279,6 +4351,42 @@ def main():
                     st.markdown(f"**{t['arsenal']}**")
                     st.caption(t["arsenal_explain"])
                     st.dataframe(rp_arsenal, use_container_width=True, hide_index=True)
+
+                # Pitch usage pie chart
+                _rp_pt_counts = rp_data["pitch_type"].dropna().value_counts()
+                if len(_rp_pt_counts) > 0:
+                    _rp_pt_total = _rp_pt_counts.sum()
+                    _rp_pie_labels = [PITCH_LABELS.get(pt, pt) for pt in _rp_pt_counts.index]
+                    _rp_pie_vals = _rp_pt_counts.values
+                    _rp_pie_colors = [PITCH_COLORS.get(pt, "#999999") for pt in _rp_pt_counts.index]
+                    _rp_sl_pie, _rp_cc_pie, _rp_sr_pie = st.columns([1, 2, 1])
+                    with _rp_cc_pie:
+                        _rp_fig_pie, _rp_ax_pie = plt.subplots(figsize=(4, 4), facecolor="#0e1117")
+                        _rp_wedges, _, _ = _rp_ax_pie.pie(
+                            _rp_pie_vals, labels=None, autopct="",
+                            colors=_rp_pie_colors, startangle=90,
+                            wedgeprops=dict(width=0.45, edgecolor="#0e1117", linewidth=1.5),
+                        )
+                        for i, (w, pct_val) in enumerate(zip(_rp_wedges, _rp_pie_vals / _rp_pt_total * 100)):
+                            if pct_val >= 5:
+                                ang = (w.theta2 + w.theta1) / 2
+                                x = 0.75 * np.cos(np.radians(ang))
+                                y = 0.75 * np.sin(np.radians(ang))
+                                _rp_ax_pie.text(x, y, f"{pct_val:.0f}%", ha="center", va="center",
+                                                fontsize=11, color="white", fontweight="bold")
+                        _rp_pie_title = "Pitch Usage" if lang == "EN" else "球種使用率"
+                        _rp_ax_pie.set_title(f"{_rp_pie_title} (n={_rp_pt_total})", color="white",
+                                             fontsize=14, fontweight="bold", pad=10)
+                        _rp_legend = _rp_ax_pie.legend(
+                            _rp_wedges, _rp_pie_labels, loc="center left",
+                            bbox_to_anchor=(1.0, 0.5), fontsize=11,
+                            facecolor="#0e1117", edgecolor="gray",
+                        )
+                        for txt in _rp_legend.get_texts():
+                            txt.set_color("white")
+                        _rp_fig_pie.tight_layout()
+                        st.pyplot(_rp_fig_pie, use_container_width=True)
+                        plt.close(_rp_fig_pie)
 
                 st.divider()
 
