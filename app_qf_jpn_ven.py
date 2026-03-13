@@ -294,6 +294,13 @@ TEXTS = {
         "defensive_explain": "Recommended fielder alignment based on batted ball data (spray angle, ground ball rate, pull tendency).",
         "infield_shift": "Infield",
         "outfield_shift": "Outfield",
+        "tab_gameplan": "Game Plan",
+        "gp_inning_1_3": "1st-3rd Inning: vs Suárez (1st Time Through)",
+        "gp_inning_4_5": "4th-5th Inning: vs Suárez (2nd Time Through)",
+        "gp_inning_6_plus": "6th Inning+: Bullpen Phase",
+        "gp_batting": "Batting Strategy",
+        "gp_pitching": "Pitching Strategy",
+        "gp_team_weakness": "Venezuela Team Weaknesses",
     },
     "JA": {
         "page_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
@@ -455,6 +462,13 @@ TEXTS = {
         "defensive_explain": "打球データ（方向・ゴロ率・引っ張り傾向）に基づく守備配置の推奨。",
         "infield_shift": "内野",
         "outfield_shift": "外野",
+        "tab_gameplan": "ゲームプラン",
+        "gp_inning_1_3": "1〜3回: vs スアレス（1巡目）",
+        "gp_inning_4_5": "4〜5回: vs スアレス（2巡目）",
+        "gp_inning_6_plus": "6回以降: ブルペン戦",
+        "gp_batting": "打撃戦略",
+        "gp_pitching": "投球戦略",
+        "gp_team_weakness": "ベネズエラ打線の弱点",
     },
 }
 
@@ -2143,8 +2157,9 @@ def main():
         <span class="hero-badge">📊 {_data_label}</span>
     </div>""", unsafe_allow_html=True)
 
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab_gp, tab2, tab3, tab4 = st.tabs([
         f"🎯 {t['tab1']}",
+        f"📋 {t['tab_gameplan']}",
         f"⚔️ {t['tab2']}",
         f"🎱 {t['tab3']}",
         f"🔥 {t['tab4']}",
@@ -2779,23 +2794,63 @@ def main():
                         st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
                     st.divider()
 
-        st.divider()
+    # ===================================================================
+    # TAB: Game Plan (inning-by-inning strategy)
+    # ===================================================================
+    with tab_gp:
+        st.markdown(f"""<div class="tab-header">
+            <h2>📋 {t['tab_gameplan']}</h2>
+            <p class="tab-sub">{"Inning-by-inning strategy based on MLB Statcast data" if lang == "EN" else "MLB Statcastデータに基づくイニング別攻略"}</p>
+        </div>""", unsafe_allow_html=True)
 
-        # Key tendencies
-        st.subheader(t["key_tendencies"])
-        st.info(t["tendency_text"])
+        # ----- Build all data needed for game plan -----
+        # SP stats
+        _gp_sp_info = PITCHER_BY_NAME.get(PREDICTED_SP, {})
+        _gp_sp_data = df_pit[df_pit["pitcher"] == _gp_sp_info.get("mlbam_id", 0)] if _gp_sp_info else pd.DataFrame()
+        _gp_sp_stats = pitching_stats(_gp_sp_data) if not _gp_sp_data.empty else {}
 
-        st.divider()
+        # SP pitch type usage breakdown
+        _gp_sp_pitch_usage = {}
+        if not _gp_sp_data.empty:
+            _pt_counts = _gp_sp_data["pitch_type"].dropna().value_counts()
+            _pt_total = _pt_counts.sum()
+            if _pt_total > 0:
+                for pt, cnt in _pt_counts.items():
+                    label = PITCH_LABELS.get(pt, pt)
+                    _gp_sp_pitch_usage[label] = round(cnt / _pt_total * 100, 1)
 
-        # ===== GAME PLAN =====
-        st.header(t["game_plan"])
+        _sp_k = f"{_gp_sp_stats.get('K%', 0):.1f}" if _gp_sp_stats else "?"
+        _sp_bb = f"{_gp_sp_stats.get('BB%', 0):.1f}" if _gp_sp_stats else "?"
+        _sp_whiff = f"{_gp_sp_stats.get('Whiff%', 0):.1f}" if _gp_sp_stats else "?"
+        _sp_velo = f"{_gp_sp_stats.get('Avg Velo', 0):.1f}" if _gp_sp_stats.get("Avg Velo") else "?"
 
-        # Team weakness analysis (auto-generated from data)
-        st.subheader(t["team_weaknesses_title"])
-        weakness_points = []
+        # Build bullpen stats
+        _gp_bp_stats = {}
+        for rp_name in KEY_RELIEVERS:
+            rp_info = PITCHER_BY_NAME.get(rp_name, {})
+            if not rp_info:
+                continue
+            rp_data = df_pit[df_pit["pitcher"] == rp_info["mlbam_id"]]
+            if rp_data.empty:
+                continue
+            rp_s = pitching_stats(rp_data)
+            # Chase rate
+            _rp_outside = rp_data[rp_data["zone"].isin([11, 12, 13, 14]) if "zone" in rp_data.columns else pd.Series(dtype=bool)]
+            _rp_chase_pct = 0.0
+            if "zone" in rp_data.columns:
+                _rp_outside = rp_data[rp_data["zone"] >= 11]
+                _swing_events = {"hit_into_play", "foul", "swinging_strike",
+                                 "swinging_strike_blocked", "foul_tip",
+                                 "hit_into_play_score", "hit_into_play_no_out"}
+                _rp_outside_swings = _rp_outside[_rp_outside["description"].isin(_swing_events)]
+                _rp_chase_pct = len(_rp_outside_swings) / len(_rp_outside) * 100 if len(_rp_outside) > 0 else 0.0
+            _gp_bp_stats[rp_name] = {**rp_s, "Chase%": round(_rp_chase_pct, 1)}
+
+        # Batter weakness analysis
         high_k_batters = []
-        platoon_weak_batters = []
         low_bb_batters = []
+        platoon_weak_batters = []
+        _gp_batter_stats = {}
 
         for p in PREDICTED_LINEUP:
             player_info = PLAYER_BY_NAME.get(p["name"])
@@ -2805,6 +2860,7 @@ def main():
             if pdf_gp.empty:
                 continue
             s_gp = batting_stats(pdf_gp)
+            _gp_batter_stats[p["name"]] = s_gp
             display = _name_display(p["name"], lang)
 
             if s_gp["K%"] >= 22.0:
@@ -2812,7 +2868,6 @@ def main():
             if s_gp["BB%"] < 7.0:
                 low_bb_batters.append(f"{display} ({s_gp['BB%']:.1f}%)")
 
-            # Check platoon split
             vs_l_gp = pdf_gp[pdf_gp["p_throws"] == "L"]
             vs_r_gp = pdf_gp[pdf_gp["p_throws"] == "R"]
             if not vs_l_gp.empty and not vs_r_gp.empty:
@@ -2830,119 +2885,302 @@ def main():
                         else:
                             platoon_weak_batters.append(f"{display}\uff08\u53f3\u6295\u624bOPS .{int(sr_gp['OPS']*1000):03d}\uff09")
 
+        # ===== Section A: Team Weakness Summary =====
+        st.subheader(t["gp_team_weakness"])
+
         if high_k_batters:
             if lang == "EN":
                 st.markdown("**High K% batters — target with strikeout pitching:**\n"
-                            + "MLB avg K% = 22.4%. These batters are above average → use put-away pitches aggressively with 2 strikes.\n"
+                            + "MLB avg K% = 22.4%. These batters are above average — use put-away pitches aggressively with 2 strikes.\n"
                             + "\n".join(f"- {b}" for b in high_k_batters))
             else:
                 st.markdown("**三振率の高い打者 — 三振を狙える:**\n"
-                            + "MLB平均K% = 22.4%。これらの打者は平均以上 → 2ストライク後は決め球を大胆に使う。\n"
+                            + "MLB平均K% = 22.4%。これらの打者は平均以上 — 2ストライク後は決め球を大胆に使う。\n"
                             + "\n".join(f"- {b}" for b in high_k_batters))
 
         if low_bb_batters:
             if lang == "EN":
                 st.markdown("**Aggressive batters — expand the zone:**\n"
-                            + "MLB avg BB% = 8.3%. These batters swing at pitches outside the zone more often → use offspeed away to induce weak contact or chases.\n"
+                            + "MLB avg BB% = 8.3%. These batters swing at pitches outside the zone more often — use offspeed away to induce weak contact or chases.\n"
                             + "\n".join(f"- {b}" for b in low_bb_batters))
             else:
                 st.markdown("**積極的な打者 — ゾーン外で勝負:**\n"
-                            + "MLB平均BB% = 8.3%。これらの打者はゾーン外を振りやすい → 変化球を外角に集め、凡打やチェイスを誘う。\n"
+                            + "MLB平均BB% = 8.3%。これらの打者はゾーン外を振りやすい — 変化球を外角に集め、凡打やチェイスを誘う。\n"
                             + "\n".join(f"- {b}" for b in low_bb_batters))
 
         if platoon_weak_batters:
             if lang == "EN":
                 st.markdown("**Platoon vulnerabilities — exploit with matchups:**\n"
-                            + "OPS drops 80+ points against one side → use bullpen matchups to target this weakness in key at-bats.\n"
+                            + "OPS drops 80+ points against one side — use bullpen matchups to target this weakness in key at-bats.\n"
                             + "\n".join(f"- {b}" for b in platoon_weak_batters))
             else:
                 st.markdown("**左右差が大きい打者 — マッチアップで攻める:**\n"
-                            + "一方の投手に対してOPSが80ポイント以上低下 → 勝負所でブルペンの左右を使い分けて弱い側を突く。\n"
+                            + "一方の投手に対してOPSが80ポイント以上低下 — 勝負所でブルペンの左右を使い分けて弱い側を突く。\n"
                             + "\n".join(f"- {b}" for b in platoon_weak_batters))
 
-        # Batting strategy
-        st.subheader(t["game_plan_batting"])
-        # Build SP stats for game plan
-        _gp_sp_info = PITCHER_BY_NAME.get(PREDICTED_SP, {})
-        _gp_sp_data = df_pit[df_pit["pitcher"] == _gp_sp_info.get("mlbam_id", 0)] if _gp_sp_info else pd.DataFrame()
-        _gp_sp_stats = pitching_stats(_gp_sp_data) if not _gp_sp_data.empty else {}
+        st.divider()
 
-        # Build bullpen stats for game plan
-        _gp_bp_lines_en = []
-        _gp_bp_lines_ja = []
-        for rp_name in KEY_RELIEVERS:
-            rp_info = PITCHER_BY_NAME.get(rp_name, {})
-            if not rp_info:
-                continue
-            rp_data = df_pit[df_pit["pitcher"] == rp_info["mlbam_id"]]
-            if rp_data.empty:
-                continue
-            rp_s = pitching_stats(rp_data)
-            rp_display_en = rp_name
-            rp_display_ja = rp_name
-            velo_str = f"{rp_s['Avg Velo']:.1f} mph" if rp_s.get("Avg Velo") else "N/A"
-            _gp_bp_lines_en.append(
-                f"- **{rp_display_en}:** K% {rp_s['K%']:.1f}%, BB% {rp_s['BB%']:.1f}%, "
-                f"Whiff% {rp_s['Whiff%']:.1f}%, Avg Velo {velo_str}"
-            )
-            _gp_bp_lines_ja.append(
-                f"- **{rp_display_ja}:** 奪三振率 {rp_s['K%']:.1f}%, 与四球率 {rp_s['BB%']:.1f}%, "
-                f"空振率 {rp_s['Whiff%']:.1f}%, 平均球速 {velo_str}"
-            )
+        # ===== Section B: 1-3回 (1st Time Through Order) =====
+        st.subheader(t["gp_inning_1_3"])
 
-        _sp_k = f"{_gp_sp_stats.get('K%', 0):.1f}" if _gp_sp_stats else "?"
-        _sp_bb = f"{_gp_sp_stats.get('BB%', 0):.1f}" if _gp_sp_stats else "?"
-        _sp_whiff = f"{_gp_sp_stats.get('Whiff%', 0):.1f}" if _gp_sp_stats else "?"
+        # Pitch usage summary string
+        _pitch_usage_str_en = ", ".join(f"{lbl} {pct}%" for lbl, pct in sorted(_gp_sp_pitch_usage.items(), key=lambda x: -x[1])[:4])
+        _pitch_usage_str_ja = ", ".join(f"{lbl} {pct}%" for lbl, pct in sorted(_gp_sp_pitch_usage.items(), key=lambda x: -x[1])[:4])
 
+        st.markdown(f"**{t['gp_batting']}**")
         if lang == "EN":
             st.success(
-                "**vs Ranger Suárez (LHP starter):**\n"
-                f"- K% {_sp_k}%, BB% {_sp_bb}%, Whiff% {_sp_whiff}% — pitch-to-contact pitcher, low K rate\n"
-                "- Be patient early, force him to throw strikes, wait for the pitch to drive\n"
-                "- **RHB:** Changeup down and away generates whiffs but hangs when elevated → lay off low, punish up\n"
-                "- **LHB:** Sinker runs arm-side → sit on pitches over the inner half\n\n"
-                "**vs Bullpen (key stats):**\n"
-                + "\n".join(_gp_bp_lines_en)
+                f"**vs Ranger Suárez (LHP) — 1st time through the order:**\n"
+                f"- K% {_sp_k}%, BB% {_sp_bb}%, Whiff% {_sp_whiff}%, Avg Velo {_sp_velo} mph\n"
+                f"- Pitch mix: {_pitch_usage_str_en}\n"
+                "- Suárez is freshest here — breaking balls are sharpest. 1st time through order historically sees lowest OPS\n"
+                "- **Strategy:** Be patient, take pitches, identify his release point and pitch mix\n"
+                "- **RHB:** Lay off low changeup — it looks hittable but drops late. Wait for pitches up in the zone\n"
+                "- **LHB:** Sinker runs away from you — protect the outer half, look for pitches arm-side that stay over the plate"
             )
         else:
             st.success(
-                "**vs レンジャー・スアレス（左腕先発）:**\n"
-                f"- 奪三振率 {_sp_k}%, 与四球率 {_sp_bb}%, 空振率 {_sp_whiff}% — ソフトコンタクト型、三振は少ない\n"
-                "- 早いカウントで無理に仕掛けない。甘い球を待ち、カウントを有利に進める\n"
-                "- **右打者:** 外角低めチェンジアップは空振りを取れるが、高めに浮くと打てる → 低めは見逃し、高めを狙う\n"
-                "- **左打者:** シンカーがアーム側に逃げる → インコースの球に狙いを絞る\n\n"
-                "**vs ブルペン（主要成績）:**\n"
-                + "\n".join(_gp_bp_lines_ja)
+                f"**vs レンジャー・スアレス（左腕） — 1巡目:**\n"
+                f"- 奪三振率 {_sp_k}%, 与四球率 {_sp_bb}%, 空振率 {_sp_whiff}%, 平均球速 {_sp_velo} mph\n"
+                f"- 球種配分: {_pitch_usage_str_ja}\n"
+                "- スアレスは立ち上がりが最も安定 — 変化球のキレが最大。1巡目は統計的にOPSが最も低い\n"
+                "- **戦略:** 早打ちせず球数を投げさせる。リリースポイントと球種パターンを見極める\n"
+                "- **右打者:** 低めチェンジアップを見逃す — 打てそうに見えるが最後に落ちる。高めの甘い球を待つ\n"
+                "- **左打者:** シンカーが外に逃げる — 外角をカバーし、アーム側でプレート上に残る球を狙う"
             )
 
-        # Pitching strategy
-        st.subheader(t["game_plan_pitching"])
-        # Build pitching strategy with data
-        _gp_pit_lines_en = []
-        _gp_pit_lines_ja = []
+        st.markdown(f"**{t['gp_pitching']}**")
+
+        # Build 1st-time-through pitching approach by batting order groups
+        _top_order = [p for p in PREDICTED_LINEUP if p["order"] <= 3]
+        _mid_order = [p for p in PREDICTED_LINEUP if 4 <= p["order"] <= 6]
+        _bot_order = [p for p in PREDICTED_LINEUP if p["order"] >= 7]
+
+        def _batter_line(p_list, lang_code):
+            lines = []
+            for p in p_list:
+                dn = _name_display(p["name"], lang_code)
+                s = _gp_batter_stats.get(p["name"], {})
+                if s:
+                    lines.append(f"- **{dn} (#{p['order']}):** AVG .{int(s['AVG']*1000):03d}, K% {s['K%']:.1f}%, BB% {s['BB%']:.1f}%")
+                else:
+                    lines.append(f"- **{dn} (#{p['order']})**")
+            return "\n".join(lines)
+
+        if lang == "EN":
+            st.info(
+                "**1st time through: Establish your game plan, attack the zone, get ahead early**\n\n"
+                "**Top of order (#1-3) — HIGH DANGER:**\n"
+                + _batter_line(_top_order, "EN") + "\n"
+                "- Elite contact and on-base ability. Pound the zone, don't nibble — falling behind gives them free bases\n"
+                "- Acuña: Pitch inside aggressively, don't let him extend his arms\n\n"
+                "**Middle order (#4-6) — POWER THREAT:**\n"
+                + _batter_line(_mid_order, "EN") + "\n"
+                "- Power hitters who can change the game with one swing. Establish fastball command, then expand\n\n"
+                "**Bottom order (#7-9) — CONTROLLED AGGRESSION:**\n"
+                + _batter_line(_bot_order, "EN") + "\n"
+                "- Attack the zone with purpose. Get ahead 0-1 and use the expanded zone to your advantage"
+            )
+        else:
+            st.info(
+                "**1巡目: ゲームプランを確立し、ゾーンを攻め、早めにカウントを有利に**\n\n"
+                "**上位打線 (#1-3) — 最警戒:**\n"
+                + _batter_line(_top_order, "JA") + "\n"
+                "- 卓越したコンタクト力と出塁能力。ゾーンを大胆に攻める — ボール先行は出塁を許す\n"
+                "- アクーニャ: インコースを積極的に攻め、腕を伸ばして打たせない\n\n"
+                "**中軸 (#4-6) — パワー警戒:**\n"
+                + _batter_line(_mid_order, "JA") + "\n"
+                "- 一発で流れを変えるパワーヒッター。ストレートでコマンドを確立してから変化球で広げる\n\n"
+                "**下位打線 (#7-9) — 制御された攻め:**\n"
+                + _batter_line(_bot_order, "JA") + "\n"
+                "- 目的を持ってゾーンを攻める。0-1と有利にし、拡大ゾーンを活用する"
+            )
+
+        st.divider()
+
+        # ===== Section C: 4-5回 (2nd Time Through Order) =====
+        st.subheader(t["gp_inning_4_5"])
+
+        st.markdown(f"**{t['gp_batting']}**")
+        if lang == "EN":
+            st.success(
+                "**vs Suárez — 2nd time through the order:**\n"
+                "- 2nd time through: batters gain familiarity advantage. MLB-wide, pitchers allow ~15-20% higher OPS 2nd time through\n"
+                "- Start hunting specific pitches — if he's relying heavily on sinker/changeup, sit on one and drive it\n"
+                "- Watch for fatigue cues: velocity drop from initial readings, pitch count > 75, breaking ball flattening out\n"
+                f"- Track his velo — if it drops from {_sp_velo} mph baseline, he's tiring. Attack fastballs that lose life\n"
+                "- **RHB:** He may start doubling up on changeup — look for the pattern and sit on it\n"
+                "- **LHB:** Sinker command may loosen — look for pitches that catch the middle of the plate"
+            )
+        else:
+            st.success(
+                "**vs スアレス — 2巡目:**\n"
+                "- 2巡目は打者に慣れの優位性。MLB全体で投手は2巡目にOPSが15-20%上昇する傾向\n"
+                "- 特定の球種を狙い始める — シンカー/チェンジアップに依存しているなら、片方に狙いを絞って叩く\n"
+                f"- 疲労の兆候を見逃さない: 初期の{_sp_velo} mphからの球速低下、球数75球超え、変化球の曲がりの鈍化\n"
+                "- 球速が落ちたらストレート系を積極的に攻める — キレが落ちた直球は格好の的\n"
+                "- **右打者:** チェンジアップを連投してくる可能性 — パターンを読んで狙い撃つ\n"
+                "- **左打者:** シンカーのコマンドが乱れ始める — プレート中央に残る球を逃さない"
+            )
+
+        st.markdown(f"**{t['gp_pitching']}**")
+
+        # Identify high-K and low-K batters for 2nd time through approach
+        _high_k_names = [p["name"] for p in PREDICTED_LINEUP
+                         if _gp_batter_stats.get(p["name"], {}).get("K%", 0) >= 22.0]
+        _patient_names = [p["name"] for p in PREDICTED_LINEUP
+                          if _gp_batter_stats.get(p["name"], {}).get("BB%", 0) >= 9.0]
+
+        _high_k_display = ", ".join(_name_display(n, lang) for n in _high_k_names[:3]) if _high_k_names else "N/A"
+        _patient_display = ", ".join(_name_display(n, lang) for n in _patient_names[:3]) if _patient_names else "N/A"
+
+        if lang == "EN":
+            st.info(
+                "**2nd time through: Venezuela hitters have seen your stuff**\n\n"
+                "- Mix sequences differently from 1st at-bat — don't repeat the same approach\n"
+                "- Change eye levels: if you went fastball-up/slider-down in the 1st AB, reverse it\n"
+                "- Use your 3rd/4th pitch options more — give them a different look\n\n"
+                f"**High-K batters (still attackable):** {_high_k_display}\n"
+                "- These batters still swing and miss — stay aggressive with 2-strike put-away pitches\n\n"
+                f"**Patient batters (careful):** {_patient_display}\n"
+                "- These batters work counts well — don't fall behind. First-pitch strikes are critical"
+            )
+        else:
+            st.info(
+                "**2巡目: ベネズエラ打線は既に球を見ている**\n\n"
+                "- 1打席目と違う配球パターンで攻める — 同じアプローチの繰り返しは通用しない\n"
+                "- 目線を変える: 1打席目でストレート高め→スライダー低めなら、2打席目は逆の組み立て\n"
+                "- 3番手・4番手の球種を増やす — 違う見せ方で翻弄する\n\n"
+                f"**高三振率の打者（引き続き攻めれる）:** {_high_k_display}\n"
+                "- これらの打者は空振りが多い — 2ストライク後の決め球を積極的に使い続ける\n\n"
+                f"**選球眼の良い打者（注意）:** {_patient_display}\n"
+                "- カウントを稼ぐのが上手い打者 — ボール先行を避ける。初球ストライクが最重要"
+            )
+
+        st.divider()
+
+        # ===== Section D: 6回+ (Bullpen Phase) =====
+        st.subheader(t["gp_inning_6_plus"])
+
+        st.markdown(f"**{t['gp_batting']}**")
+
+        # Build bullpen approach lines
+        _bp_approach_en = []
+        _bp_approach_ja = []
+        for rp_name, rp_s in _gp_bp_stats.items():
+            rp_disp_en = rp_name
+            rp_disp_ja = _name_display(rp_name, "JA")
+            velo_str = f"{rp_s['Avg Velo']:.1f}" if rp_s.get("Avg Velo") else "?"
+            chase_str = f"{rp_s['Chase%']:.1f}" if rp_s.get("Chase%") else "?"
+
+            if rp_s["K%"] >= 25.0:
+                approach_en = "HIGH K-RATE — patient approach, don't chase. Protect with 2 strikes."
+                approach_ja = "高三振率 — 辛抱強く、ボール球を振らない。2ストライク後はファウルで粘る。"
+            elif rp_s["BB%"] >= 10.0:
+                approach_en = "WALKS HITTERS — take pitches early, work the count, draw walks."
+                approach_ja = "四球が多い — 早いカウントは見ていく。カウントを進め、四球を選ぶ。"
+            else:
+                approach_en = "CONTACT PITCHER — jump on early-count fastballs, be aggressive."
+                approach_ja = "コンタクト型 — 早いカウントのストレートを叩く。積極的に。"
+
+            _bp_approach_en.append(
+                f"- **{rp_disp_en}:** K% {rp_s['K%']:.1f}%, Whiff% {rp_s['Whiff%']:.1f}%, "
+                f"Chase% {chase_str}%, Velo {velo_str} mph — {approach_en}"
+            )
+            _bp_approach_ja.append(
+                f"- **{rp_disp_ja}:** 奪三振率 {rp_s['K%']:.1f}%, 空振率 {rp_s['Whiff%']:.1f}%, "
+                f"チェイス率 {chase_str}%, 球速 {velo_str} mph — {approach_ja}"
+            )
+
+        if lang == "EN":
+            st.success(
+                "**vs Bullpen — reliever-by-reliever approach:**\n"
+                + "\n".join(_bp_approach_en) + "\n\n"
+                "**General bullpen strategy:**\n"
+                "- New pitcher = new timing. Take the first pitch to adjust\n"
+                "- Relievers throw harder but have less command — sit on the fastball\n"
+                "- If they fall behind in the count, look for a hittable fastball"
+            )
+        else:
+            st.success(
+                "**vs ブルペン — リリーフ投手別アプローチ:**\n"
+                + "\n".join(_bp_approach_ja) + "\n\n"
+                "**ブルペン全般の戦略:**\n"
+                "- 新しい投手 = 新しいタイミング。初球は見てアジャストする\n"
+                "- リリーフは球は速いがコマンドは劣る — ストレート狙い\n"
+                "- カウントが不利になればストレートが来る — それを逃さない"
+            )
+
+        st.markdown(f"**{t['gp_pitching']}**")
+
+        # Build late-game pitching strategy
+        _platoon_targets = []
         for p in PREDICTED_LINEUP:
+            s = _gp_batter_stats.get(p["name"], {})
+            if not s:
+                continue
+            dn = _name_display(p["name"], lang)
             pi = PLAYER_BY_NAME.get(p["name"])
             if not pi:
                 continue
-            pdf_p = df_bat[df_bat["batter"] == pi["mlbam_id"]]
-            if pdf_p.empty:
+            pdf_gp = df_bat[df_bat["batter"] == pi["mlbam_id"]]
+            if pdf_gp.empty:
                 continue
-            s_p = batting_stats(pdf_p)
+            vs_l = pdf_gp[pdf_gp["p_throws"] == "L"]
+            vs_r = pdf_gp[pdf_gp["p_throws"] == "R"]
+            if not vs_l.empty and not vs_r.empty:
+                sl = batting_stats(vs_l)
+                sr = batting_stats(vs_r)
+                if sl["PA"] >= 30 and sr["PA"] >= 30:
+                    if sl["OPS"] < sr["OPS"] - 0.080:
+                        if lang == "EN":
+                            _platoon_targets.append(f"- **{dn}:** Weak vs LHP (OPS .{int(sl['OPS']*1000):03d}) — use left-handed reliever")
+                        else:
+                            _platoon_targets.append(f"- **{dn}:** 左投手に弱い（OPS .{int(sl['OPS']*1000):03d}） — 左腕リリーフを起用")
+                    elif sr["OPS"] < sl["OPS"] - 0.080:
+                        if lang == "EN":
+                            _platoon_targets.append(f"- **{dn}:** Weak vs RHP (OPS .{int(sr['OPS']*1000):03d}) — use right-handed reliever")
+                        else:
+                            _platoon_targets.append(f"- **{dn}:** 右投手に弱い（OPS .{int(sr['OPS']*1000):03d}） — 右腕リリーフを起用")
+
+        _platoon_block = "\n".join(_platoon_targets) if _platoon_targets else ("- No significant platoon splits detected" if lang == "EN" else "- 大きな左右差は検出されず")
+
+        # Per-batter scouting lines for late-game
+        _late_bat_en = []
+        _late_bat_ja = []
+        for p in PREDICTED_LINEUP:
+            s = _gp_batter_stats.get(p["name"], {})
+            if not s:
+                continue
             dn_en = p["name"]
             dn_ja = _name_display(p["name"], "JA")
-            stat_tag = f"AVG .{int(s_p['AVG']*1000):03d}, OPS .{int(s_p['OPS']*1000):03d}, K% {s_p['K%']:.1f}%, BB% {s_p['BB%']:.1f}%"
-            _gp_pit_lines_en.append(f"- **{dn_en} (#{p['order']}):** {stat_tag} → {p['note_en']}")
-            _gp_pit_lines_ja.append(f"- **{dn_ja} (#{p['order']}):** {stat_tag} → {p['note_ja']}")
+            stat_tag = f"AVG .{int(s['AVG']*1000):03d}, OPS .{int(s['OPS']*1000):03d}, K% {s['K%']:.1f}%, BB% {s['BB%']:.1f}%"
+            _late_bat_en.append(f"- **{dn_en} (#{p['order']}):** {stat_tag} — {p['note_en']}")
+            _late_bat_ja.append(f"- **{dn_ja} (#{p['order']}):** {stat_tag} — {p['note_ja']}")
 
         if lang == "EN":
-            st.success(
-                "**Lineup Scouting (data-driven):**\n"
-                + "\n".join(_gp_pit_lines_en)
+            st.info(
+                "**Late-game pitching: Protect the lead / close the game**\n\n"
+                "**Platoon matchups to exploit from the bullpen:**\n"
+                + _platoon_block + "\n\n"
+                "**Per-batter scouting (3rd time through or pinch-hit):**\n"
+                + "\n".join(_late_bat_en) + "\n\n"
+                "**Key principles:**\n"
+                "- 3rd time through the order: if starter is still in, have the bullpen warm and ready\n"
+                "- Use platoon advantage aggressively — match handedness for key outs\n"
+                "- Shorten the game: get ground balls for double plays in high-leverage spots"
             )
         else:
-            st.success(
-                "**打線スカウティング（データ根拠）:**\n"
-                + "\n".join(_gp_pit_lines_ja)
+            st.info(
+                "**終盤の投球戦略: リードを守る / 試合を締める**\n\n"
+                "**ブルペンで活用すべきプラトーンマッチアップ:**\n"
+                + _platoon_block + "\n\n"
+                "**打者別スカウティング（3巡目または代打）:**\n"
+                + "\n".join(_late_bat_ja) + "\n\n"
+                "**基本方針:**\n"
+                "- 3巡目: 先発がまだ投げている場合、ブルペンを準備しておく\n"
+                "- プラトーンの優位性を積極的に使う — 重要な打席では投打の左右を合わせる\n"
+                "- 試合を短くする: ハイレバレッジの場面ではゴロを打たせて併殺を狙う"
             )
 
     # ===================================================================
