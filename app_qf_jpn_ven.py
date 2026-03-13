@@ -3436,7 +3436,7 @@ def main():
             angles_plot = angles + [angles[0]]
             mlb_plot = mlb_vals + [mlb_vals[0]]
 
-            _sl_tr, _cc_tr, _sr_tr = st.columns([1, 4, 1])
+            _sl_tr, _cc_tr, _sr_tr = st.columns([1, 2, 1])
             with _cc_tr:
                 fig_radar, ax_radar = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
                                                    facecolor="#0e1117")
