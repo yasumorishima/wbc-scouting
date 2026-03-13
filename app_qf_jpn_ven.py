@@ -68,9 +68,9 @@ PREDICTED_LINEUP = [
 # Bench / Pinch-hit candidates
 BENCH_PLAYERS = [
     {"name": "Willson Contreras", "role_en": "LHB pinch-hit option (3x All-Star catcher)", "role_ja": "左打ちの代打要員（元3度オールスター捕手）"},
-    {"name": "Maikel Garcia", "role_en": "Hot bat off the bench (.286/16HR/23SB, Gold Glove — 4-for-4 vs Dominican Republic)", "role_ja": "途中出場の切り札（.286/16HR/23SB/GG、ドミニカ戦4打数4安打）"},
+    {"name": "Maikel Garcia", "role_en": "AVG .286, 16 HR, 23 SB, Gold Glove (2024)", "role_ja": "打率.286、16HR、23盗塁、ゴールドグラブ（2024）"},
     {"name": "Gleyber Torres", "role_en": "Utility infielder (2B/SS), former starter", "role_ja": "ユーティリティ内野手（二塁/遊撃）、元スタメン"},
-    {"name": "Javier Sanoha", "role_en": "Pinch-hit HR in pool play — power off the bench", "role_ja": "1次ラウンドで代打本塁打 — ベンチからのパワー"},
+    {"name": "Javier Sanoha", "role_en": "Minor league prospect, limited MLB data", "role_ja": "マイナーリーグ有望株、MLBデータ少"},
 ]
 
 PREDICTED_SP = "Ranger Suárez"
@@ -155,11 +155,11 @@ TEXTS = {
         "pool_d_record": "Data Source: MLB Statcast (2024-2025 Regular Season)",
         "key_tendencies": "Team Characteristics",
         "tendency_text": (
-            "- **Top of Order:** Acuña Jr. (leadoff) + Arráez (#2) — elite speed paired with MLB's best contact hitter\n"
-            "- **Middle Order:** E. Suárez (#3) + William Contreras (#4, C) + Salvador Perez (#5, DH) — power-loaded 3-4-5\n"
-            "- **Youth Factor:** Jackson Chourio (#6, CF) — young 5-tool talent dropped to 6th for lineup balance\n"
-            "- **Defense Up the Middle:** Giménez (#7, 2B) + Tovar (#9, SS) — athletic double-play combo\n"
-            "- **Bench Weapons:** Willson Contreras (LHB pinch-hit), Maikel Garcia (4-for-4 vs DR), Torres (utility)\n"
+            "- **1-2番:** Acuña Jr. (2024 SB 72, SLG .476) + Arráez (2024 AVG .314, K% 8.2%)\n"
+            "- **3-4-5番:** E. Suárez + W. Contreras (2024 OPS .823) + S. Perez (2024 HR 29, RBI 104)\n"
+            "- **6番:** Chourio (2024 AVG .275, 21HR, 26歳以下)\n"
+            "- **7-9番:** Giménez (2024 DRS +9) + Tovar (2024 OPS .718)\n"
+            "- **控え:** Willson Contreras (LHB), Maikel Garcia (.286/16HR), Torres\n"
             "- **Data Source:** All analysis based on MLB Statcast (2024-2025 regular season)"
         ),
         "order": "#", "pos": "Pos", "player": "Player", "note": "Note",
@@ -193,13 +193,13 @@ TEXTS = {
         "where_to_attack": "Where to Attack",
         "bullpen_overview": "Bullpen Usage Pattern",
         "bullpen_text": (
-            "- **Daniel Palencia** (RHP, Cubs) — Closer candidate: ERA 2.91, 22 SV, avg 99.6 mph\n"
-            "- **José Buttó** (RHP, Giants) — High-leverage arm, swing-and-miss stuff\n"
-            "- **Eduard Bazardo** (RHP, Mariners) — Multi-inning bridge option\n"
-            "- **Keider Montero** (RHP, Tigers) — 3 scoreless IP vs Nicaragua in pool play\n"
-            "- **Luinder Ávila** (RHP, Royals) — Depth piece\n"
-            "- ⚠️ **Andrés Machado** (RHP, Orix Buffaloes) — 28 saves in NPB, knows Japanese hitters well. No Statcast data (NPB player)\n"
-            "- All stats from MLB Statcast (2024-2025 regular season) except Machado (NPB)"
+            "- **Daniel Palencia** (RHP, Cubs) — ERA 2.91, 22 SV, avg 99.6 mph, K% 29.3%\n"
+            "- **José Buttó** (RHP, Giants) — ERA 3.42, Whiff% 28.1%, avg 95.2 mph\n"
+            "- **Eduard Bazardo** (RHP, Mariners) — ERA 3.18, 52.1 IP in 2024\n"
+            "- **Keider Montero** (RHP, Tigers) — ERA 4.50, avg 93.8 mph\n"
+            "- **Luinder Ávila** (RHP, Royals) — ERA 4.85, 37 IP in 2024\n"
+            "- ⚠️ **Andrés Machado** (RHP, Orix Buffaloes) — NPB 2024: 28 SV, ERA 1.92. Statcastデータなし\n"
+            "- MLB成績は全て2024-2025レギュラーシーズン（マチャドを除く）"
         ),
         "reliever_profile": "Reliever Profile",
         "sp_label": "Starter", "rp_label": "Reliever",
@@ -300,11 +300,10 @@ TEXTS = {
         "outfield_shift": "Outfield",
         "tab_gameplan": "Game Plan",
         "machado_warning": (
-            "⚠️ **Warning: Andrés Machado (RHP, Orix Buffaloes — NPB)**\n\n"
-            "- 28 saves in NPB — knows Japanese hitters' weaknesses from facing them in Japan\n"
-            "- **No Statcast data available** (NPB player — not in MLB database)\n"
-            "- Likely deployed in high-leverage late innings\n"
-            "- NPB/KBO players are excluded from Statcast-based analysis in this app"
+            "⚠️ **Andrés Machado (RHP, Orix Buffaloes — NPB)**\n\n"
+            "- NPB 2024: 28 SV, ERA 1.92\n"
+            "- **Statcastデータなし**（NPB所属 — MLBデータベースに記録なし）\n"
+            "- NPB/KBO所属選手はStatcastベースの分析対象外"
         ),
         "bench_title": "Bench / Pinch-Hit Candidates",
         "gp_inning_1_3": "1st-3rd Inning: vs Suárez (Starter)",
@@ -329,11 +328,11 @@ TEXTS = {
         "pool_d_record": "データ出典: MLB Statcast（2024-2025レギュラーシーズン）",
         "key_tendencies": "チームの特徴",
         "tendency_text": (
-            "- **上位打線:** アクーニャJr.（1番）+ アラエス（2番） — 俊足とMLB最高のコンタクト力\n"
-            "- **中軸:** E.スアレス（3番）+ W.コントレラス（4番・捕手）+ S.ペレス（5番・DH） — パワー満載の3-4-5番\n"
-            "- **若さ:** チュリオ（6番・CF） — 若き5ツールプレイヤー、打線バランスのため6番に\n"
-            "- **二遊間の守備力:** ヒメネス（7番・2B）+ トバー（9番・SS） — 運動能力の高い二遊間コンビ\n"
-            "- **ベンチの武器:** Willsonコントレラス（左打代打）、M.ガルシア（DR戦4打数4安打）、トーレス（ユーティリティ）\n"
+            "- **1-2番:** アクーニャJr.（2024 盗塁72, SLG .476）+ アラエス（2024 打率.314, 三振率8.2%）\n"
+            "- **3-4-5番:** E.スアレス + W.コントレラス（2024 OPS .823）+ S.ペレス（2024 HR29, 打点104）\n"
+            "- **6番:** チュリオ（2024 打率.275, 21HR, 26歳以下）\n"
+            "- **7-9番:** ヒメネス（2024 DRS +9）+ トバー（2024 OPS .718）\n"
+            "- **控え:** Willsonコントレラス（左打）、M.ガルシア（.286/16HR）、トーレス\n"
             "- **データソース:** 全分析はMLB Statcast（2024-2025レギュラーシーズン）に基づく"
         ),
         "order": "#", "pos": "守備", "player": "選手", "note": "備考",
@@ -367,13 +366,13 @@ TEXTS = {
         "where_to_attack": "攻略ポイント",
         "bullpen_overview": "ブルペン運用パターン",
         "bullpen_text": (
-            "- **ダニエル・パレンシア**（右腕、カブス） — 抑え候補: 防御率2.91、22セーブ、平均球速99.6mph\n"
-            "- **ホセ・ブット**（右腕、ジャイアンツ） — 勝負どころの切り札\n"
-            "- **エドゥアルド・バサルド**（右腕、マリナーズ） — イニング跨ぎの中継ぎ\n"
-            "- **ケイダー・モンテロ**（右腕、タイガース） — ニカラグア戦3回無失点の実績\n"
-            "- **ルインデル・アビラ**（右腕、ロイヤルズ） — 控え要員\n"
-            "- ⚠️ **アンドレス・マチャド**（右腕、オリックス・バファローズ） — NPBで28セーブ、日本の打者を熟知。Statcastデータなし（NPB所属）\n"
-            "- 成績は全てMLB Statcast（2024-2025レギュラーシーズン）のデータ（マチャドを除く）"
+            "- **ダニエル・パレンシア**（右腕、カブス） — 防御率2.91、22セーブ、平均球速99.6mph、奪三振率29.3%\n"
+            "- **ホセ・ブット**（右腕、ジャイアンツ） — 防御率3.42、空振率28.1%、平均球速95.2mph\n"
+            "- **エドゥアルド・バサルド**（右腕、マリナーズ） — 防御率3.18、2024年52.1イニング登板\n"
+            "- **ケイダー・モンテロ**（右腕、タイガース） — 防御率4.50、平均球速93.8mph\n"
+            "- **ルインデル・アビラ**（右腕、ロイヤルズ） — 防御率4.85、2024年37イニング\n"
+            "- ⚠️ **アンドレス・マチャド**（右腕、オリックス） — NPB 2024: 28セーブ、防御率1.92。Statcastデータなし\n"
+            "- MLB成績は全て2024-2025レギュラーシーズン（マチャドを除く）"
         ),
         "reliever_profile": "リリーフ投手プロフィール",
         "sp_label": "先発", "rp_label": "リリーフ",
@@ -474,11 +473,10 @@ TEXTS = {
         "outfield_shift": "外野",
         "tab_gameplan": "ゲームプラン",
         "machado_warning": (
-            "⚠️ **注意: アンドレス・マチャド（右腕、オリックス・バファローズ — NPB）**\n\n"
-            "- NPBで28セーブ — 日本の打者の弱点を熟知する「日本キラー」\n"
+            "⚠️ **アンドレス・マチャド（右腕、オリックス・バファローズ — NPB）**\n\n"
+            "- NPB 2024: 28セーブ、防御率1.92\n"
             "- **Statcastデータなし**（NPB所属のためMLBデータベースに存在しない）\n"
-            "- 終盤の勝負どころで登板の可能性大\n"
-            "- NPB/KBO所属選手はStatcast分析の対象外です"
+            "- NPB/KBO所属選手はStatcast分析の対象外"
         ),
         "bench_title": "控え・代打候補",
         "gp_inning_1_3": "1〜3回: vs スアレス（先発）",
@@ -765,29 +763,29 @@ def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
     weaknesses = []
 
     if stats["SLG"] >= 0.450:
-        strengths.append("elite power (SLG .450+)" if lang == "EN"
-                         else "長打力が非常に高い（SLG .450以上）")
+        strengths.append(f"SLG .{int(stats['SLG']*1000):03d} (MLB avg .397)" if lang == "EN"
+                         else f"長打率 .{int(stats['SLG']*1000):03d}（MLB平均 .397）")
     elif stats["SLG"] >= 0.400:
-        strengths.append("above-average power" if lang == "EN"
-                         else "平均以上の長打力")
+        strengths.append(f"SLG .{int(stats['SLG']*1000):03d} (MLB avg .397)" if lang == "EN"
+                         else f"長打率 .{int(stats['SLG']*1000):03d}（MLB平均 .397）")
     if stats["AVG"] >= 0.300:
-        strengths.append("elite contact ability (AVG .300+)" if lang == "EN"
-                         else "卓越したコンタクト力（打率 .300以上）")
+        strengths.append(f"AVG .{int(stats['AVG']*1000):03d} (MLB avg .248)" if lang == "EN"
+                         else f"打率 .{int(stats['AVG']*1000):03d}（MLB平均 .248）")
     elif stats["AVG"] >= 0.270:
-        strengths.append("solid contact hitter" if lang == "EN"
-                         else "安定したコンタクトヒッター")
+        strengths.append(f"AVG .{int(stats['AVG']*1000):03d} (MLB avg .248)" if lang == "EN"
+                         else f"打率 .{int(stats['AVG']*1000):03d}（MLB平均 .248）")
     if stats["BB%"] >= 10.0:
-        strengths.append(f"patient approach (BB% {stats['BB%']:.1f})" if lang == "EN"
-                         else f"選球眼が良い（四球率 {stats['BB%']:.1f}%）")
+        strengths.append(f"BB% {stats['BB%']:.1f}% (MLB avg 8.3%)" if lang == "EN"
+                         else f"四球率 {stats['BB%']:.1f}%（MLB平均 8.3%）")
     if stats["xwOBA"] and stats["xwOBA"] >= 0.350:
-        strengths.append("high batted-ball quality (xwOBA .350+)" if lang == "EN"
-                         else "打球の質が高い（xwOBA .350以上）")
+        strengths.append(f"xwOBA .{int(stats['xwOBA']*1000):03d} (MLB avg .311)" if lang == "EN"
+                         else f"xwOBA .{int(stats['xwOBA']*1000):03d}（MLB平均 .311）")
     if stats["K%"] >= 25.0:
-        weaknesses.append(f"high strikeout rate (K% {stats['K%']:.1f})" if lang == "EN"
-                          else f"三振が多い（三振率 {stats['K%']:.1f}%）")
+        weaknesses.append(f"K% {stats['K%']:.1f}% (MLB avg 22.4%)" if lang == "EN"
+                          else f"三振率 {stats['K%']:.1f}%（MLB平均 22.4%）")
     elif stats["K%"] >= 20.0:
-        weaknesses.append(f"moderate strikeout rate (K% {stats['K%']:.1f})" if lang == "EN"
-                          else f"三振がやや多い（三振率 {stats['K%']:.1f}%）")
+        weaknesses.append(f"K% {stats['K%']:.1f}% (MLB avg 22.4%)" if lang == "EN"
+                          else f"三振率 {stats['K%']:.1f}%（MLB平均 22.4%）")
 
     vs_l = pdf[pdf["p_throws"] == "L"]
     vs_r = pdf[pdf["p_throws"] == "R"]
@@ -835,29 +833,29 @@ def generate_pitcher_summary(stats: dict, pdf: pd.DataFrame, pitcher: dict,
     weaknesses = []
 
     if stats["K%"] >= 25.0:
-        strengths.append("elite strikeout ability (K% 25+)" if lang == "EN"
-                         else "三振を奪う能力が非常に高い（K% 25以上）")
+        strengths.append(f"K% {stats['K%']:.1f}% (MLB avg 22.4%)" if lang == "EN"
+                         else f"奪三振率 {stats['K%']:.1f}%（MLB平均 22.4%）")
     elif stats["K%"] >= 20.0:
-        strengths.append("above-average strikeout rate" if lang == "EN"
-                         else "平均以上の奪三振率")
+        strengths.append(f"K% {stats['K%']:.1f}% (MLB avg 22.4%)" if lang == "EN"
+                         else f"奪三振率 {stats['K%']:.1f}%（MLB平均 22.4%）")
     if stats["Opp AVG"] <= 0.220:
-        strengths.append(f"excellent contact management (Opp AVG .{int(stats['Opp AVG'] * 1000):03d})" if lang == "EN"
-                         else f"被打率が非常に低い（被打率 .{int(stats['Opp AVG'] * 1000):03d}）")
+        strengths.append(f"Opp AVG .{int(stats['Opp AVG'] * 1000):03d} (MLB avg .248)" if lang == "EN"
+                         else f"被打率 .{int(stats['Opp AVG'] * 1000):03d}（MLB平均 .248）")
     if stats["xwOBA"] and stats["xwOBA"] <= 0.290:
-        strengths.append("low batted-ball quality allowed (xwOBA .290-)" if lang == "EN"
-                         else "打球の質を抑えている（被xwOBA .290以下）")
+        strengths.append(f"xwOBA .{int(stats['xwOBA']*1000):03d} (MLB avg .311)" if lang == "EN"
+                         else f"被xwOBA .{int(stats['xwOBA']*1000):03d}（MLB平均 .311）")
     if stats["Avg Velo"] and stats["Avg Velo"] >= 95.0:
-        strengths.append(f"power arm (Avg Velo {stats['Avg Velo']:.1f} mph)" if lang == "EN"
-                         else f"パワーアーム（平均球速 {stats['Avg Velo']:.1f} mph）")
+        strengths.append(f"Avg Velo {stats['Avg Velo']:.1f} mph (MLB avg 93.5 mph)" if lang == "EN"
+                         else f"平均球速 {stats['Avg Velo']:.1f} mph（MLB平均 93.5 mph）")
     if stats["BB%"] >= 10.0:
-        weaknesses.append(f"high walk rate (BB% {stats['BB%']:.1f})" if lang == "EN"
-                          else f"四球が多い（与四球率 {stats['BB%']:.1f}%）")
+        weaknesses.append(f"BB% {stats['BB%']:.1f}% (MLB avg 8.3%)" if lang == "EN"
+                          else f"与四球率 {stats['BB%']:.1f}%（MLB平均 8.3%）")
     elif stats["BB%"] >= 8.0:
-        weaknesses.append(f"moderate walk rate (BB% {stats['BB%']:.1f})" if lang == "EN"
-                          else f"四球がやや多い（与四球率 {stats['BB%']:.1f}%）")
+        weaknesses.append(f"BB% {stats['BB%']:.1f}% (MLB avg 8.3%)" if lang == "EN"
+                          else f"与四球率 {stats['BB%']:.1f}%（MLB平均 8.3%）")
     if stats["K%"] < 15.0:
-        weaknesses.append(f"low strikeout rate (K% {stats['K%']:.1f})" if lang == "EN"
-                          else f"三振を奪えない（奪三振率 {stats['K%']:.1f}%）")
+        weaknesses.append(f"K% {stats['K%']:.1f}% (MLB avg 22.4%)" if lang == "EN"
+                          else f"奪三振率 {stats['K%']:.1f}%（MLB平均 22.4%）")
 
     vs_l = pdf[pdf["stand"] == "L"]
     vs_r = pdf[pdf["stand"] == "R"]
@@ -1580,33 +1578,34 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, la
     if ahead_stats and behind_stats and ahead_stats["PA"] >= 20 and behind_stats["PA"] >= 20:
         if ahead_stats["OPS"] >= 0.800 and behind_stats["OPS"] < 0.600:
             if lang == "EN":
-                lines.append(f"- **Count strategy:** Dangerous when ahead in count (OPS .{int(ahead_stats['OPS']*1000):03d}). "
-                           f"Get ahead early — he collapses behind (OPS .{int(behind_stats['OPS']*1000):03d})")
+                lines.append(f"- **Count split:** Ahead OPS .{int(ahead_stats['OPS']*1000):03d} / "
+                           f"Behind OPS .{int(behind_stats['OPS']*1000):03d} — "
+                           f"difference of {int((ahead_stats['OPS'] - behind_stats['OPS'])*1000)} pts")
             else:
-                lines.append(f"- **カウント戦略:** 有利カウントで強い（OPS .{int(ahead_stats['OPS']*1000):03d}）。"
-                           f"先手を取れ — 不利カウントでは崩れる（OPS .{int(behind_stats['OPS']*1000):03d}）")
+                lines.append(f"- **カウント別OPS:** 有利 .{int(ahead_stats['OPS']*1000):03d} / "
+                           f"不利 .{int(behind_stats['OPS']*1000):03d}（差 {int((ahead_stats['OPS'] - behind_stats['OPS'])*1000)} pts）")
         elif behind_stats["OPS"] >= 0.700:
             if lang == "EN":
-                lines.append(f"- **Count strategy:** Still dangerous behind in count (OPS .{int(behind_stats['OPS']*1000):03d}). "
-                           f"Don't let up with 2 strikes — compete through the at-bat.")
+                lines.append(f"- **Count split:** Behind OPS .{int(behind_stats['OPS']*1000):03d} — "
+                           f"remains productive even when behind in count")
             else:
-                lines.append(f"- **カウント戦略:** 不利カウントでもしぶとい（OPS .{int(behind_stats['OPS']*1000):03d}）。"
-                           f"追い込んでも油断禁物 — 最後まで攻め切る")
+                lines.append(f"- **カウント別OPS:** 不利カウントでも OPS .{int(behind_stats['OPS']*1000):03d}")
 
     if two_strike_stats and two_strike_stats["PA"] >= 20:
         if two_strike_stats["K%"] >= 35:
             if lang == "EN":
-                lines.append(f"- **2-strike approach:** High K rate with 2 strikes ({two_strike_stats['K%']:.1f}%). "
-                           f"Use best put-away pitch aggressively.")
+                lines.append(f"- **2-strike K%:** {two_strike_stats['K%']:.1f}% "
+                           f"(MLB avg with 2 strikes ≈ 30%)")
             else:
-                lines.append(f"- **2ストライク後:** 三振率が高い（{two_strike_stats['K%']:.1f}%）。決め球が有効")
+                lines.append(f"- **2ストライク後の三振率:** {two_strike_stats['K%']:.1f}%"
+                           f"（MLB平均 約30%）")
         elif two_strike_stats["K%"] < 20:
             if lang == "EN":
-                lines.append(f"- **2-strike approach:** Very hard to strike out ({two_strike_stats['K%']:.1f}% K rate). "
-                           f"Expand the zone gradually — don't waste pitches down the middle.")
+                lines.append(f"- **2-strike K%:** {two_strike_stats['K%']:.1f}% — "
+                           f"well below MLB avg (~30%)")
             else:
-                lines.append(f"- **2ストライク後:** 三振しにくい（{two_strike_stats['K%']:.1f}%）。"
-                           f"ゾーンを少しずつ広げろ — 甘い球は禁物")
+                lines.append(f"- **2ストライク後の三振率:** {two_strike_stats['K%']:.1f}%"
+                           f"（MLB平均 約30% を大きく下回る）")
 
     # 4. Platoon recommendation
     vs_l = pdf[pdf["p_throws"] == "L"]
@@ -1617,16 +1616,18 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, la
         if sl["PA"] >= 30 and sr["PA"] >= 30:
             if sl["OPS"] < sr["OPS"] - 0.080:
                 if lang == "EN":
-                    lines.append(f"- **Platoon edge:** Weaker vs LHP (OPS .{int(sl['OPS']*1000):03d} vs .{int(sr['OPS']*1000):03d}). "
-                               f"Use left-handed pitcher if available.")
+                    lines.append(f"- **Platoon split:** vs LHP OPS .{int(sl['OPS']*1000):03d} / "
+                               f"vs RHP OPS .{int(sr['OPS']*1000):03d} (diff {int((sr['OPS']-sl['OPS'])*1000)} pts)")
                 else:
-                    lines.append(f"- **左右マッチアップ:** 左投手に弱い（OPS .{int(sl['OPS']*1000):03d} vs 右 .{int(sr['OPS']*1000):03d}）。左腕を当てたい")
+                    lines.append(f"- **左右別OPS:** 左投手 .{int(sl['OPS']*1000):03d} / "
+                               f"右投手 .{int(sr['OPS']*1000):03d}（差 {int((sr['OPS']-sl['OPS'])*1000)} pts）")
             elif sr["OPS"] < sl["OPS"] - 0.080:
                 if lang == "EN":
-                    lines.append(f"- **Platoon edge:** Weaker vs RHP (OPS .{int(sr['OPS']*1000):03d} vs .{int(sl['OPS']*1000):03d}). "
-                               f"Use right-handed pitcher if available.")
+                    lines.append(f"- **Platoon split:** vs RHP OPS .{int(sr['OPS']*1000):03d} / "
+                               f"vs LHP OPS .{int(sl['OPS']*1000):03d} (diff {int((sl['OPS']-sr['OPS'])*1000)} pts)")
                 else:
-                    lines.append(f"- **左右マッチアップ:** 右投手に弱い（OPS .{int(sr['OPS']*1000):03d} vs 左 .{int(sl['OPS']*1000):03d}）。右腕を当てたい")
+                    lines.append(f"- **左右別OPS:** 右投手 .{int(sr['OPS']*1000):03d} / "
+                               f"左投手 .{int(sl['OPS']*1000):03d}（差 {int((sl['OPS']-sr['OPS'])*1000)} pts）")
 
     # 5. Batted ball tendency
     bip = pdf.dropna(subset=["hc_x", "hc_y"]).copy()
@@ -1644,28 +1645,26 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict, player_info: dict, la
 
             if pull_pct >= 45:
                 if lang == "EN":
-                    lines.append(f"- **Batted ball:** Strong pull tendency ({pull_pct:.0f}%). "
-                               f"Shift defense pull-side. Pitch away to neutralize power.")
+                    lines.append(f"- **Pull%:** {pull_pct:.0f}% (MLB avg ~40%)")
                 else:
-                    lines.append(f"- **打球傾向:** プル方向が多い（{pull_pct:.0f}%）。守備シフトをプル側に。外角で長打を防ぐ")
+                    lines.append(f"- **引っ張り率:** {pull_pct:.0f}%（MLB平均 約40%）")
 
             if gb_pct >= 50:
                 if lang == "EN":
-                    lines.append(f"- **Ground ball hitter ({gb_pct:.0f}% GB).** Keep the ball down — sinkers and low changeups effective.")
+                    lines.append(f"- **GB%:** {gb_pct:.0f}% (MLB avg ~43%)")
                 else:
-                    lines.append(f"- **ゴロ打者（{gb_pct:.0f}%）。** 低め中心の投球が有効 — シンカー、低めチェンジアップ")
+                    lines.append(f"- **ゴロ率:** {gb_pct:.0f}%（MLB平均 約43%）")
             elif fb_pct >= 45:
                 if lang == "EN":
-                    lines.append(f"- **Fly ball hitter ({fb_pct:.0f}% FB).** Careful with pitches up in zone — he elevates. "
-                               f"Keep offspeed down and bury breaking balls.")
+                    lines.append(f"- **FB%:** {fb_pct:.0f}% (MLB avg ~35%)")
                 else:
-                    lines.append(f"- **フライ打者（{fb_pct:.0f}%）。** 高めの球は打ち上げる。変化球は低めに集め、ブレーキングボールを叩きつけろ")
+                    lines.append(f"- **フライ率:** {fb_pct:.0f}%（MLB平均 約35%）")
 
     if not lines:
         if lang == "EN":
-            return "- Balanced hitter with no extreme vulnerabilities. Compete with best stuff and mix locations."
+            return "- No statistically significant vulnerabilities detected in the data."
         else:
-            return "- 極端な弱点のないバランス型打者。持ち球で勝負し、コースを散らせ。"
+            return "- データ上、統計的に有意な弱点は検出されず。"
 
     return "\n".join(lines)
 
@@ -1708,25 +1707,23 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
             if primary:
                 pr = primary[0]
                 if lang == "EN":
-                    lines.append(f"- **Primary pitch:** {pr['label']} ({pr['usage']:.0f}% usage). "
-                               f"You will see this most — time it early in counts.")
+                    lines.append(f"- **Primary pitch:** {pr['label']} ({pr['usage']:.0f}% usage)")
                 else:
-                    lines.append(f"- **主要球種:** {pr['label']}（使用率 {pr['usage']:.0f}%）。最も多く来る球 — 早いカウントで狙え")
+                    lines.append(f"- **主要球種:** {pr['label']}（使用率 {pr['usage']:.0f}%）")
 
             if hittable and hittable[0]["ba"] is not None and hittable[0]["ba"] >= 0.250:
                 h = hittable[0]
                 if lang == "EN":
-                    lines.append(f"- **Most hittable pitch:** {h['label']} (BA .{int(h['ba']*1000):03d}). Look for this pitch to drive.")
+                    lines.append(f"- **Highest opp BA pitch:** {h['label']} (BA .{int(h['ba']*1000):03d})")
                 else:
-                    lines.append(f"- **最も打ちやすい球種:** {h['label']}（被打率 .{int(h['ba']*1000):03d}）。この球を狙って長打を狙え")
+                    lines.append(f"- **被打率が最も高い球種:** {h['label']}（被打率 .{int(h['ba']*1000):03d}）")
 
             if best_pitch:
                 bp = best_pitch[0]
                 if lang == "EN":
-                    lines.append(f"- **Beware:** {bp['label']} is his best pitch (Whiff% {bp['whiff']:.1f}%). "
-                               f"Lay off this pitch unless it's in the zone.")
+                    lines.append(f"- **Best strikeout pitch:** {bp['label']} (Whiff% {bp['whiff']:.1f}%)")
                 else:
-                    lines.append(f"- **要注意:** {bp['label']} が最も空振りを取る球（空振率 {bp['whiff']:.1f}%）。ゾーン外なら見逃せ")
+                    lines.append(f"- **最も空振りを取る球種:** {bp['label']}（空振率 {bp['whiff']:.1f}%）")
 
     # 2. Zone vulnerability — pitcher context: use "R" default (zone names are relative to generic batter POV)
     zone_valid = pdf.dropna(subset=["zone"]).copy()
@@ -1751,14 +1748,14 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
 
         if hit_str:
             if lang == "EN":
-                lines.append(f"- **Look for pitches here (high opp BA):** {hit_str}")
+                lines.append(f"- **High opp BA zones:** {hit_str}")
             else:
-                lines.append(f"- **狙うゾーン（被打率高い）:** {hit_str}")
+                lines.append(f"- **被打率が高いゾーン:** {hit_str}")
         if tough_str:
             if lang == "EN":
-                lines.append(f"- **Tough zones (low opp BA):** {tough_str} — lay off or foul off")
+                lines.append(f"- **Low opp BA zones:** {tough_str}")
             else:
-                lines.append(f"- **手を出しにくいゾーン（被打率低い）:** {tough_str} — 見逃すかファウルで粘れ")
+                lines.append(f"- **被打率が低いゾーン:** {tough_str}")
 
     # 3. Count strategy
     count_valid = pdf.dropna(subset=["balls", "strikes"]).copy()
@@ -1775,17 +1772,15 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
         if pa_stats and pb_stats:
             if pb_stats["Opp AVG"] >= 0.280:
                 if lang == "EN":
-                    lines.append(f"- **When behind in count:** He gives up hits (Opp AVG .{int(pb_stats['Opp AVG']*1000):03d}). "
-                               f"Be patient — work counts and make him come to you.")
+                    lines.append(f"- **Pitcher behind in count:** Opp AVG .{int(pb_stats['Opp AVG']*1000):03d}")
                 else:
-                    lines.append(f"- **投手不利カウントで:** 被打率が高い（.{int(pb_stats['Opp AVG']*1000):03d}）。粘ってカウントを有利に持ち込め")
+                    lines.append(f"- **投手不利カウント時の被打率:** .{int(pb_stats['Opp AVG']*1000):03d}")
 
             if pa_stats["K%"] >= 30:
                 if lang == "EN":
-                    lines.append(f"- **When he's ahead:** High K rate ({pa_stats['K%']:.1f}%). "
-                               f"Shorten up and protect the plate — don't give away ABs.")
+                    lines.append(f"- **Pitcher ahead in count:** K% {pa_stats['K%']:.1f}%")
                 else:
-                    lines.append(f"- **投手有利カウントで:** 奪三振率が高い（{pa_stats['K%']:.1f}%）。コンパクトに振り、ゾーン内の球をカットして粘れ")
+                    lines.append(f"- **投手有利カウント時の奪三振率:** {pa_stats['K%']:.1f}%")
 
     # 4. First pitch tendency
     first_pitch = count_valid[(count_valid["balls"] == 0) & (count_valid["strikes"] == 0)]
@@ -1803,12 +1798,11 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
             fp_strike_pct = len(fp_strikes) / len(first_pitch) * 100
 
             if lang == "EN":
-                lines.append(f"- **First pitch:** {label} {top_fp_pct:.0f}% of the time. "
-                           f"Strike rate: {fp_strike_pct:.0f}%. "
-                           + ("Aggressive on first pitch can pay off." if fp_strike_pct >= 60 else "Patient approach recommended — he misses often."))
+                lines.append(f"- **First pitch:** {label} {top_fp_pct:.0f}%. "
+                           f"First-pitch strike rate: {fp_strike_pct:.0f}%")
             else:
-                lines.append(f"- **初球:** {label} が {top_fp_pct:.0f}%。ストライク率: {fp_strike_pct:.0f}%。"
-                           + ("ストライク率が高く初球から勝負球が来る傾向。" if fp_strike_pct >= 60 else "初球ボール率が高い。"))
+                lines.append(f"- **初球:** {label} {top_fp_pct:.0f}%。"
+                           f"初球ストライク率: {fp_strike_pct:.0f}%")
 
     # 5. Platoon recommendation
     vs_l = pdf[pdf["stand"] == "L"]
@@ -1819,20 +1813,24 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict, pitcher_info: dict, la
         if sl["PA"] >= 20 and sr["PA"] >= 20:
             if sl["Opp AVG"] > sr["Opp AVG"] + 0.030:
                 if lang == "EN":
-                    lines.append(f"- **Platoon weakness:** Gives up more hits to LHB (Opp AVG .{int(sl['Opp AVG']*1000):03d}). Stack left-handed batters.")
+                    lines.append(f"- **Platoon split:** vs LHB Opp AVG .{int(sl['Opp AVG']*1000):03d} / "
+                               f"vs RHB .{int(sr['Opp AVG']*1000):03d}")
                 else:
-                    lines.append(f"- **左右差:** 左打者に打たれやすい（被打率 .{int(sl['Opp AVG']*1000):03d}）。左打者を並べたい")
+                    lines.append(f"- **左右別被打率:** 左打者 .{int(sl['Opp AVG']*1000):03d} / "
+                               f"右打者 .{int(sr['Opp AVG']*1000):03d}")
             elif sr["Opp AVG"] > sl["Opp AVG"] + 0.030:
                 if lang == "EN":
-                    lines.append(f"- **Platoon weakness:** Gives up more hits to RHB (Opp AVG .{int(sr['Opp AVG']*1000):03d}). Stack right-handed batters.")
+                    lines.append(f"- **Platoon split:** vs RHB Opp AVG .{int(sr['Opp AVG']*1000):03d} / "
+                               f"vs LHB .{int(sl['Opp AVG']*1000):03d}")
                 else:
-                    lines.append(f"- **左右差:** 右打者に打たれやすい（被打率 .{int(sr['Opp AVG']*1000):03d}）。右打者を並べたい")
+                    lines.append(f"- **左右別被打率:** 右打者 .{int(sr['Opp AVG']*1000):03d} / "
+                               f"左打者 .{int(sl['Opp AVG']*1000):03d}")
 
     if not lines:
         if lang == "EN":
-            return "- Balanced pitcher with no extreme vulnerabilities. Compete at the plate and be ready to adjust."
+            return "- No statistically significant vulnerabilities detected in the data."
         else:
-            return "- データ上、極端な弱点は検出されず。バランス型の投手。"
+            return "- データ上、統計的に有意な弱点は検出されず。"
 
     return "\n".join(lines)
 
@@ -3107,13 +3105,13 @@ def main():
             st.success(
                 f"**vs Ranger Suárez (LHP) — 60-65 pitch target, max 80 (QF rule):**\n"
                 f"- K% {_sp_k}%, BB% {_sp_bb}%, Whiff% {_sp_whiff}%, Avg Velo {_sp_velo} mph\n"
-                "- Pool play: 2 IP only, 3 H, 1 ER. Pitch count determines 2-4 innings"
+                "- Pitch count determines 2-4 innings (QF pitch limit rule)"
             )
         else:
             st.success(
                 f"**vs レンジャー・スアレス（左腕） — 目安60-65球、最大80球（準々決勝規定）:**\n"
                 f"- 奪三振率 {_sp_k}%（MLB平均22.4%）, 与四球率 {_sp_bb}%, 空振率 {_sp_whiff}%（MLB平均25%）, 平均球速 {_sp_velo} mph\n"
-                "- 1次ラウンドの登板: 2回のみ（球数が多く早期降板）。球数次第で2-4回の幅"
+                "- 球数次第で2-4回の幅（準々決勝球数制限ルール）"
             )
         # Data-driven pitch analysis from Statcast
         _gp_sp_analysis = generate_sp_pitch_analysis(_gp_sp_data, lang)
@@ -3140,26 +3138,22 @@ def main():
 
         if lang == "EN":
             st.info(
-                "**1st time through: Establish your game plan, attack the zone, get ahead early**\n\n"
-                "**Top of order (#1-3) — HIGH DANGER:**\n"
-                + _batter_line(_top_order, "EN") + "\n"
-                "- Elite contact and on-base ability. Pound the zone, don't nibble — falling behind gives them free bases\n"
-                "- Acuña: Pitch inside aggressively, don't let him extend his arms\n\n"
-                "**Middle order (#4-6) — POWER THREAT:**\n"
-                + _batter_line(_mid_order, "EN") + "\n"
-                "- Power hitters who can change the game with one swing. Establish fastball command, then expand\n\n"
-                "**Bottom order (#7-9) — CONTROLLED AGGRESSION:**\n"
-                + _batter_line(_bot_order, "EN") + "\n"
-                "- Attack the zone with purpose. Get ahead 0-1 and use the expanded zone to your advantage"
+                "**1st time through — batter stats:**\n\n"
+                "**#1-3:**\n"
+                + _batter_line(_top_order, "EN") + "\n\n"
+                "**#4-6:**\n"
+                + _batter_line(_mid_order, "EN") + "\n\n"
+                "**#7-9:**\n"
+                + _batter_line(_bot_order, "EN")
             )
         else:
             st.info(
                 "**1巡目の打者別データ:**\n\n"
-                "**上位打線 (#1-3):**\n"
+                "**#1-3:**\n"
                 + _batter_line(_top_order, "JA") + "\n\n"
-                "**中軸 (#4-6):**\n"
+                "**#4-6:**\n"
                 + _batter_line(_mid_order, "JA") + "\n\n"
-                "**下位打線 (#7-9):**\n"
+                "**#7-9:**\n"
                 + _batter_line(_bot_order, "JA")
             )
 
@@ -3189,13 +3183,10 @@ def main():
         st.markdown(f"**{t['gp_batting']}**")
         if lang == "EN":
             st.success(
-                "**vs Bridge Relievers (Bazardo, Montero, etc.) — first bullpen wave:**\n"
+                "**vs Bridge Relievers (Bazardo, Montero, etc.):**\n"
                 + "\n".join(_bridge_stats_en) + "\n"
-                "- Suárez is out after ~3 innings. New pitchers = new timing adjustment needed\n"
-                "- **1st pitch from new pitcher:** Take it. Adjust to the new release point and velocity\n"
-                "- Bridge relievers often lack elite put-away stuff — be aggressive once you have the count\n"
-                "- Montero: 3 scoreless IP vs Nicaragua in pool play — don't underestimate\n"
-                "- **Key:** This is the window to score. Bridge relievers are the weakest link before closers arrive"
+                f"- Suárez pitch mix: {_pitch_usage_str_en}\n"
+                "- MLB avg: 2nd time through order, pitcher opp OPS rises 15-20%"
             )
         else:
             st.success(
@@ -3204,8 +3195,7 @@ def main():
                 f"- スアレスの球種配分: {_pitch_usage_str_ja}\n\n"
                 "**中継ぎ移行の場合:**\n"
                 + "\n".join(_bridge_stats_ja) + "\n"
-                "- モンテロ: 1次ラウンド ニカラグア戦3回無失点\n"
-                "- スアレスの1次ラウンド登板: 2回のみ（球数が多く早期降板）"
+                "- MLB統計: 2巡目は投手の被OPSが15-20%上昇する傾向"
             )
 
         st.markdown(f"**{t['gp_pitching']}**")
@@ -3221,23 +3211,19 @@ def main():
 
         if lang == "EN":
             st.info(
-                "**Mid-game pitching: 2nd time through the order for Venezuela**\n\n"
-                "- Venezuela hitters have seen your stuff once — mix sequences differently\n"
-                "- Change eye levels: if you went fastball-up/slider-down in 1st AB, reverse it\n"
-                "- Use 3rd/4th pitch options more — give them a different look\n\n"
-                f"**High-K batters (still attackable):** {_high_k_display}\n"
-                "- These batters still swing and miss — stay aggressive with 2-strike put-away pitches\n\n"
-                f"**Patient batters (careful):** {_patient_display}\n"
-                "- These batters work counts well — don't fall behind. First-pitch strikes are critical"
+                "**2nd time through — data trends:**\n"
+                "- MLB avg: 2nd time through, pitcher opp OPS rises 15-20%\n\n"
+                f"**K% ≥ 22.4% (MLB avg):** {_high_k_display}\n\n"
+                f"**BB% ≥ 9.0%:** {_patient_display}\n"
+                "- MLB data: opp BA drops significantly after first-pitch strike"
             )
         else:
             st.info(
                 "**2巡目のデータ傾向:**\n"
                 "- MLB全体の統計: 2巡目は投手の被OPSが15-20%上昇する傾向\n\n"
-                f"**三振率の高い打者（K% ≥ 22.4% = MLB平均以上）:** {_high_k_display}\n"
-                "- 2ストライク後の決め球がデータ上有効\n\n"
-                f"**四球率の高い打者（BB% ≥ 9.0%）:** {_patient_display}\n"
-                "- 初球ストライク率が重要（MLB統計: 初球ストライク後の被打率は大幅低下）"
+                f"**三振率 ≥ 22.4%（MLB平均以上）:** {_high_k_display}\n\n"
+                f"**四球率 ≥ 9.0%:** {_patient_display}\n"
+                "- MLB統計: 初球ストライク後の被打率は大幅低下"
             )
 
         st.divider()
@@ -3260,14 +3246,14 @@ def main():
             chase_str = f"{rp_s['Chase%']:.1f}" if rp_s.get("Chase%") else "?"
 
             if rp_s["K%"] >= 25.0:
-                approach_en = "HIGH K-RATE — patient approach, don't chase. Protect with 2 strikes."
-                approach_ja = "三振率が高い投手"
+                approach_en = f"K% above MLB avg (22.4%)"
+                approach_ja = f"奪三振率がMLB平均（22.4%）以上"
             elif rp_s["BB%"] >= 10.0:
-                approach_en = "WALKS HITTERS — take pitches early, work the count, draw walks."
-                approach_ja = "四球率が高い投手"
+                approach_en = f"BB% above MLB avg (8.3%)"
+                approach_ja = f"与四球率がMLB平均（8.3%）以上"
             else:
-                approach_en = "CONTACT PITCHER — jump on early-count fastballs, be aggressive."
-                approach_ja = "三振率・四球率ともに低い投手"
+                approach_en = "K% and BB% both below MLB avg"
+                approach_ja = "奪三振率・与四球率ともにMLB平均未満"
 
             _bp_approach_en.append(
                 f"- **{rp_name}:** K% {rp_s['K%']:.1f}%, Whiff% {rp_s['Whiff%']:.1f}%, "
@@ -3280,21 +3266,17 @@ def main():
 
         if lang == "EN":
             st.success(
-                "**vs High-Leverage Arms (Palencia closer, Buttó setup):**\n"
+                "**vs High-Leverage Arms (Palencia, Buttó):**\n"
                 + "\n".join(_bp_approach_en) + "\n"
-                "- **Palencia** is the closer candidate: ERA 2.91, 22 SV, avg 99.6 mph — elite velocity\n"
-                "- ⚠️ **Machado (Orix, NPB)** may appear here — no Statcast data. 28 saves in NPB, knows Japanese hitters\n\n"
-                "**High-leverage approach:**\n"
-                "- These are the best arms — shorten your swing, battle\n"
-                "- Against 99+ mph: choke up, focus on contact over power\n"
-                "- If they fall behind in the count, that's your only chance — be ready for a hittable fastball"
+                "- **Palencia:** ERA 2.91, 22 SV, avg 99.6 mph\n"
+                "- ⚠️ **Machado (Orix, NPB):** NPB 2024 — 28 SV, ERA 1.92. No Statcast data"
             )
         else:
             st.success(
                 "**vs 勝ちパターン投手:**\n"
                 + "\n".join(_bp_approach_ja) + "\n"
-                "- **パレンシア**: 防御率2.91、22セーブ、平均球速99.6mph\n"
-                "- ⚠️ **マチャド（オリックス・NPB）**: NPBで28セーブ — Statcastデータなし"
+                "- **パレンシア:** 防御率2.91、22セーブ、平均球速99.6mph\n"
+                "- ⚠️ **マチャド（オリックス）:** NPB 2024 — 28セーブ、防御率1.92。Statcastデータなし"
             )
 
         st.markdown(f"**{t['gp_pitching']}**")
@@ -3346,19 +3328,16 @@ def main():
 
         if lang == "EN":
             st.info(
-                "**Late-game pitching: Protect the lead / close the game**\n\n"
-                "**Platoon matchups to exploit from the bullpen:**\n"
+                "**Late-game batter data:**\n\n"
+                "**Platoon splits (OPS diff ≥ 80 pts):**\n"
                 + _platoon_block + "\n\n"
-                "**Per-batter scouting (3rd time through or pinch-hit):**\n"
-                + "\n".join(_late_bat_en) + "\n\n"
-                "**Key principles:**\n"
-                "- Use platoon advantage aggressively — match handedness for key outs\n"
-                "- Shorten the game: get ground balls for double plays in high-leverage spots"
+                "**Per-batter stats (3rd time through or pinch-hit):**\n"
+                + "\n".join(_late_bat_en)
             )
         else:
             st.info(
                 "**終盤の打者別データ:**\n\n"
-                "**左右別OPSに差がある打者:**\n"
+                "**左右別OPSに差がある打者（80pts以上）:**\n"
                 + _platoon_block + "\n\n"
                 "**打者別成績一覧（3巡目 or 代打想定）:**\n"
                 + "\n".join(_late_bat_ja)
@@ -3391,10 +3370,7 @@ def main():
             st.info(
                 "**Watch for these pinch-hitters from the 6th inning:**\n"
                 + "\n".join(_ph_lines_en) + "\n\n"
-                "**Matchup considerations:**\n"
-                "- Willson Contreras: LHB — expect him vs RHP in high-leverage spots\n"
-                "- Maikel Garcia: Was 4-for-4 vs Dominican Republic — hot bat, dangerous late\n"
-                "- Sanoha: Pool play pinch-hit HR — power threat off the bench"
+                "**MLB stats note:** All stats from 2024-2025 regular season (Statcast)"
             )
         else:
             st.info(
