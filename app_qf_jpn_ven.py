@@ -148,12 +148,11 @@ TEXTS = {
         "pool_d_record": "Data Source: MLB Statcast (2024-2025 Regular Season)",
         "key_tendencies": "Team Characteristics",
         "tendency_text": (
-            "Venezuela's lineup is anchored by Ronald Acuña Jr. at leadoff and Luis Arráez in the #2 hole — "
-            "elite speed paired with the best contact hitter in MLB. "
-            "The middle of the order features Salvador Perez and William Contreras providing power. "
-            "Jackson Chourio adds youth and athleticism in center field. "
-            "Andrés Giménez brings left-handed balance and Gold Glove defense at 2B. "
-            "All analysis is based on MLB Statcast data (2024-2025 regular season)."
+            "- **Top of Order:** Acuña Jr. (leadoff) + Arráez (#2) — elite speed paired with MLB's best contact hitter\n"
+            "- **Middle Order:** Salvador Perez & William Contreras provide power from the heart of the lineup\n"
+            "- **Youth Factor:** Jackson Chourio — young 5-tool talent in center field\n"
+            "- **LHB Balance:** Andrés Giménez — Gold Glove defense at 2B, switch hitter\n"
+            "- **Data Source:** All analysis based on MLB Statcast (2024-2025 regular season)"
         ),
         "order": "#", "pos": "Pos", "player": "Player", "note": "Note",
         "team": "Team", "bats": "Bats", "throws": "Throws", "role": "Role",
@@ -185,21 +184,18 @@ TEXTS = {
         "xwoba": "xwOBA",
         "where_to_attack": "Where to Attack",
         "attack_text_suarez": (
-            "Ranger Suarez is a soft-contact LHP who relies heavily on his sinker and changeup. "
-            "Against RHB: look for the changeup down and away — it generates swings and misses "
-            "but can be vulnerable when left up in the zone. "
-            "Against LHB: his sinker runs arm-side; sit on pitches on the inner half. "
-            "Key: be patient early — he is a pitch-to-contact pitcher with a low K rate. "
-            "Force him to elevate or fall behind in counts."
+            "- **Type:** Soft-contact LHP — sinker + changeup dominant, low K rate\n"
+            "- **vs RHB:** Changeup down and away generates whiffs, but vulnerable when elevated — lay off low, punish up\n"
+            "- **vs LHB:** Sinker runs arm-side — sit on pitches over the inner half\n"
+            "- **Key:** Be patient early. Force him to elevate or fall behind in counts"
         ),
         "bullpen_overview": "Bullpen Usage Pattern",
         "bullpen_text": (
-            "Venezuela's bullpen features a mix of power arms and multi-inning options. "
-            "José Buttó (RHP, Giants) is a high-leverage reliever with swing-and-miss stuff. "
-            "Eduard Bazardo (RHP, Mariners) serves as a multi-inning bridge option. "
-            "Daniel Palencia (RHP, Cubs) adds depth with power stuff. "
-            "Luinder Ávila (RHP, Royals) is a replacement call-up. "
-            "All stats below are from MLB Statcast (2024-2025 regular season)."
+            "- **José Buttó** (RHP, Giants) — High-leverage closer, swing-and-miss stuff\n"
+            "- **Eduard Bazardo** (RHP, Mariners) — Multi-inning bridge option\n"
+            "- **Daniel Palencia** (RHP, Cubs) — Power arm, depth piece\n"
+            "- **Luinder Ávila** (RHP, Royals) — Replacement call-up\n"
+            "- All stats from MLB Statcast (2024-2025 regular season)"
         ),
         "reliever_profile": "Reliever Profile",
         "sp_label": "Starter", "rp_label": "Reliever",
@@ -313,12 +309,11 @@ TEXTS = {
         "pool_d_record": "データ出典: MLB Statcast（2024-2025レギュラーシーズン）",
         "key_tendencies": "チームの特徴",
         "tendency_text": (
-            "ベネズエラ打線はアクーニャJr.のリードオフとアラエスの2番で構成 — "
-            "俊足とMLB最高のコンタクト力の組み合わせ。"
-            "中軸はサルバドール・ペレスとウィリアム・コントレラスのパワー。"
-            "ジャクソン・チュリオがセンターで若さと身体能力を加える。"
-            "アンドレス・ヒメネスは左打者のバランスとゴールドグラブ級の二塁守備。"
-            "全ての分析はMLB Statcastデータ（2024-2025レギュラーシーズン）に基づいています。"
+            "- **上位打線:** アクーニャJr.（1番）+ アラエス（2番） — 俊足とMLB最高のコンタクト力\n"
+            "- **中軸:** S.ペレス & W.コントレラス — パワーで打線の核を形成\n"
+            "- **若さ:** ジャクソン・チュリオ — センターの5ツールプレイヤー\n"
+            "- **左打バランス:** A.ヒメネス — ゴールドグラブ級の二塁守備、スイッチヒッター\n"
+            "- **データソース:** 全分析はMLB Statcast（2024-2025レギュラーシーズン）に基づく"
         ),
         "order": "#", "pos": "守備", "player": "選手", "note": "備考",
         "team": "チーム", "bats": "打席", "throws": "投", "role": "役割",
@@ -350,20 +345,18 @@ TEXTS = {
         "xwoba": "xwOBA",
         "where_to_attack": "攻略ポイント",
         "attack_text_suarez": (
-            "レンジャー・スアレスはソフトコンタクト型の左腕。シンカーとチェンジアップが主体。"
-            "対右打者: 外角低めのチェンジアップに空振りを取るが、高めに浮くと打たれやすい。"
-            "対左打者: シンカーがアーム側に動く。インコースの球に狙いを絞る。"
-            "攻略の鍵: 早いカウントで仕掛けない。奪三振率が低い投手なので、"
-            "ボールを見極めてカウントを有利に進め、甘い球を待つ。"
+            "- **タイプ:** ソフトコンタクト型の左腕 — シンカー＋チェンジアップ主体、低い奪三振率\n"
+            "- **対右打者:** 外角低めチェンジアップで空振りを取るが、高めに浮くと打てる — 低めは見逃し、高めを叩く\n"
+            "- **対左打者:** シンカーがアーム側に動く — インコースの球に狙いを絞る\n"
+            "- **攻略の鍵:** 早打ちしない。カウントを有利にして甘い球を待つ"
         ),
         "bullpen_overview": "ブルペン運用パターン",
         "bullpen_text": (
-            "ベネズエラのブルペンはパワーアームとイニング跨ぎが可能な中継ぎで構成。"
-            "ホセ・ブット（右腕、ジャイアンツ）はハイレバレッジの切り札。"
-            "エドゥアルド・バサルド（右腕、マリナーズ）はイニング跨ぎの中継ぎ。"
-            "ダニエル・パレンシア（右腕、カブス）はパワーピッチャー。"
-            "ルインデル・アビラ（右腕、ロイヤルズ）は代替招集。"
-            "以下の成績は全てMLB Statcast（2024-2025レギュラーシーズン）のデータです。"
+            "- **ホセ・ブット**（右腕、ジャイアンツ） — ハイレバレッジの切り札\n"
+            "- **エドゥアルド・バサルド**（右腕、マリナーズ） — イニング跨ぎの中継ぎ\n"
+            "- **ダニエル・パレンシア**（右腕、カブス） — パワーアーム\n"
+            "- **ルインデル・アビラ**（右腕、ロイヤルズ） — 代替招集\n"
+            "- 成績は全てMLB Statcast（2024-2025レギュラーシーズン）のデータ"
         ),
         "reliever_profile": "リリーフ投手プロフィール",
         "sp_label": "先発", "rp_label": "リリーフ",
@@ -644,17 +637,21 @@ def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
                         f"（OPS .{int(weak_ops * 1000):03d}）"
                     )
 
-    parts = []
+    lines = []
     if strengths:
-        prefix = "Strengths: " if lang == "EN" else "強み: "
-        parts.append(prefix + ", ".join(strengths) + ".")
+        header = "**Strengths:**" if lang == "EN" else "**強み:**"
+        lines.append(header)
+        for s in strengths:
+            lines.append(f"- {s}")
     if weaknesses:
-        prefix = "Weaknesses: " if lang == "EN" else "弱み: "
-        parts.append(prefix + ", ".join(weaknesses) + ".")
-    if not parts:
-        return ("Balanced profile with no extreme strengths or weaknesses."
-                if lang == "EN" else "特に目立つ偏りのないバランス型の打者。")
-    return " ".join(parts)
+        header = "**Weaknesses:**" if lang == "EN" else "**弱み:**"
+        lines.append(header)
+        for w in weaknesses:
+            lines.append(f"- {w}")
+    if not lines:
+        return ("- Balanced profile with no extreme strengths or weaknesses."
+                if lang == "EN" else "- 特に目立つ偏りのないバランス型の打者。")
+    return "\n".join(lines)
 
 
 def generate_pitcher_summary(stats: dict, pdf: pd.DataFrame, pitcher: dict,
@@ -710,17 +707,21 @@ def generate_pitcher_summary(stats: dict, pdf: pd.DataFrame, pitcher: dict,
                         f"（被打率 .{int(weak_avg * 1000):03d}）"
                     )
 
-    parts = []
+    lines = []
     if strengths:
-        prefix = "Strengths: " if lang == "EN" else "強み: "
-        parts.append(prefix + ", ".join(strengths) + ".")
+        header = "**Strengths:**" if lang == "EN" else "**強み:**"
+        lines.append(header)
+        for s in strengths:
+            lines.append(f"- {s}")
     if weaknesses:
-        prefix = "Weaknesses: " if lang == "EN" else "弱み: "
-        parts.append(prefix + ", ".join(weaknesses) + ".")
-    if not parts:
-        return ("Balanced profile with no extreme strengths or weaknesses."
-                if lang == "EN" else "特に目立つ偏りのないバランス型の投手。")
-    return " ".join(parts)
+        header = "**Weaknesses:**" if lang == "EN" else "**弱み:**"
+        lines.append(header)
+        for w in weaknesses:
+            lines.append(f"- {w}")
+    if not lines:
+        return ("- Balanced profile with no extreme strengths or weaknesses."
+                if lang == "EN" else "- 特に目立つ偏りのないバランス型の投手。")
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
