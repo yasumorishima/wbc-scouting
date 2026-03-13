@@ -3052,14 +3052,14 @@ def main():
                 if sl_gp["PA"] >= 30 and sr_gp["PA"] >= 30:
                     if sl_gp["OPS"] < sr_gp["OPS"] - 0.080:
                         if lang == "EN":
-                            platoon_weak_batters.append(f"{display} (OPS .{int(sl_gp['OPS']*1000):03d} vs LHP)")
+                            platoon_weak_batters.append(f"{display} (vs LHP .{int(sl_gp['OPS']*1000):03d} / vs RHP .{int(sr_gp['OPS']*1000):03d})")
                         else:
-                            platoon_weak_batters.append(f"{display}\uff08\u5de6\u6295\u624bOPS .{int(sl_gp['OPS']*1000):03d}\uff09")
+                            platoon_weak_batters.append(f"{display}（左投手 .{int(sl_gp['OPS']*1000):03d} / 右投手 .{int(sr_gp['OPS']*1000):03d}）")
                     elif sr_gp["OPS"] < sl_gp["OPS"] - 0.080:
                         if lang == "EN":
-                            platoon_weak_batters.append(f"{display} (OPS .{int(sr_gp['OPS']*1000):03d} vs RHP)")
+                            platoon_weak_batters.append(f"{display} (vs RHP .{int(sr_gp['OPS']*1000):03d} / vs LHP .{int(sl_gp['OPS']*1000):03d})")
                         else:
-                            platoon_weak_batters.append(f"{display}\uff08\u53f3\u6295\u624bOPS .{int(sr_gp['OPS']*1000):03d}\uff09")
+                            platoon_weak_batters.append(f"{display}（右投手 .{int(sr_gp['OPS']*1000):03d} / 左投手 .{int(sl_gp['OPS']*1000):03d}）")
 
         # ===== Section A: Team Weakness Summary =====
         st.subheader(t["gp_team_weakness"])
