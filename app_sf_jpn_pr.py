@@ -1,8 +1,8 @@
-"""WBC 2026 Quarterfinal: Japan vs Venezuela — Scouting Dashboard.
+"""WBC 2026 Semifinal: Japan vs Puerto Rico (Tentative) — Scouting Dashboard.
 
-A unified scouting report for Japan's coaching staff, covering Venezuela's
-predicted lineup, starting pitcher (Ranger Suárez), and bullpen.
-All analysis is based on Venezuela players' MLB Statcast data (2024-2025).
+A unified scouting report for Japan's coaching staff, covering Puerto Rico's
+predicted lineup, starting pitcher (Seth Lugo), and bullpen.
+All analysis is based on Puerto Rico players' MLB Statcast data (2024-2025).
 """
 
 import pathlib
@@ -17,12 +17,8 @@ import pandas as pd
 import streamlit as st
 from scipy.stats import gaussian_kde
 
-from players import (
-    PITCHER_BY_NAME,
-    PLAYER_BY_NAME,
-    VENEZUELA_BATTERS,
-    VENEZUELA_PITCHERS,
-)
+from players_pr_batters import PR_BATTERS, PLAYER_BY_NAME
+from players_pr_pitchers import PR_PITCHERS, PITCHER_BY_NAME
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -54,34 +50,31 @@ PITCH_COLORS = {
 }
 
 PREDICTED_LINEUP = [
-    {"order": 1, "name": "Ronald Acuña Jr.", "pos": "RF", "note_en": "Elite speed + power, leadoff threat", "note_ja": "俊足強打のリードオフ"},
-    {"order": 2, "name": "Luis Arráez", "pos": "1B", "note_en": "Best contact hitter in MLB, batting title contender", "note_ja": "MLB最高のコンタクトヒッター、首位打者候補"},
-    {"order": 3, "name": "Eugenio Suárez", "pos": "3B", "note_en": "Corner infield power (3B), veteran slugger", "note_ja": "コーナー内野のパワーヒッター（三塁）"},
-    {"order": 4, "name": "William Contreras", "pos": "C", "note_en": "Switch hitter, starting catcher", "note_ja": "スイッチヒッター、正捕手"},
-    {"order": 5, "name": "Salvador Perez", "pos": "DH", "note_en": "Veteran power bat, 3x All-Star catcher as DH", "note_ja": "ベテランパワー打者、3度のオールスター捕手のDH起用"},
-    {"order": 6, "name": "Jackson Chourio", "pos": "CF", "note_en": "Young star, 5-tool talent", "note_ja": "若き5ツールプレイヤー"},
-    {"order": 7, "name": "Andrés Giménez", "pos": "2B", "note_en": "Gold Glove defense at 2B, switch hitter", "note_ja": "ゴールドグラブ級二塁守備、スイッチヒッター"},
-    {"order": 8, "name": "Wilyer Abreu", "pos": "LF", "note_en": "Solid LHB, strong defense", "note_ja": "堅実な左打者、好守備"},
-    {"order": 9, "name": "Ezequiel Tovar", "pos": "SS", "note_en": "Athletic SS, power potential", "note_ja": "身体能力の高い遊撃手、パワーも秘める"},
+    {"order": 1, "name": "Heliot Ramos", "pos": "RF", "note_en": "Power outfielder, rising star with Giants", "note_ja": "パワー型外野手、ジャイアンツの若手有望株"},
+    {"order": 2, "name": "Nolan Arenado", "pos": "3B", "note_en": "10x All-Star, elite defender, veteran power bat", "note_ja": "10度のオールスター、ゴールドグラブ常連のベテラン強打者"},
+    {"order": 3, "name": "Willi Castro", "pos": "LF", "note_en": "Switch hitter, versatile bat with speed", "note_ja": "スイッチヒッター、俊足でユーティリティ性も高い"},
+    {"order": 4, "name": "Carlos Cortes", "pos": "DH", "note_en": "Left-handed bat, contact-oriented hitter", "note_ja": "左打ちのコンタクトヒッター"},
+    {"order": 5, "name": "Matthew Lugo", "pos": "CF", "note_en": "Young outfielder, developing power", "note_ja": "若手外野手、成長中のパワーポテンシャル"},
+    {"order": 6, "name": "Darrell Hernáiz", "pos": "2B", "note_en": "Young infielder, solid defensively", "note_ja": "若手内野手、堅実な守備力"},
+    {"order": 7, "name": "Luis Vázquez", "pos": "SS", "note_en": "Shortstop, defensive-first player", "note_ja": "遊撃手、守備力が持ち味"},
 ]
 
-# Bench / Pinch-hit candidates
 BENCH_PLAYERS = [
-    {"name": "Willson Contreras", "role_en": "LHB pinch-hit option (3x All-Star catcher)", "role_ja": "左打ちの代打要員（元3度オールスター捕手）"},
-    {"name": "Maikel Garcia", "role_en": "AVG .286, 16 HR, 23 SB, Gold Glove (2024)", "role_ja": "打率.286、16HR、23盗塁、ゴールドグラブ（2024）"},
-    {"name": "Gleyber Torres", "role_en": "Utility infielder (2B/SS), former starter", "role_ja": "ユーティリティ内野手（二塁/遊撃）、元スタメン"},
-    {"name": "Javier Sanoha", "role_en": "Minor league prospect, limited MLB data", "role_ja": "マイナーリーグ有望株、MLBデータ少"},
+    {"name": "Edwin Arroyo", "role_en": "Minor league SS prospect (Reds), no MLB Statcast data", "role_ja": "マイナーリーグ遊撃手有望株（レッズ）、MLBデータなし"},
+    {"name": "Bryan Torres", "role_en": "Minor league OF prospect (Cardinals), no MLB Statcast data", "role_ja": "マイナーリーグ外野手有望株（カーディナルス）、MLBデータなし"},
+    {"name": "Luis Quinones", "role_en": "Minor league prospect (Twins), no MLB Statcast data", "role_ja": "マイナーリーグ有望株（ツインズ）、MLBデータなし"},
+    {"name": "Eduardo Rivera", "role_en": "Minor league pitcher (Red Sox), no MLB Statcast data", "role_ja": "マイナーリーグ投手（レッドソックス）、MLBデータなし"},
+    {"name": "Elmer Rodríguez", "role_en": "Minor league pitcher (Yankees), no MLB Statcast data", "role_ja": "マイナーリーグ投手（ヤンキース）、MLBデータなし"},
+    {"name": "Ricardo Velez", "role_en": "Minor league pitcher (Rangers), no MLB Statcast data", "role_ja": "マイナーリーグ投手（レンジャーズ）、MLBデータなし"},
 ]
 
-PREDICTED_SP = "Ranger Suárez"
+PREDICTED_SP = "Seth Lugo"
 
-KEY_RELIEVERS = ["José Buttó", "Eduard Bazardo", "Daniel Palencia", "Keider Montero", "Luinder Ávila"]
+KEY_RELIEVERS = ["Edwin Díaz", "Fernando Cruz", "José Espada", "Rico Garcia", "Jovani Morán", "Yacksel Ríos"]
 
-# MLB average benchmarks (2024 season)
 _MLB_AVG_BAT = {"AVG": .243, "OBP": .312, "SLG": .397, "OPS": .709, "K%": 22.4, "BB%": 8.3, "xwOBA": .311}
 _MLB_AVG_PIT = {"Opp AVG": .243, "Opp SLG": .397, "K%": 22.4, "BB%": 8.3, "xwOBA": .311, "Whiff%": 25.0, "Velo": 93.5}
 
-# Stat help tooltips (bilingual) — shown as ? icon on st.metric
 _STAT_HELP = {
     "EN": {
         "AVG": "Batting average — hits ÷ at-bats. MLB avg ≈ .243",
@@ -142,24 +135,24 @@ def load_stadium_coords() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 TEXTS = {
     "EN": {
-        "page_title": "WBC 2026 QF: Japan vs Venezuela",
-        "main_title": "WBC 2026 Quarterfinal: Japan vs Venezuela",
-        "subtitle": "Mar 15 (Sun) 10:00 JST — LoanDepot Park, Miami",
+        "page_title": "WBC 2026 SF: Japan vs Puerto Rico (Tentative)",
+        "main_title": "WBC 2026 Semifinal: Japan vs Puerto Rico (Tentative)",
+        "subtitle": "Semifinal — LoanDepot Park, Miami",
         "tab1": "Matchup Overview",
         "tab2": "Lineup Scouting",
         "tab3": "Starting Pitcher",
         "tab4": "Bullpen Scouting",
         "season": "Season",
-        "predicted_lineup": "Venezuela Predicted Starting Lineup",
+        "predicted_lineup": "Puerto Rico Predicted Starting Lineup",
         "predicted_sp": "Predicted Starting Pitcher",
         "pool_d_record": "Data Source: MLB Statcast (2024-2025 Regular Season)",
         "key_tendencies": "Team Characteristics",
         "tendency_text": (
-            "- **1-2番:** Acuña Jr. (2024 SB 72, SLG .476) + Arráez (2024 AVG .314, K% 8.2%)\n"
-            "- **3-4-5番:** E. Suárez + W. Contreras (2024 OPS .823) + S. Perez (2024 HR 29, RBI 104)\n"
-            "- **6番:** Chourio (2024 AVG .275, 21HR, 26歳以下)\n"
-            "- **7-9番:** Giménez (2024 DRS +9) + Tovar (2024 OPS .718)\n"
-            "- **控え:** Willson Contreras (LHB), Maikel Garcia (.286/16HR), Torres\n"
+            "- **1-2:** Ramos (2024 power outfielder, Giants) + Arenado (10x All-Star, veteran)\n"
+            "- **3-4:** Castro (switch hitter) + Cortes (LHB contact hitter)\n"
+            "- **5-7:** Lugo (CF) + Hernáiz (young IF) + Vázquez (SS)\n"
+            "- **Bench:** Minor league prospects (Arroyo, Torres, Quinones) — no MLB Statcast data\n"
+            "- **Note:** Roster has only 7 batters with MLB data; remaining slots filled by minor leaguers\n"
             "- **Data Source:** All analysis based on MLB Statcast (2024-2025 regular season)"
         ),
         "order": "#", "pos": "Pos", "player": "Player", "note": "Note",
@@ -193,13 +186,13 @@ TEXTS = {
         "where_to_attack": "Where to Attack",
         "bullpen_overview": "Bullpen Usage Pattern",
         "bullpen_text": (
-            "- **Daniel Palencia** (RHP, Cubs) — ERA 2.91, 22 SV, avg 99.6 mph, K% 29.3%\n"
-            "- **José Buttó** (RHP, Giants) — ERA 3.42, Whiff% 28.1%, avg 95.2 mph\n"
-            "- **Eduard Bazardo** (RHP, Mariners) — ERA 3.18, 52.1 IP in 2024\n"
-            "- **Keider Montero** (RHP, Tigers) — ERA 4.50, avg 93.8 mph\n"
-            "- **Luinder Ávila** (RHP, Royals) — ERA 4.85, 37 IP in 2024\n"
-            "- ⚠️ **Andrés Machado** (RHP, Orix Buffaloes) — NPB 2024: 28 SV, ERA 1.92. Statcastデータなし\n"
-            "- MLB成績は全て2024-2025レギュラーシーズン（マチャドを除く）"
+            "- **Edwin Díaz** (RHP, Dodgers) — Former elite closer, 32 SV in 2022\n"
+            "- **Fernando Cruz** (RHP, Yankees) — Veteran reliever\n"
+            "- **José Espada** (RHP, Orioles) — Young arm\n"
+            "- **Rico Garcia** (RHP, Orioles) — Middle reliever\n"
+            "- **Jovani Morán** (LHP, Red Sox) — Left-handed specialist\n"
+            "- **Yacksel Ríos** (RHP, Cubs) — Veteran reliever\n"
+            "- MLB stats are all from 2024-2025 regular season"
         ),
         "reliever_profile": "Reliever Profile",
         "sp_label": "Starter", "rp_label": "Reliever",
@@ -283,9 +276,9 @@ TEXTS = {
         "count_first_pitch": "First Pitch (0-0)",
         "count_two_strikes": "Two Strikes (0-2, 1-2, 2-2, 3-2 — all counts with 2 strikes)",
         "game_plan": "Game Plan: How Japan Wins",
-        "game_plan_batting": "Batting Strategy vs Venezuela Pitching",
-        "game_plan_pitching": "Pitching Strategy vs Venezuela Lineup",
-        "team_weaknesses_title": "Venezuela Team Weaknesses",
+        "game_plan_batting": "Batting Strategy vs Puerto Rico Pitching",
+        "game_plan_pitching": "Pitching Strategy vs Puerto Rico Lineup",
+        "team_weaknesses_title": "Puerto Rico Team Weaknesses",
         "pitching_plan_title": "How to Pitch to This Batter",
         "pitching_plan_explain": "Data-driven analysis of this batter's vulnerabilities — pitch types, zones, counts, and platoon splits.",
         "hitting_plan_title": "How to Hit This Pitcher",
@@ -299,40 +292,38 @@ TEXTS = {
         "infield_shift": "Infield",
         "outfield_shift": "Outfield",
         "tab_gameplan": "Game Plan",
-        "machado_warning": (
-            "⚠️ **Andrés Machado (RHP, Orix Buffaloes — NPB)**\n\n"
-            "- NPB 2024: 28 SV, ERA 1.92\n"
-            "- **Statcastデータなし**（NPB所属 — MLBデータベースに記録なし）\n"
-            "- NPB/KBO所属選手はStatcastベースの分析対象外"
+        "tentative_warning": (
+            "This analysis assumes Puerto Rico as the semifinal opponent. "
+            "The actual opponent will be determined by the quarterfinal results."
         ),
         "bench_title": "Bench / Pinch-Hit Candidates",
-        "gp_inning_1_3": "1st-3rd Inning: vs Suárez (Starter)",
+        "gp_inning_1_3": "1st-3rd Inning: vs Lugo (Starter)",
         "gp_inning_4_5": "4th-5th Inning: SP Continuation or Bullpen Transition",
         "gp_inning_6_plus": "6th Inning+: Bullpen Back (High-Leverage)",
         "gp_pinch_hit": "Pinch-Hit Matchups (6th Inning+)",
         "gp_batting": "Batting Strategy",
         "gp_pitching": "Pitching Strategy",
-        "gp_team_weakness": "Venezuela Team Weaknesses",
+        "gp_team_weakness": "Puerto Rico Team Weaknesses",
     },
     "JA": {
-        "page_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
-        "main_title": "WBC 2026 準々決勝: 日本 vs ベネズエラ",
-        "subtitle": "3月15日(日) 10:00 JST — ローンデポ・パーク（マイアミ）",
+        "page_title": "WBC 2026 準決勝: 日本 vs プエルトリコ（仮想定）",
+        "main_title": "WBC 2026 準決勝: 日本 vs プエルトリコ（仮想定）",
+        "subtitle": "準決勝 — ローンデポ・パーク（マイアミ）",
         "tab1": "対戦プレビュー",
         "tab2": "打線スカウティング",
         "tab3": "先発投手分析",
         "tab4": "ブルペン分析",
         "season": "シーズン",
-        "predicted_lineup": "ベネズエラ 予想スタメン",
+        "predicted_lineup": "プエルトリコ 予想スタメン",
         "predicted_sp": "予想先発投手",
         "pool_d_record": "データ出典: MLB Statcast（2024-2025レギュラーシーズン）",
         "key_tendencies": "チームの特徴",
         "tendency_text": (
-            "- **1-2番:** アクーニャJr.（2024 盗塁72, SLG .476）+ アラエス（2024 打率.314, 三振率8.2%）\n"
-            "- **3-4-5番:** E.スアレス + W.コントレラス（2024 OPS .823）+ S.ペレス（2024 HR29, 打点104）\n"
-            "- **6番:** チュリオ（2024 打率.275, 21HR, 26歳以下）\n"
-            "- **7-9番:** ヒメネス（2024 DRS +9）+ トバー（2024 OPS .718）\n"
-            "- **控え:** Willsonコントレラス（左打）、M.ガルシア（.286/16HR）、トーレス\n"
+            "- **1-2番:** ラモス（ジャイアンツ、パワー型外野手）+ アレナド（10度オールスター、ベテラン）\n"
+            "- **3-4番:** カストロ（スイッチヒッター）+ コルテス（左打ちコンタクトヒッター）\n"
+            "- **5-7番:** ルーゴ（CF）+ エルナイス（若手IF）+ バスケス（SS）\n"
+            "- **控え:** マイナーリーグ有望株（アロヨ、トーレス、キノネス）— MLBデータなし\n"
+            "- **注意:** MLBデータのある打者は7名のみ。残りのスロットはマイナーリーガーが埋める\n"
             "- **データソース:** 全分析はMLB Statcast（2024-2025レギュラーシーズン）に基づく"
         ),
         "order": "#", "pos": "守備", "player": "選手", "note": "備考",
@@ -366,13 +357,13 @@ TEXTS = {
         "where_to_attack": "攻略ポイント",
         "bullpen_overview": "ブルペン運用パターン",
         "bullpen_text": (
-            "- **ダニエル・パレンシア**（右腕、カブス） — 防御率2.91、22セーブ、平均球速99.6mph、奪三振率29.3%\n"
-            "- **ホセ・ブット**（右腕、ジャイアンツ） — 防御率3.42、空振率28.1%、平均球速95.2mph\n"
-            "- **エドゥアルド・バサルド**（右腕、マリナーズ） — 防御率3.18、2024年52.1イニング登板\n"
-            "- **ケイダー・モンテロ**（右腕、タイガース） — 防御率4.50、平均球速93.8mph\n"
-            "- **ルインデル・アビラ**（右腕、ロイヤルズ） — 防御率4.85、2024年37イニング\n"
-            "- ⚠️ **アンドレス・マチャド**（右腕、オリックス） — NPB 2024: 28セーブ、防御率1.92。Statcastデータなし\n"
-            "- MLB成績は全て2024-2025レギュラーシーズン（マチャドを除く）"
+            "- **エドウィン・ディアス**（右腕、ドジャース） — 元エリートクローザー、2022年32セーブ\n"
+            "- **フェルナンド・クルーズ**（右腕、ヤンキース） — ベテランリリーバー\n"
+            "- **ホセ・エスパダ**（右腕、オリオールズ） — 若手投手\n"
+            "- **リコ・ガルシア**（右腕、オリオールズ） — 中継ぎ\n"
+            "- **ホバニ・モラン**（左腕、レッドソックス） — 左のスペシャリスト\n"
+            "- **ヤクセル・リオス**（右腕、カブス） — ベテランリリーバー\n"
+            "- MLB成績は全て2024-2025レギュラーシーズン"
         ),
         "reliever_profile": "リリーフ投手プロフィール",
         "sp_label": "先発", "rp_label": "リリーフ",
@@ -456,9 +447,9 @@ TEXTS = {
         "count_first_pitch": "初球 (0-0)",
         "count_two_strikes": "2ストライク（0-2, 1-2, 2-2, 3-2 — 2ストライクの全カウント）",
         "game_plan": "ゲームプラン: 日本の勝ち方",
-        "game_plan_batting": "打撃戦略 — ベネズエラ投手陣攻略",
-        "game_plan_pitching": "投手戦略 — ベネズエラ打線対策",
-        "team_weaknesses_title": "ベネズエラ打線の弱点",
+        "game_plan_batting": "打撃戦略 — プエルトリコ投手陣攻略",
+        "game_plan_pitching": "投手戦略 — プエルトリコ打線対策",
+        "team_weaknesses_title": "プエルトリコ打線の弱点",
         "pitching_plan_title": "この打者の攻略法",
         "pitching_plan_explain": "球種・ゾーン・カウント・左右の弱点をデータから分析した投手への配球プラン。",
         "hitting_plan_title": "この投手の攻略法",
@@ -472,20 +463,18 @@ TEXTS = {
         "infield_shift": "内野",
         "outfield_shift": "外野",
         "tab_gameplan": "ゲームプラン",
-        "machado_warning": (
-            "⚠️ **アンドレス・マチャド（右腕、オリックス・バファローズ — NPB）**\n\n"
-            "- NPB 2024: 28セーブ、防御率1.92\n"
-            "- **Statcastデータなし**（NPB所属のためMLBデータベースに存在しない）\n"
-            "- NPB/KBO所属選手はStatcast分析の対象外"
+        "tentative_warning": (
+            "この分析は準決勝の対戦相手をプエルトリコと仮想定したものです。"
+            "実際の対戦相手は準々決勝の結果によって確定します。"
         ),
         "bench_title": "控え・代打候補",
-        "gp_inning_1_3": "1〜3回: vs スアレス（先発）",
+        "gp_inning_1_3": "1〜3回: vs ルーゴ（先発）",
         "gp_inning_4_5": "4〜5回: 先発続投 or 中継ぎ移行",
         "gp_inning_6_plus": "6回以降: ブルペン後半（勝ちパターン）",
         "gp_pinch_hit": "代打マッチアップ（6回以降）",
         "gp_batting": "打撃戦略",
         "gp_pitching": "投球戦略",
-        "gp_team_weakness": "ベネズエラ打線の弱点",
+        "gp_team_weakness": "プエルトリコ打線の弱点",
     },
 }
 
@@ -494,8 +483,8 @@ TEXTS = {
 # Data loading
 # ---------------------------------------------------------------------------
 DATA_DIR = pathlib.Path(__file__).parent / "data"
-BATTER_CSV = DATA_DIR / "venezuela_statcast.csv"
-PITCHER_CSV = DATA_DIR / "venezuela_pitchers_statcast.csv"
+BATTER_CSV = DATA_DIR / "pr_statcast.csv"
+PITCHER_CSV = DATA_DIR / "pr_pitchers_statcast.csv"
 
 
 @st.cache_data
@@ -1980,13 +1969,12 @@ def _name_display(name: str, lang: str) -> str:
             return f"{ja}（{name}）"
     return name
 
-
 # ---------------------------------------------------------------------------
 # Streamlit App
 # ---------------------------------------------------------------------------
 def main():
     st.set_page_config(
-        page_title="WBC 2026 QF: JPN vs VEN",
+        page_title="WBC 2026 SF: JPN vs PR (Tentative)",
         page_icon="\U0001F1EF\U0001F1F5",
         layout="wide",
         initial_sidebar_state="collapsed",
@@ -2297,9 +2285,9 @@ def main():
 
     st.sidebar.markdown("""
     <div style="text-align:center; padding: 16px 0 8px 0;">
-        <div style="font-size:2.4rem; letter-spacing:8px;">🇯🇵 ⚔️ 🇻🇪</div>
+        <div style="font-size:2.4rem; letter-spacing:8px;">🇯🇵 ⚔️ 🇵🇷</div>
         <div style="font-size:1.1rem; font-weight:700; color:#e6f1ff; margin-top:6px;">
-            WBC 2026 Quarterfinal
+            WBC 2026 Semifinal (Tentative)
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -2323,13 +2311,15 @@ def main():
 
     # -- Hero Banner --
     _data_label = "MLB Statcast 2024-2025 Regular Season" if lang == "EN" else "MLB Statcast 2024-2025レギュラーシーズン"
-    _qf_label = "Quarterfinal" if lang == "EN" else "準々決勝"
+    _qf_label = "Semifinal (Tentative)" if lang == "EN" else "準決勝（仮想定）"
     st.markdown(f"""<div class="hero-banner">
-        <div class="hero-flags">🇯🇵 🇻🇪</div>
+        <div class="hero-flags">🇯🇵 🇵🇷</div>
         <p class="hero-title">{t['main_title']}</p>
         <p class="hero-sub">{t['subtitle']}</p>
         <span class="hero-badge">📊 {_data_label}</span>
     </div>""", unsafe_allow_html=True)
+
+    st.warning(t["tentative_warning"])
 
     tab1, tab_gp, tab2, tab3, tab4 = st.tabs([
         f"🎯 {t['tab1']}",
@@ -2366,8 +2356,7 @@ def main():
         lineup_df = pd.DataFrame(lineup_rows)
         st.dataframe(lineup_df, use_container_width=True, hide_index=True)
 
-        # Machado NPB warning
-        st.warning(t["machado_warning"])
+        st.warning(t["tentative_warning"])
 
         # Bench / Pinch-hit candidates
         st.subheader(t["bench_title"])
@@ -3157,15 +3146,15 @@ def main():
         st.markdown(f"**{t['gp_batting']}**")
         if lang == "EN":
             st.success(
-                f"**vs Ranger Suárez (LHP) — 60-65 pitch target, max 80 (QF rule):**\n"
+                f"**vs Seth Lugo (RHP) — 65-75 pitch target (SF rule):**\n"
                 f"- K% {_sp_k}%, BB% {_sp_bb}%, Whiff% {_sp_whiff}%, Avg Velo {_sp_velo} mph\n"
-                "- Pitch count determines 2-4 innings (QF pitch limit rule)"
+                "- Royals ace, ERA 3.00 in 2024, durable starter"
             )
         else:
             st.success(
-                f"**vs レンジャー・スアレス（左腕） — 目安60-65球、最大80球（準々決勝規定）:**\n"
+                f"**vs セス・ルーゴ（右腕） — 目安65-75球（準決勝規定）:**\n"
                 f"- 奪三振率 {_sp_k}%（MLB平均22.4%）, 与四球率 {_sp_bb}%, 空振率 {_sp_whiff}%（MLB平均25%）, 平均球速 {_sp_velo} mph\n"
-                "- 球数次第で2-4回の幅（準々決勝球数制限ルール）"
+                "- ロイヤルズのエース、2024年防御率3.00、スタミナ型先発"
             )
         # Data-driven pitch analysis from Statcast
         _gp_sp_analysis = generate_sp_pitch_analysis(_gp_sp_data, lang)
@@ -3216,8 +3205,8 @@ def main():
         # ===== Section C: 4-5回 (Bullpen Front — Bridge Relievers) =====
         st.subheader(t["gp_inning_4_5"])
 
-        # Build bridge reliever stats (Bazardo, Montero — inning-eater types)
-        _bridge_names = ["Eduard Bazardo", "Keider Montero"]
+        # Build bridge reliever stats (Garcia, Espada — inning-eater types)
+        _bridge_names = ["Rico Garcia", "José Espada"]
         _bridge_stats_en = []
         _bridge_stats_ja = []
         for rp_name in _bridge_names:
@@ -3237,16 +3226,16 @@ def main():
         st.markdown(f"**{t['gp_batting']}**")
         if lang == "EN":
             st.success(
-                "**vs Bridge Relievers (Bazardo, Montero, etc.):**\n"
+                "**vs Bridge Relievers (Garcia, Espada, etc.):**\n"
                 + "\n".join(_bridge_stats_en) + "\n"
-                f"- Suárez pitch mix: {_pitch_usage_str_en}\n"
+                f"- Lugo pitch mix: {_pitch_usage_str_en}\n"
                 "- MLB avg: 2nd time through order, pitcher opp OPS rises 15-20%"
             )
         else:
             st.success(
-                "**スアレス続投の場合（2巡目）:**\n"
+                "**ルーゴ続投の場合（2巡目）:**\n"
                 "- MLB統計: 2巡目は投手の被OPSが15-20%上昇する傾向\n"
-                f"- スアレスの球種配分: {_pitch_usage_str_ja}\n\n"
+                f"- ルーゴの球種配分: {_pitch_usage_str_ja}\n\n"
                 "**中継ぎ移行の場合:**\n"
                 + "\n".join(_bridge_stats_ja) + "\n"
                 "- MLB統計: 2巡目は投手の被OPSが15-20%上昇する傾向"
@@ -3287,8 +3276,8 @@ def main():
 
         st.markdown(f"**{t['gp_batting']}**")
 
-        # Build high-leverage reliever approach (Palencia closer, Buttó, Machado warning)
-        _hlev_names = ["Daniel Palencia", "José Buttó"]
+        # Build high-leverage reliever approach (Díaz closer, Cruz)
+        _hlev_names = ["Edwin Díaz", "Fernando Cruz"]
         _bp_approach_en = []
         _bp_approach_ja = []
         for rp_name in _hlev_names:
@@ -3320,17 +3309,13 @@ def main():
 
         if lang == "EN":
             st.success(
-                "**vs High-Leverage Arms (Palencia, Buttó):**\n"
-                + "\n".join(_bp_approach_en) + "\n"
-                "- **Palencia:** ERA 2.91, 22 SV, avg 99.6 mph\n"
-                "- ⚠️ **Machado (Orix, NPB):** NPB 2024 — 28 SV, ERA 1.92. No Statcast data"
+                "**vs High-Leverage Arms (Díaz, Cruz):**\n"
+                + "\n".join(_bp_approach_en)
             )
         else:
             st.success(
                 "**vs 勝ちパターン投手:**\n"
-                + "\n".join(_bp_approach_ja) + "\n"
-                "- **パレンシア:** 防御率2.91、22セーブ、平均球速99.6mph\n"
-                "- ⚠️ **マチャド（オリックス）:** NPB 2024 — 28セーブ、防御率1.92。Statcastデータなし"
+                + "\n".join(_bp_approach_ja)
             )
 
         st.markdown(f"**{t['gp_pitching']}**")
@@ -3433,7 +3418,7 @@ def main():
             )
 
     # ===================================================================
-    # TAB 2: Venezuela Lineup Scouting
+    # TAB 2: Puerto Rico Lineup Scouting
     # ===================================================================
     with tab2:
         season_label = f"{season} MLB Season (Statcast)" if lang == "EN" else f"{season}年 MLBシーズン（Statcast）"
@@ -3532,14 +3517,14 @@ def main():
         # ---------------------------------------------------------------
         _bat_roster_title = "打者一覧（全ロースター）" if lang == "JA" else "All Batters (Full Roster)"
         _bat_roster_sub = "スタメン9名 ＋ 控え選手。選手を選択すると詳細分析が表示されます。" if lang == "JA" else "Starting 9 + bench. Select a player for detailed analysis."
-        st.markdown(f"""<div class="section-header"><h3>🇻🇪 {_bat_roster_title}</h3><p>{_bat_roster_sub}</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="section-header"><h3>🇵🇷 {_bat_roster_title}</h3><p>{_bat_roster_sub}</p></div>""", unsafe_allow_html=True)
 
         # Build lineup lookup for quick order retrieval
         _lineup_order = {le["name"]: le["order"] for le in PREDICTED_LINEUP}
         _lineup_pos = {le["name"]: le["pos"] for le in PREDICTED_LINEUP}
 
         batter_rows = []
-        for p in VENEZUELA_BATTERS:
+        for p in PR_BATTERS:
             pi = PLAYER_BY_NAME.get(p["name"])
             if not pi:
                 continue
@@ -3951,7 +3936,7 @@ def main():
                     st.caption("⚠️ " + ("データ不足のため全体で算出" if lang == "JA" else "Insufficient data — using overall"))
 
     # ===================================================================
-    # TAB 3: Ranger Suarez Analysis
+    # TAB 3: Seth Lugo Analysis
     # ===================================================================
     with tab3:
         season_label = f"{season} MLB Season (Statcast)" if lang == "EN" else f"{season}年 MLBシーズン（Statcast）"
@@ -4240,7 +4225,7 @@ def main():
         # ---------------------------------------------------------------
         # All relievers summary table + selectbox for individual report
         # ---------------------------------------------------------------
-        all_relievers = [p for p in VENEZUELA_PITCHERS if p["name"] != PREDICTED_SP]
+        all_relievers = [p for p in PR_PITCHERS if p["name"] != PREDICTED_SP]
 
         # Build summary table
         rp_rows = []
@@ -4271,7 +4256,7 @@ def main():
 
         _pit_roster_title = "投手一覧（先発除く）" if lang == "JA" else "All Pitchers (excl. Starter)"
         _pit_roster_sub = "主力リリーバー ＋ 控え投手。選手を選択すると詳細分析が表示されます。" if lang == "JA" else "Key relievers + bench. Select a pitcher for detailed analysis."
-        st.markdown(f"""<div class="section-header"><h3>🇻🇪 {_pit_roster_title}</h3><p>{_pit_roster_sub}</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="section-header"><h3>🇵🇷 {_pit_roster_title}</h3><p>{_pit_roster_sub}</p></div>""", unsafe_allow_html=True)
         rp_sum_df = pd.DataFrame(rp_rows)
         rp_col_map = {"tag": "役割" if lang == "JA" else "Role",
                       "name": "選手名" if lang == "JA" else "Name",

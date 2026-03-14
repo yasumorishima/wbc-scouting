@@ -551,14 +551,13 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
 
 
 def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
-    """Draw 3x3 zone chart using Statcast zone 1-9 (pitcher version)."""
+    """Draw 3x3 zone chart using plate_x/plate_z coordinates (pitcher version)."""
     hit_events = {"single", "double", "triple", "home_run"}
     ab_events = hit_events | {"field_out", "strikeout", "grounded_into_double_play",
                               "double_play", "force_out", "fielders_choice",
                               "fielders_choice_out", "strikeout_double_play", "field_error"}
 
-    valid = df.dropna(subset=["zone"]).copy()
-    valid["zone"] = valid["zone"].astype(int)
+    valid = df.dropna(subset=["plate_x", "plate_z"]).copy()
 
     x_edges = np.linspace(-0.83, 0.83, 4)
     z_edges = np.linspace(1.5, 3.5, 4)
@@ -578,7 +577,11 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
         cmap = plt.cm.RdYlGn_r.copy()
 
     for zone_num, (row, col) in zone_map.items():
-        zdf = valid[valid["zone"] == zone_num]
+        mask = ((valid["plate_x"] >= x_edges[col])
+                & (valid["plate_x"] < x_edges[col + 1])
+                & (valid["plate_z"] >= z_edges[row])
+                & (valid["plate_z"] < z_edges[row + 1]))
+        zdf = valid[mask]
         if metric == "usage":
             total_in_zone = len(valid[(valid["zone"] >= 1) & (valid["zone"] <= 9)])
             if len(zdf) >= 3 and total_in_zone > 0:

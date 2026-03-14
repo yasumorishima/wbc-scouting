@@ -495,14 +495,13 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
 
 
 def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
-    """Draw 3x3 zone chart using Statcast zone 1-9."""
+    """Draw 3x3 zone chart using plate_x/plate_z coordinates."""
     hit_events = {"single", "double", "triple", "home_run"}
     ab_events = hit_events | {"field_out", "strikeout", "grounded_into_double_play",
                               "double_play", "force_out", "fielders_choice",
                               "fielders_choice_out", "strikeout_double_play", "field_error"}
 
-    valid = df.dropna(subset=["zone"]).copy()
-    valid["zone"] = valid["zone"].astype(int)
+    valid = df.dropna(subset=["plate_x", "plate_z"]).copy()
 
     # Zone layout (catcher's view):
     # 1 2 3   (top)
@@ -525,7 +524,11 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax):
         vmin, vmax = 0.150, 0.500
 
     for zone_num, (row, col) in zone_map.items():
-        zdf = valid[valid["zone"] == zone_num]
+        mask = ((valid["plate_x"] >= x_edges[col])
+                & (valid["plate_x"] < x_edges[col + 1])
+                & (valid["plate_z"] >= z_edges[row])
+                & (valid["plate_z"] < z_edges[row + 1]))
+        zdf = valid[mask]
         if metric == "ba":
             ab = zdf[zdf["events"].isin(ab_events)]
             hits = zdf[zdf["events"].isin(hit_events)]
@@ -653,8 +656,11 @@ def pitch_type_table(df: pd.DataFrame, t) -> pd.DataFrame:
         })]
         whiff_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
 
-        # chase = swings outside zone
-        outside = grp[(grp["zone"].notna()) & (grp["zone"] >= 11)]
+        # chase = swings outside zone — coordinate-based
+        grp_coords = grp.dropna(subset=["plate_x", "plate_z"])
+        outside = grp_coords[
+            (grp_coords["plate_x"] < -0.83) | (grp_coords["plate_x"] > 0.83)
+            | (grp_coords["plate_z"] < 1.5) | (grp_coords["plate_z"] > 3.5)]
         chase_swings = outside[outside["description"].isin({
             "hit_into_play", "foul", "swinging_strike",
             "swinging_strike_blocked", "foul_tip",

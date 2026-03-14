@@ -376,6 +376,46 @@ def generate_pitcher_summary(stats: dict, pdf: pd.DataFrame, pitcher: dict,
 
 
 # ---------------------------------------------------------------------------
+# Coordinate-based zone helpers (replaces Statcast zone column)
+# ---------------------------------------------------------------------------
+# Strike zone boundaries: plate width ±0.83 ft, height 1.5–3.5 ft
+_SZ_X_EDGES = np.linspace(-0.83, 0.83, 4)   # [-0.83, -0.277, 0.277, 0.83]
+_SZ_Z_EDGES = np.linspace(1.5, 3.5, 4)       # [1.5, 2.167, 2.833, 3.5]
+
+
+def _is_outside_zone(plate_x: pd.Series, plate_z: pd.Series) -> pd.Series:
+    """Return boolean mask: True if pitch is outside the strike zone."""
+    return ((plate_x < -0.83) | (plate_x > 0.83)
+            | (plate_z < 1.5) | (plate_z > 3.5))
+
+
+def _zone_ba_from_coords(pdf: pd.DataFrame) -> dict:
+    """Calculate BA per 3x3 zone using plate_x/plate_z coordinates.
+
+    Returns dict {zone_num: ba} for zones 1-9.
+    Zone layout (catcher's view):
+      1 | 2 | 3   (high)
+      4 | 5 | 6   (mid)
+      7 | 8 | 9   (low)
+    """
+    valid = pdf.dropna(subset=["plate_x", "plate_z"]).copy()
+    zone_ba = {}
+    for row in range(3):
+        for col in range(3):
+            zone_num = (2 - row) * 3 + col + 1
+            mask = ((valid["plate_x"] >= _SZ_X_EDGES[col])
+                    & (valid["plate_x"] < _SZ_X_EDGES[col + 1])
+                    & (valid["plate_z"] >= _SZ_Z_EDGES[row])
+                    & (valid["plate_z"] < _SZ_Z_EDGES[row + 1]))
+            zdf = valid[mask]
+            ab = zdf[zdf["events"].isin(_AB_EVENTS)]
+            hits = zdf[zdf["events"].isin(_HIT_EVENTS)]
+            if len(ab) >= 5:
+                zone_ba[zone_num] = len(hits) / len(ab)
+    return zone_ba
+
+
+# ---------------------------------------------------------------------------
 # Strategic analysis
 # ---------------------------------------------------------------------------
 def _zone_names_for_bats(bats: str, lang: str) -> dict:
@@ -416,7 +456,8 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict,
             whiffs = grp[grp["description"].isin(_WHIFF_DESCS)]
             ba = len(hits) / len(ab) if len(ab) >= 10 else None
             whiff_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
-            outside = grp[(grp["zone"].notna()) & (grp["zone"] >= 11)]
+            grp_coords = grp.dropna(subset=["plate_x", "plate_z"])
+            outside = grp_coords[_is_outside_zone(grp_coords["plate_x"], grp_coords["plate_z"])]
             chase_swings = outside[outside["description"].isin(_SWING_DESCS)]
             chase_pct = len(chase_swings) / len(outside) * 100 if len(outside) > 0 else 0
             label = PITCH_LABELS.get(pt, pt)
@@ -449,17 +490,9 @@ def generate_pitching_plan(pdf: pd.DataFrame, stats: dict,
                     if lang == "EN" else
                     f"- **ゾーン外で振らせる球:** {bc['label']}（チェイス率 {bc['chase']:.1f}%）")
 
-    # 2. Zone weakness (3x3)
-    zone_valid = pdf.dropna(subset=["zone"]).copy()
-    zone_valid["zone"] = zone_valid["zone"].astype(int)
+    # 2. Zone weakness (3x3) — coordinate-based
     zone_names = _zone_names_for_bats(bats, lang)
-    zone_ba = {}
-    for z in range(1, 10):
-        zdf = zone_valid[zone_valid["zone"] == z]
-        ab = zdf[zdf["events"].isin(_AB_EVENTS)]
-        hits = zdf[zdf["events"].isin(_HIT_EVENTS)]
-        if len(ab) >= 5:
-            zone_ba[z] = len(hits) / len(ab)
+    zone_ba = _zone_ba_from_coords(pdf)
     if zone_ba:
         weak_zones = sorted(zone_ba.items(), key=lambda x: x[1])[:2]
         strong_zones = sorted(zone_ba.items(), key=lambda x: x[1], reverse=True)[:2]
@@ -601,17 +634,9 @@ def generate_hitting_plan(pdf: pd.DataFrame, stats: dict,
                     if lang == "EN" else
                     f"- **最も空振りを取る球種:** {bp['label']}（空振率 {bp['whiff']:.1f}%）")
 
-    # 2. Zone vulnerability
-    zone_valid = pdf.dropna(subset=["zone"]).copy()
-    zone_valid["zone"] = zone_valid["zone"].astype(int)
+    # 2. Zone vulnerability — coordinate-based
     zone_names = _zone_names_for_bats("R", lang)
-    zone_ba = {}
-    for z in range(1, 10):
-        zdf = zone_valid[zone_valid["zone"] == z]
-        ab = zdf[zdf["events"].isin(_AB_EVENTS)]
-        hits = zdf[zdf["events"].isin(_HIT_EVENTS)]
-        if len(ab) >= 5:
-            zone_ba[z] = len(hits) / len(ab)
+    zone_ba = _zone_ba_from_coords(pdf)
     if zone_ba:
         hittable_zones = sorted(zone_ba.items(), key=lambda x: x[1], reverse=True)[:2]
         tough_zones = sorted(zone_ba.items(), key=lambda x: x[1])[:2]
@@ -891,9 +916,8 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax,
 
 def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax,
                    lang: str = "EN"):
-    """Draw 3x3 zone chart using Statcast zone 1-9."""
-    valid = df.dropna(subset=["zone"]).copy()
-    valid["zone"] = valid["zone"].astype(int)
+    """Draw 3x3 zone chart using plate_x/plate_z coordinates."""
+    valid = df.dropna(subset=["plate_x", "plate_z"]).copy()
     x_edges = np.linspace(-0.83, 0.83, 4)
     z_edges = np.linspace(1.5, 3.5, 4)
     grid = np.full((3, 3), np.nan)
@@ -902,7 +926,11 @@ def draw_zone_3x3(df: pd.DataFrame, metric: str, title: str, ax,
                 7: (0, 0), 8: (0, 1), 9: (0, 2)}
     vmin, vmax = (0, 0.450) if metric == "ba" else (0.150, 0.500)
     for zone_num, (row, col) in zone_map.items():
-        zdf = valid[valid["zone"] == zone_num]
+        mask = ((valid["plate_x"] >= x_edges[col])
+                & (valid["plate_x"] < x_edges[col + 1])
+                & (valid["plate_z"] >= z_edges[row])
+                & (valid["plate_z"] < z_edges[row + 1]))
+        zdf = valid[mask]
         if metric == "ba":
             ab = zdf[zdf["events"].isin(_AB_EVENTS)]
             hits = zdf[zdf["events"].isin(_HIT_EVENTS)]
@@ -1144,7 +1172,8 @@ def pitch_type_table(df: pd.DataFrame, t) -> pd.DataFrame:
             "swinging_strike", "swinging_strike_blocked", "foul_tip",
         })]
         whiff_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
-        outside = grp[(grp["zone"].notna()) & (grp["zone"] >= 11)]
+        grp_coords = grp.dropna(subset=["plate_x", "plate_z"])
+        outside = grp_coords[_is_outside_zone(grp_coords["plate_x"], grp_coords["plate_z"])]
         chase_swings = outside[outside["description"].isin({
             "hit_into_play", "foul", "swinging_strike",
             "swinging_strike_blocked", "foul_tip",
