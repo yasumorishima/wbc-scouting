@@ -1,4 +1,4 @@
-"""WBC 2026 Netherlands Pitching Scouting Dashboard."""
+"""WBC 2026 Venezuela Pitching Scouting Dashboard."""
 
 import pathlib
 
@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 from scipy.stats import gaussian_kde
 
-from players_ned_pitchers import NED_PITCHERS, PITCHER_BY_NAME
+from players_venezuela_pitchers import VENEZUELA_PITCHERS, PITCHER_BY_NAME
 
 from scouting_lib import (
     PREMIUM_CSS,
@@ -24,7 +24,7 @@ from scouting_lib import (
 # ---------------------------------------------------------------------------
 TEXTS = {
     "EN": {
-        "title": "Netherlands Pitching Scouting Report",
+        "title": "Venezuela Pitching Scouting Report",
         "subtitle": "WBC 2026 — Projected Opponent Pitching Analysis",
         "select_pitcher": "Select Pitcher",
         "team_overview": "Staff Overview",
@@ -75,7 +75,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "The Netherlands has developed a solid pitching tradition with players competing at the MLB and Triple-A level. The staff may feature diverse arm types with the ability to keep opposing lineups off balance."
+            "Venezuela's pitching staff includes proven MLB starters and high-leverage relievers. Ranger Suárez and Eduardo Rodríguez anchor the rotation with elite stuff."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -145,7 +145,7 @@ TEXTS = {
         "count_pie_title": "Pitch Selection by Count (Visual)",
     },
     "JA": {
-        "title": "オランダ 投手スカウティングレポート",
+        "title": "ベネズエラ 投手スカウティングレポート",
         "subtitle": "WBC 2026 — 対戦相手投手分析（想定）",
         "select_pitcher": "投手を選択",
         "team_overview": "投手陣概要",
@@ -196,7 +196,7 @@ TEXTS = {
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "オランダの投手陣はMLBやトリプルAレベルの投手を含む充実した顔ぶれが期待される。\n\n多様な球種と投球スタイルで打線を抑える能力が高い可能性がある。"
+            "ベネズエラの投手陣はMLB実績のある先発とハイレバレッジのリリーバーで構成。\n\nスアレスとロドリゲスが先発の柱となる。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "
@@ -290,7 +290,7 @@ PITCH_COLORS = {
 # ---------------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------------
-DATA_PATH = pathlib.Path(__file__).parent / "data" / "ned_pitchers_statcast.csv"
+DATA_PATH = pathlib.Path(__file__).parent / "data" / "venezuela_pitchers_statcast.csv"
 
 
 @st.cache_data
@@ -724,8 +724,8 @@ def count_category(balls: int, strikes: int) -> str:
 # ---------------------------------------------------------------------------
 def main():
     st.set_page_config(
-        page_title="Netherlands Pitching \u2014 WBC 2026",
-        page_icon="\U0001F1F3\U0001F1F1",
+        page_title="Venezuela Pitching \u2014 WBC 2026",
+        page_icon="\U0001F1FB\U0001F1EA",
         layout="wide",
         initial_sidebar_state="collapsed",
     )
@@ -745,10 +745,10 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    st.sidebar.markdown(f"# \U0001F1F3\U0001F1F1 {t['title']}")
+    st.sidebar.markdown(f"# \U0001F1FB\U0001F1EA {t['title']}")
     st.sidebar.caption(t["subtitle"])
 
-    _name_ja_map = {p["name"]: p.get("name_ja", "") for p in NED_PITCHERS}
+    _name_ja_map = {p["name"]: p.get("name_ja", "") for p in VENEZUELA_PITCHERS}
 
     def _display_name(name):
         ja = _name_ja_map.get(name, "")
@@ -756,7 +756,7 @@ def main():
             return f"{ja}（{name}）"
         return name
 
-    pitcher_names = [t["team_overview"]] + [p["name"] for p in NED_PITCHERS]
+    pitcher_names = [t["team_overview"]] + [p["name"] for p in VENEZUELA_PITCHERS]
     selected = st.sidebar.selectbox(
         t["select_pitcher"], pitcher_names,
         format_func=lambda x: x if x == t["team_overview"] else _display_name(x),
@@ -773,13 +773,13 @@ def main():
     # -----------------------------------------------------------------------
     if selected == t["team_overview"]:
         season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
-        st.header(f"\U0001F1F3\U0001F1F1 {t['team_overview']} — {season_label}")
+        st.header(f"\U0001F1FB\U0001F1EA {t['team_overview']} — {season_label}")
 
         st.info(t["overview_guide"])
 
         rows = []
         pitcher_stats_list = []
-        for p in NED_PITCHERS:
+        for p in VENEZUELA_PITCHERS:
             pdf = df_all[df_all["pitcher"] == p["mlbam_id"]]
             if pdf.empty:
                 continue
@@ -997,7 +997,7 @@ def main():
     role_label = t["sp"] if pitcher["role"] == "SP" else t["rp"]
 
     season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
-    st.header(f"\U0001F1F3\U0001F1F1 {_display_name(pitcher['name'])} — {season_label}")
+    st.header(f"\U0001F1FB\U0001F1EA {_display_name(pitcher['name'])} — {season_label}")
     c1, c2, c3 = st.columns(3)
     c1.metric(t["team"], pitcher["team"])
     c2.metric(t["throws"], pitcher["throws"])

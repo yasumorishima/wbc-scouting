@@ -13,6 +13,12 @@ from scipy.stats import gaussian_kde
 
 from players_usa_pitchers import USA_PITCHERS, PITCHER_BY_NAME
 
+from scouting_lib import (
+    PREMIUM_CSS,
+    generate_hitting_plan,
+    draw_pitch_selection_pies as _lib_draw_pies,
+)
+
 # ---------------------------------------------------------------------------
 # i18n
 # ---------------------------------------------------------------------------
@@ -23,7 +29,6 @@ TEXTS = {
         "select_pitcher": "Select Pitcher",
         "team_overview": "Staff Overview",
         "season": "Season",
-        "all_seasons": "All",
         "profile": "Pitcher Profile",
         "team": "Team",
         "throws": "Throws",
@@ -68,17 +73,9 @@ TEXTS = {
         "opp_slg": "Opp SLG",
         "xwoba_against": "xwOBA Against",
         "zone_3x3": "Zone Chart (3×3)",
-        "top3_title": "Top 3 Pitchers (by K%)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "Team USA features one of the most talented pitching staffs in the tournament. "
-            "Paul Skenes and Tarik Skubal anchor the rotation as true ace-caliber starters. "
-            "Mason Miller provides elite closer ability with elite velocity. "
-            "The bullpen is deep with high-strikeout arms including David Bednar, "
-            "Griffin Jax, and Garrett Whitlock. "
-            "Key vulnerabilities: limited left-handed pitching (Matt Boyd, Garrett Cleavinger, "
-            "Gabe Speier, Tarik Skubal), and some relievers may have command inconsistencies "
-            "in high-pressure situations."
+            "The USA's pitching staff is loaded with elite arms from top MLB rotations and bullpens, providing dominant coverage at every stage of the game."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -106,9 +103,7 @@ TEXTS = {
             "- **Put Away%** = Rate of strikeouts when pitching with 2 strikes"
         ),
         "glossary_batted": (
-            "- **GB%** = Ground ball rate\n"
-            "- **LD%** = Line drive rate\n"
-            "- **FB%** = Fly ball rate\n"
+            "- **GB%** = Ground ball rate\n- **LD%** = Line drive rate\n- **FB%** = Fly ball rate\n"
             "- **Avg EV Against** = Average exit velocity allowed (mph)\n"
             "- **Avg LA Against** = Average launch angle allowed (degrees)"
         ),
@@ -125,6 +120,14 @@ TEXTS = {
         "pitch_filter": "Filter by pitch type",
         "all_pitches": "All Pitches",
         "count_pitch_mix": "Pitch Mix by Count",
+        "top3_title": "Top 3 Pitchers (by K%)",
+        "team_radar_title": "Staff Pitching Profile",
+        "full_stats_table": "Full Stats Table",
+        "zone_caption": "Shows where pitches are located and how batters perform in each zone",
+        "arsenal_caption": "Breakdown of each pitch type: velocity, movement, and swing-and-miss ability",
+        "movement_caption": "Each dot is a pitch — shows how much each pitch type moves horizontally and vertically",
+        "batted_ball_caption": "How opposing batters' batted balls behave against this pitcher",
+        "platoon_caption": "Compares pitching stats against left-handed vs right-handed batters",
         "glossary_count": (
             "- **Pitches** = Total pitches thrown\n"
             "- **Opp AVG** = Opponents' batting average against\n"
@@ -132,6 +135,14 @@ TEXTS = {
             "- **K%** = Strikeout rate (strikeouts / plate appearances)\n"
             "- **BB%** = Walk rate (walks / plate appearances)"
         ),
+        "hitting_plan_title": "Hitting Plan — How to Attack This Pitcher",
+        "hitting_plan_explain": "Data-driven approach based on pitch arsenal vulnerabilities, hittable zones, count tendencies, and platoon splits.",
+        "count_first_pitch": "First Pitch (0-0)",
+        "count_ahead_pitcher": "Pitcher Ahead (S>B)",
+        "count_behind_pitcher": "Pitcher Behind (B>S)",
+        "count_even_pitcher": "Even Count (B=S, >0)",
+        "count_two_strikes": "2 Strikes",
+        "count_pie_title": "Pitch Selection by Count (Visual)",
     },
     "JA": {
         "title": "アメリカ 投手スカウティングレポート",
@@ -139,7 +150,6 @@ TEXTS = {
         "select_pitcher": "投手を選択",
         "team_overview": "投手陣概要",
         "season": "シーズン",
-        "all_seasons": "全シーズン",
         "profile": "投手プロフィール",
         "team": "チーム",
         "throws": "投",
@@ -177,23 +187,16 @@ TEXTS = {
         "rp": "リリーフ",
         "velo_spin": "球速・回転数プロフィール",
         "movement_chart": "変化量チャート",
-        "pitches": "投球数",
-        "k_pct": "奪三振率",
-        "bb_pct": "与四球率",
-        "opp_avg": "被打率",
-        "opp_slg": "被長打率",
-        "xwoba_against": "被xwOBA",
+        "pitches": "Pitches\uff08\u6295\u7403\u6570\uff09",
+        "k_pct": "K%\uff08\u596a\u4e09\u632f\u7387\uff09",
+        "bb_pct": "BB%\uff08\u4e0e\u56db\u7403\u7387\uff09",
+        "opp_avg": "Opp AVG\uff08\u88ab\u6253\u7387\uff09",
+        "opp_slg": "Opp SLG\uff08\u88ab\u9577\u6253\u7387\uff09",
+        "xwoba_against": "xwOBA\uff08\u88ab\u671f\u5f85\u5024\uff09",
         "zone_3x3": "ゾーンチャート (3×3)",
-        "top3_title": "注目投手 TOP3（奪三振率順）",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "アメリカは大会トップクラスの投手陣を誇る。"
-            "ポール・スキーンズとタリク・スクーバルがエースとして先発を牽引。"
-            "メイソン・ミラーは圧倒的な球速を誇るエリートクローザー。"
-            "デビッド・ベドナー、グリフィン・ジャックス、ギャレット・ウィットロックらが"
-            "高奪三振率のブルペン陣を形成。\n\n"
-            "弱点: 左腕はボイド・クリーヴィンジャー・スパイアー・スクーバルの4人のみ。"
-            "また一部のリリーフは接戦の場面でコマンドが乱れる可能性がある。"
+            "アメリカの投手陣はMLBトップクラスの先発・リリーフを多数擁し、どの局面でも支配的な投球が期待される。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "
@@ -221,9 +224,7 @@ TEXTS = {
             "- **決め球率（Put Away%）** = 2ストライクから三振を奪う割合"
         ),
         "glossary_batted": (
-            "- **ゴロ%** = ゴロの割合\n"
-            "- **ライナー%** = ライナーの割合\n"
-            "- **フライ%** = フライの割合\n"
+            "- **ゴロ%** = ゴロの割合\n- **ライナー%** = ライナーの割合\n- **フライ%** = フライの割合\n"
             "- **被平均打球速度** = 打たれた打球のスピード (mph)\n"
             "- **被平均打球角度** = 打たれた打球の角度"
         ),
@@ -240,6 +241,14 @@ TEXTS = {
         "pitch_filter": "球種で絞り込み",
         "all_pitches": "全球種",
         "count_pitch_mix": "カウント別 球種配分",
+        "top3_title": "注目投手 TOP3（奪三振率順）",
+        "team_radar_title": "投手陣の特徴",
+        "full_stats_table": "詳細成績一覧",
+        "zone_caption": "各ゾーンへの投球分布と、ゾーンごとの被打率を表示",
+        "arsenal_caption": "球種ごとの球速・変化量・空振り率の詳細",
+        "movement_caption": "各ドットが1球 — 球種ごとの縦横の変化量を可視化",
+        "batted_ball_caption": "この投手に対する打球の傾向（ゴロ・ライナー・フライの割合）",
+        "platoon_caption": "左打者と右打者、それぞれに対する投球成績の比較",
         "glossary_count": (
             "- **投球数（Pitches）** = 投じた総球数\n"
             "- **被打率（Opp AVG）** = 対戦打者の打率\n"
@@ -247,6 +256,14 @@ TEXTS = {
             "- **奪三振率（K%）** = 打席あたりの三振を奪う割合\n"
             "- **与四球率（BB%）** = 打席あたりの四球を与える割合"
         ),
+        "hitting_plan_title": "打撃プラン — この投手の攻略法",
+        "hitting_plan_explain": "球種別の弱点、被打率の高いゾーン、カウント傾向、左右差からデータに基づく攻め方を自動生成。",
+        "count_first_pitch": "初球 (0-0)",
+        "count_ahead_pitcher": "投手有利 (S>B)",
+        "count_behind_pitcher": "投手不利 (B>S)",
+        "count_even_pitcher": "イーブン (B=S, >0)",
+        "count_two_strikes": "2ストライク",
+        "count_pie_title": "カウント別 球種配分（ビジュアル）",
     },
 }
 
@@ -286,8 +303,6 @@ def load_data() -> pd.DataFrame:
 
 
 def filter_season(df: pd.DataFrame, season) -> pd.DataFrame:
-    if season == "All":
-        return df
     return df[df["season"] == int(season)]
 
 
@@ -330,6 +345,14 @@ def pitching_stats(df: pd.DataFrame) -> dict:
     xwoba = df["estimated_woba_using_speedangle"].dropna().mean()
     avg_velo = df["release_speed"].dropna().mean() if "release_speed" in df.columns else None
 
+    # Whiff% (swing-and-miss rate)
+    swing_events = {"hit_into_play", "foul", "swinging_strike",
+                    "swinging_strike_blocked", "foul_tip", "hit_into_play_score",
+                    "hit_into_play_no_out"}
+    swings = df[df["description"].isin(swing_events)]
+    whiffs = df[df["description"].isin({"swinging_strike", "swinging_strike_blocked", "foul_tip"})]
+    whiff_pct = len(whiffs) / len(swings) * 100 if len(swings) > 0 else 0
+
     return {
         "Pitches": total_pitches,
         "PA": n_pa, "K": n_k, "BB": n_bb, "HR": n_hr,
@@ -337,6 +360,7 @@ def pitching_stats(df: pd.DataFrame) -> dict:
         "Opp SLG": round(opp_slg, 3),
         "K%": round(k_pct, 1),
         "BB%": round(bb_pct, 1),
+        "Whiff%": round(whiff_pct, 1),
         "xwOBA": round(xwoba, 3) if not pd.isna(xwoba) else None,
         "Avg Velo": round(avg_velo, 1) if avg_velo and not pd.isna(avg_velo) else None,
     }
@@ -364,8 +388,8 @@ def generate_pitcher_summary(stats: dict, pdf: pd.DataFrame, pitcher: dict,
                          else "打球の質を抑えている（被xwOBA .290以下）")
 
     if stats["Avg Velo"] and stats["Avg Velo"] >= 95.0:
-        strengths.append(f"power arm (Avg Velo {stats['Avg Velo']:.1f} mph / {stats['Avg Velo'] * 1.609:.0f} km/h)" if lang == "EN"
-                         else f"パワーアーム（平均球速 {stats['Avg Velo']:.1f} mph / {stats['Avg Velo'] * 1.609:.0f} km/h）")
+        strengths.append(f"power arm (Avg Velo {stats['Avg Velo']:.1f} mph)" if lang == "EN"
+                         else f"パワーアーム（平均球速 {stats['Avg Velo']:.1f} mph）")
 
     if stats["BB%"] >= 10.0:
         weaknesses.append(f"high walk rate (BB% {stats['BB%']:.1f})" if lang == "EN"
@@ -706,34 +730,20 @@ def main():
         initial_sidebar_state="collapsed",
     )
 
-    # -- Responsive CSS for mobile --
-    st.markdown("""
-    <style>
-    @media (max-width: 768px) {
-        /* Shrink metric cards */
-        [data-testid="stMetric"] {
-            padding: 0.3rem 0.4rem;
-        }
-        [data-testid="stMetricLabel"] {
-            font-size: 0.75rem !important;
-        }
-        [data-testid="stMetricValue"] {
-            font-size: 1.1rem !important;
-        }
-        /* Tighter column gaps */
-        [data-testid="stHorizontalBlock"] {
-            gap: 0.3rem !important;
-        }
-        /* Readable table text */
-        .stDataFrame td, .stDataFrame th {
-            font-size: 0.8rem !important;
-        }
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # -- Premium dark theme CSS --
+    st.markdown(PREMIUM_CSS, unsafe_allow_html=True)
 
     lang = st.sidebar.radio("Language / \u8a00\u8a9e", ["JA", "EN"], horizontal=True)
     t = TEXTS[lang]
+
+    # -- Hero banner --
+    st.markdown(f"""
+    <div class="hero-banner">
+        <div class="hero-title">{t['title']}</div>
+        <div class="hero-sub">{t['subtitle']}</div>
+        <div class="hero-badge">MLB Statcast 2024-2025</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.sidebar.markdown(f"# \U0001F1FA\U0001F1F8 {t['title']}")
     st.sidebar.caption(t["subtitle"])
@@ -747,24 +757,25 @@ def main():
         return name
 
     pitcher_names = [t["team_overview"]] + [p["name"] for p in USA_PITCHERS]
-    selected = st.sidebar.selectbox(t["select_pitcher"], pitcher_names)
+    selected = st.sidebar.selectbox(
+        t["select_pitcher"], pitcher_names,
+        format_func=lambda x: x if x == t["team_overview"] else _display_name(x),
+    )
 
     df_all = load_data()
 
-    seasons = ["All"] + sorted(df_all["season"].unique().tolist())
-    season = st.sidebar.selectbox(t["season"], seasons, format_func=lambda x: t["all_seasons"] if x == "All" else str(x))
+    seasons = sorted(df_all["season"].unique().tolist())
+    season = st.sidebar.selectbox(t["season"], seasons, index=len(seasons) - 1, format_func=str)
     df_all = filter_season(df_all, season)
 
     # -----------------------------------------------------------------------
     # Staff Overview
     # -----------------------------------------------------------------------
     if selected == t["team_overview"]:
-        st.header(f"\U0001F1FA\U0001F1F8 {t['team_overview']}")
+        season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+        st.header(f"\U0001F1FA\U0001F1F8 {t['team_overview']} — {season_label}")
 
         st.info(t["overview_guide"])
-
-        with st.expander("Stats glossary" if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
-            st.markdown(t["glossary_stats"])
 
         rows = []
         pitcher_stats_list = []
@@ -773,7 +784,6 @@ def main():
             if pdf.empty:
                 continue
             s = pitching_stats(pdf)
-            pitcher_stats_list.append({"name": _display_name(p["name"]), "role": p["role"], "team": p["team"], **s})
             role_label = t["sp"] if p["role"] == "SP" else t["rp"]
             rows.append({
                 t["pitcher"]: _display_name(p["name"]),
@@ -788,21 +798,14 @@ def main():
                 t["xwoba_against"]: s["xwOBA"],
                 t["avg_velo"]: f"{s['Avg Velo']:.1f} / {s['Avg Velo'] * 1.609:.0f}" if s["Avg Velo"] else "\u2014",
             })
+            pitcher_stats_list.append({
+                "name": _display_name(p["name"]),
+                "team": p["team"],
+                "role": role_label,
+                **s,
+            })
 
         if rows:
-            overview = pd.DataFrame(rows)
-            st.dataframe(
-                overview.style.format({
-                    t["pitches"]: "{:.0f}",
-                    t["k_pct"]: "{:.1f}", t["bb_pct"]: "{:.1f}",
-                    t["opp_avg"]: "{:.3f}", t["opp_slg"]: "{:.3f}",
-                    t["xwoba_against"]: "{:.3f}",
-                }).background_gradient(subset=[t["k_pct"]], cmap="RdYlGn")
-                .background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
-                use_container_width=True,
-                hide_index=True,
-            )
-
             # --- TOP 3 Pitchers by K% ---
             if pitcher_stats_list:
                 sorted_by_k = sorted(
@@ -813,10 +816,10 @@ def main():
                 top3 = sorted_by_k[:3]
                 if top3:
                     st.subheader(t["top3_title"])
-                    st.caption(f"{season}" + (" season" if lang == "EN" else "年シーズン"))
-                    opp_avg_label = "Opp AVG（被打率）" if lang == "JA" else t["opp_avg"]
-                    bb_label = "BB%（与四球率）" if lang == "JA" else t["bb_pct"]
-                    velo_label = "球速 (mph)" if lang == "JA" else "Velo (mph)"
+                    st.caption(f"{season}" + (" season" if lang == "EN" else "\u5e74\u30b7\u30fc\u30ba\u30f3"))
+                    opp_avg_label = "Opp AVG\uff08\u88ab\u6253\u7387\uff09" if lang == "JA" else t["opp_avg"]
+                    bb_label = "BB%\uff08\u4e0e\u56db\u7403\u7387\uff09" if lang == "JA" else t["bb_pct"]
+                    velo_label = "\u7403\u901f (mph)" if lang == "JA" else "Velo (mph)"
                     _MLB_AVG_T3P = {"K%": 22.4, "Whiff%": 25.0, "BB%": 8.3,
                                     "Opp AVG": .243, "xwOBA": .311, "Velo": 93.5}
                     cols = st.columns(len(top3))
@@ -827,19 +830,20 @@ def main():
                             sub_cols = st.columns(3)
                             sub_cols[0].metric(opp_avg_label, f"{ps['Opp AVG']:.3f}")
                             sub_cols[1].metric(bb_label, f"{ps['BB%']:.1f}%")
-                            velo_str = f"{ps['Avg Velo']:.1f}" if ps["Avg Velo"] else "—"
+                            velo_str = f"{ps['Avg Velo']:.1f}" if ps["Avg Velo"] else "\u2014"
                             sub_cols[2].metric(velo_label, velo_str)
                             if ps["Avg Velo"]:
-                                sub_cols[2].caption(f"≈ {ps['Avg Velo'] * 1.609:.0f} km/h")
+                                sub_cols[2].caption(f"\u2248 {ps['Avg Velo'] * 1.609:.0f} km/h")
+                            # Mini radar chart per pitcher
                             _t3_cats_p = ["K%", "Whiff%", "BB%",
-                                          "Opp AVG" if lang == "EN" else "被打率",
+                                          "Opp AVG" if lang == "EN" else "\u88ab\u6253\u7387",
                                           "xwOBA",
-                                          "Velo" if lang == "EN" else "球速"]
+                                          "Velo" if lang == "EN" else "\u7403\u901f"]
                             _velo = ps["Avg Velo"] if ps["Avg Velo"] else 0
                             _xwoba = ps["xwOBA"] if ps["xwOBA"] else 0
                             _t3_pvals_p = [
                                 min(ps["K%"] / 35.0, 1.0),
-                                min(ps.get("Whiff%", 0) / 40.0, 1.0),
+                                min(ps["Whiff%"] / 40.0, 1.0),
                                 1.0 - min(ps["BB%"] / 15.0, 1.0),
                                 1.0 - min(ps["Opp AVG"] / 0.300, 1.0),
                                 1.0 - min(_xwoba / 0.400, 1.0) if _xwoba else 0,
@@ -880,6 +884,99 @@ def main():
                             st.pyplot(_fig_t3p, use_container_width=True)
                             plt.close(_fig_t3p)
 
+                # --- Staff Pitching Radar ---
+                valid_stats = [ps for ps in pitcher_stats_list if ps["PA"] >= 30]
+                if valid_stats:
+                    st.subheader(t["team_radar_title"])
+                    avg_k = np.mean([ps["K%"] for ps in valid_stats])
+                    avg_bb = np.mean([ps["BB%"] for ps in valid_stats])
+                    avg_opp_avg = np.mean([ps["Opp AVG"] for ps in valid_stats])
+                    avg_whiff = np.mean([ps["Whiff%"] for ps in valid_stats])
+                    xwobas = [ps["xwOBA"] for ps in valid_stats if ps["xwOBA"] is not None]
+                    avg_xwoba = np.mean(xwobas) if xwobas else 0
+                    velos = [ps["Avg Velo"] for ps in valid_stats if ps["Avg Velo"]]
+                    avg_velo = np.mean(velos) if velos else 0
+
+                    # Normalize to 0-1 (MLB typical ranges)
+                    norm_k = min(avg_k / 35.0, 1.0)
+                    norm_bb = 1.0 - min(avg_bb / 15.0, 1.0)  # lower BB% is better
+                    norm_opp_avg = 1.0 - min(avg_opp_avg / 0.300, 1.0)  # lower opp AVG is better
+                    norm_whiff = min(avg_whiff / 40.0, 1.0)  # higher Whiff% is better
+                    norm_xwoba = 1.0 - min(avg_xwoba / 0.400, 1.0) if avg_xwoba else 0  # lower xwOBA is better
+                    norm_velo = min(avg_velo / 100.0, 1.0) if avg_velo else 0
+
+                    categories = ["K%", "Whiff%", "BB%",
+                                  "Opp AVG" if lang == "EN" else "\u88ab\u6253\u7387",
+                                  "xwOBA",
+                                  "Velo" if lang == "EN" else "\u7403\u901f"]
+                    values = [norm_k, norm_whiff, norm_bb, norm_opp_avg, norm_xwoba, norm_velo]
+                    raw_values = [f"{avg_k:.1f}%", f"{avg_whiff:.1f}%", f"{avg_bb:.1f}%",
+                                 f"{avg_opp_avg:.3f}",
+                                 f"{avg_xwoba:.3f}" if avg_xwoba else "\u2014",
+                                 f"{avg_velo:.1f} mph ({avg_velo * 1.609:.0f} km/h)" if avg_velo else "\u2014"]
+
+                    # MLB average for radar overlay
+                    mlb_k = min(22.4 / 35.0, 1.0)
+                    mlb_whiff = min(25.0 / 40.0, 1.0)
+                    mlb_bb = 1.0 - min(8.3 / 15.0, 1.0)
+                    mlb_opp_avg = 1.0 - min(0.243 / 0.300, 1.0)
+                    mlb_xwoba = 1.0 - min(0.311 / 0.400, 1.0)
+                    mlb_velo = min(93.5 / 100.0, 1.0)
+                    mlb_values = [mlb_k, mlb_whiff, mlb_bb, mlb_opp_avg, mlb_xwoba, mlb_velo]
+
+                    angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+                    values_plot = values + [values[0]]
+                    angles_plot = angles + [angles[0]]
+                    mlb_plot = mlb_values + [mlb_values[0]]
+
+                    fig_radar, ax_radar = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
+                                                       facecolor="#0e1117")
+                    ax_radar.set_facecolor("#0e1117")
+                    ax_radar.plot(angles_plot, mlb_plot, "--", linewidth=1.5, color="#888888",
+                                  alpha=0.7, label="MLB avg")
+                    ax_radar.fill(angles_plot, mlb_plot, alpha=0.08, color="#888888")
+                    ax_radar.plot(angles_plot, values_plot, "o-", linewidth=2, color="#ef5350",
+                                  label="Team avg" if lang == "EN" else "\u30c1\u30fc\u30e0\u5e73\u5747")
+                    ax_radar.fill(angles_plot, values_plot, alpha=0.25, color="#ef5350")
+                    ax_radar.set_thetagrids(np.degrees(angles), categories, color="white", fontsize=11)
+                    ax_radar.set_ylim(0, 1)
+                    ax_radar.set_yticks([0.25, 0.5, 0.75, 1.0])
+                    ax_radar.set_yticklabels(["", "", "", ""], color="white")
+                    ax_radar.grid(color="gray", alpha=0.3)
+                    ax_radar.spines["polar"].set_color("gray")
+                    for angle, val, raw in zip(angles, values, raw_values):
+                        ax_radar.annotate(raw, xy=(angle, val), fontsize=9,
+                                          ha="center", va="bottom", color="white",
+                                          fontweight="bold")
+                    leg = ax_radar.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1),
+                                          fontsize=9, facecolor="#0e1117", edgecolor="gray")
+                    for txt in leg.get_texts():
+                        txt.set_color("white")
+                    fig_radar.tight_layout()
+                    st.pyplot(fig_radar, use_container_width=True)
+                    plt.close(fig_radar)
+                    radar_note = ("Outer = better. Gray dashed = MLB avg. BB%, Opp AVG, and xwOBA are inverted (lower is better)." if lang == "EN"
+                                  else "\u5916\u5074\u307b\u3069\u826f\u3044\u3002\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747\u3002BB%\u30fb\u88ab\u6253\u7387\u30fbxwOBA\u306f\u4f4e\u3044\u307b\u3069\u5916\u5074\u306b\u8868\u793a\u3002")
+                    st.caption(radar_note)
+
+            # --- Full Stats Table (in expander) ---
+            with st.expander(t["full_stats_table"], expanded=False):
+                with st.expander("Stats glossary" if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
+                    st.markdown(t["glossary_stats"])
+
+                overview = pd.DataFrame(rows)
+                st.dataframe(
+                    overview.style.format({
+                        t["pitches"]: "{:.0f}",
+                        t["k_pct"]: "{:.1f}", t["bb_pct"]: "{:.1f}",
+                        t["opp_avg"]: "{:.3f}", t["opp_slg"]: "{:.3f}",
+                        t["xwoba_against"]: "{:.3f}",
+                    }).background_gradient(subset=[t["k_pct"]], cmap="RdYlGn")
+                    .background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
             st.subheader(t["team_strengths"])
             st.info(t["strength_note"])
         else:
@@ -899,7 +996,8 @@ def main():
     stats = pitching_stats(pdf)
     role_label = t["sp"] if pitcher["role"] == "SP" else t["rp"]
 
-    st.header(f"\U0001F1FA\U0001F1F8 {pitcher['name']}")
+    season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+    st.header(f"\U0001F1FA\U0001F1F8 {_display_name(pitcher['name'])} — {season_label}")
     c1, c2, c3 = st.columns(3)
     c1.metric(t["team"], pitcher["team"])
     c2.metric(t["throws"], pitcher["throws"])
@@ -938,6 +1036,15 @@ def main():
     st.subheader(t["pitcher_summary"])
     summary = generate_pitcher_summary(stats, pdf, pitcher, lang)
     st.info(summary)
+
+    # --- Hitting Plan ---
+    st.divider()
+    st.subheader(t["hitting_plan_title"])
+    st.caption(t["hitting_plan_explain"])
+    hitting_plan = generate_hitting_plan(pdf, stats, pitcher, lang)
+    st.success(hitting_plan)
+
+    st.divider()
 
     # Individual Pitcher Radar
     _MLB_AVG_PR = {"K%": 22.4, "Whiff%": 25.0, "BB%": 8.3,
@@ -1005,6 +1112,7 @@ def main():
 
     # Arsenal Table
     st.subheader(t["arsenal"])
+    st.caption(t["arsenal_caption"])
     with st.expander("What do these columns mean?" if lang == "EN" else "\u5404\u5217\u306e\u8aac\u660e\u3092\u898b\u308b"):
         st.markdown(t["glossary_arsenal"])
     at = arsenal_table(pdf, t)
@@ -1015,6 +1123,7 @@ def main():
 
     # Movement Chart
     st.subheader(t["movement_chart"])
+    st.caption(t["movement_caption"])
     with st.expander("How to read this chart" if lang == "EN" else "\u30c1\u30e3\u30fc\u30c8\u306e\u898b\u65b9"):
         st.markdown(t["glossary_movement"])
     show_mvt_density = st.checkbox(
@@ -1034,6 +1143,7 @@ def main():
 
     # Batted Ball Against
     st.subheader(t["batted_ball"])
+    st.caption(t["batted_ball_caption"])
     with st.expander("What do these mean?" if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
         st.markdown(t["glossary_batted"])
     bb_profile = batted_ball_against(pdf, t)
@@ -1063,6 +1173,7 @@ def main():
 
     # Zone Heatmaps (vertical layout for mobile)
     st.subheader(t["zone_heatmap"] + pitch_suffix)
+    st.caption(t["zone_caption"])
     st.caption(t["danger_zone"])
     for hm_metric, hm_title in [("usage", t["usage_heatmap"]), ("ba", t["ba_heatmap"])]:
         fig_hm, ax_hm = plt.subplots(figsize=(6, 5), facecolor="#0e1117")
@@ -1098,6 +1209,7 @@ def main():
 
     # Platoon Splits
     st.subheader(t["platoon"] + pitch_suffix)
+    st.caption(t["platoon_caption"])
     with st.expander("What are platoon splits?" if lang == "EN" else "\u5de6\u53f3\u6253\u8005\u5225\u6210\u7e3e\u3068\u306f\uff1f"):
         st.markdown(t["glossary_platoon"])
 
@@ -1233,6 +1345,11 @@ def main():
         fig_mix.tight_layout(rect=[0, 0, 0.82, 1])
         st.pyplot(fig_mix, use_container_width=True)
         plt.close(fig_mix)
+
+    # --- Pitch Selection Pie Charts (donut style from QF app) ---
+    st.divider()
+    st.subheader(t["count_pie_title"])
+    _lib_draw_pies(pdf, t, lang)
 
 
 if __name__ == "__main__":

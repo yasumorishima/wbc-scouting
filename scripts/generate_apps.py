@@ -446,12 +446,60 @@ COUNTRIES = {
             "強豪国相手に接戦に持ち込む投球が期待される。"
         ),
     },
+    "usa": {
+        "name_en": "USA",
+        "name_ja": "アメリカ",
+        "flag": "\U0001F1FA\U0001F1F8",
+        "var": "USA",
+        "batter_en": (
+            "The USA fields arguably the deepest lineup in the tournament, "
+            "with multiple MVP-caliber players across every position. "
+            "The combination of power, speed, and plate discipline "
+            "makes the USA one of the most complete offensive teams."
+        ),
+        "batter_ja": (
+            "アメリカはトーナメント最深の打線を誇り、"
+            "全ポジションにMVP級の選手を配置できる可能性がある。\n\n"
+            "パワー・スピード・選球眼を兼ね備えた最も完成度の高い攻撃陣の一つ。"
+        ),
+        "pitcher_en": (
+            "The USA's pitching staff is loaded with elite arms from top MLB rotations "
+            "and bullpens, providing dominant coverage at every stage of the game."
+        ),
+        "pitcher_ja": (
+            "アメリカの投手陣はMLBトップクラスの先発・リリーフを多数擁し、"
+            "どの局面でも支配的な投球が期待される。"
+        ),
+    },
+    "venezuela": {
+        "name_en": "Venezuela",
+        "name_ja": "ベネズエラ",
+        "flag": "\U0001F1FB\U0001F1EA",
+        "var": "VENEZUELA",
+        "batter_en": (
+            "Venezuela features a star-studded lineup led by Ronald Acuña Jr. and Luis Arráez. "
+            "The combination of speed, contact, and power makes Venezuela "
+            "one of the most dangerous offenses in the tournament."
+        ),
+        "batter_ja": (
+            "ベネズエラはアクーニャJr.やアラエスを中心としたスター揃いの打線が特徴。\n\n"
+            "スピード・コンタクト・パワーを兼ね備え、最も危険な攻撃力を持つチームの一つ。"
+        ),
+        "pitcher_en": (
+            "Venezuela's pitching staff includes proven MLB starters and high-leverage relievers. "
+            "Ranger Suárez and Eduardo Rodríguez anchor the rotation with elite stuff."
+        ),
+        "pitcher_ja": (
+            "ベネズエラの投手陣はMLB実績のある先発とハイレバレッジのリリーバーで構成。\n\n"
+            "スアレスとロドリゲスが先発の柱となる。"
+        ),
+    },
 }
 
 # Countries that have pitchers CSV (others only have batters)
 HAS_PITCHERS_CSV = {
     "japan", "mex", "kor", "ned", "can", "ita", "isr", "gb", "pan", "col", "pr", "bra",
-    "dr", "usa", "venezuela",
+    "dr", "usa", "venezuela", "aus", "cuba",
 }
 
 

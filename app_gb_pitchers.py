@@ -13,6 +13,12 @@ from scipy.stats import gaussian_kde
 
 from players_gb_pitchers import GB_PITCHERS, PITCHER_BY_NAME
 
+from scouting_lib import (
+    PREMIUM_CSS,
+    generate_hitting_plan,
+    draw_pitch_selection_pies as _lib_draw_pies,
+)
+
 # ---------------------------------------------------------------------------
 # i18n
 # ---------------------------------------------------------------------------
@@ -69,7 +75,7 @@ TEXTS = {
         "zone_3x3": "Zone Chart (3×3)",
         "team_strengths": "Staff Strengths & Weaknesses",
         "strength_note": (
-            "Great Britain's pitching staff is highlighted by Brendan Beck (RHP) and Tristan Beck (RHP), brothers who both have MLB experience. The staff draws on arms across multiple MLB organizations, with an emphasis on command and pitch variety over raw velocity."
+            "Great Britain's pitching staff may feature arms developed through MLB organizations. The key strength may lie in command and pitch sequencing rather than raw velocity."
         ),
         "overview_guide": (
             "Select a pitcher from the sidebar to see their detailed scouting report: "
@@ -129,6 +135,14 @@ TEXTS = {
             "- **K%** = Strikeout rate (strikeouts / plate appearances)\n"
             "- **BB%** = Walk rate (walks / plate appearances)"
         ),
+        "hitting_plan_title": "Hitting Plan — How to Attack This Pitcher",
+        "hitting_plan_explain": "Data-driven approach based on pitch arsenal vulnerabilities, hittable zones, count tendencies, and platoon splits.",
+        "count_first_pitch": "First Pitch (0-0)",
+        "count_ahead_pitcher": "Pitcher Ahead (S>B)",
+        "count_behind_pitcher": "Pitcher Behind (B>S)",
+        "count_even_pitcher": "Even Count (B=S, >0)",
+        "count_two_strikes": "2 Strikes",
+        "count_pie_title": "Pitch Selection by Count (Visual)",
     },
     "JA": {
         "title": "イギリス 投手スカウティングレポート",
@@ -182,7 +196,7 @@ TEXTS = {
         "zone_3x3": "ゾーンチャート (3×3)",
         "team_strengths": "投手陣の強み・弱み",
         "strength_note": (
-            "イギリスの投手陣はMLB経験を持つブレンダン・ベック（右腕）とトリスタン・ベック（右腕）の兄弟が柱。\n\n複数のMLB組織出身の投手が揃い、圧倒的な球速よりも制球力と球種の多彩さを武器とした投球陣を形成している。"
+            "イギリスの投手陣はMLB傘下で育成された投手を含む構成が見込まれる。\n\n球速よりも制球力と球種の組み立てが強みとなる可能性がある。"
         ),
         "overview_guide": (
             "左のサイドバーから投手を選ぶと、個人の詳細スカウティングレポートを表示します: "
@@ -242,6 +256,14 @@ TEXTS = {
             "- **奪三振率（K%）** = 打席あたりの三振を奪う割合\n"
             "- **与四球率（BB%）** = 打席あたりの四球を与える割合"
         ),
+        "hitting_plan_title": "打撃プラン — この投手の攻略法",
+        "hitting_plan_explain": "球種別の弱点、被打率の高いゾーン、カウント傾向、左右差からデータに基づく攻め方を自動生成。",
+        "count_first_pitch": "初球 (0-0)",
+        "count_ahead_pitcher": "投手有利 (S>B)",
+        "count_behind_pitcher": "投手不利 (B>S)",
+        "count_even_pitcher": "イーブン (B=S, >0)",
+        "count_two_strikes": "2ストライク",
+        "count_pie_title": "カウント別 球種配分（ビジュアル）",
     },
 }
 
@@ -708,34 +730,20 @@ def main():
         initial_sidebar_state="collapsed",
     )
 
-    # -- Responsive CSS for mobile --
-    st.markdown("""
-    <style>
-    @media (max-width: 768px) {
-        /* Shrink metric cards */
-        [data-testid="stMetric"] {
-            padding: 0.3rem 0.4rem;
-        }
-        [data-testid="stMetricLabel"] {
-            font-size: 0.75rem !important;
-        }
-        [data-testid="stMetricValue"] {
-            font-size: 1.1rem !important;
-        }
-        /* Tighter column gaps */
-        [data-testid="stHorizontalBlock"] {
-            gap: 0.3rem !important;
-        }
-        /* Readable table text */
-        .stDataFrame td, .stDataFrame th {
-            font-size: 0.8rem !important;
-        }
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # -- Premium dark theme CSS --
+    st.markdown(PREMIUM_CSS, unsafe_allow_html=True)
 
     lang = st.sidebar.radio("Language / \u8a00\u8a9e", ["JA", "EN"], horizontal=True)
     t = TEXTS[lang]
+
+    # -- Hero banner --
+    st.markdown(f"""
+    <div class="hero-banner">
+        <div class="hero-title">{t['title']}</div>
+        <div class="hero-sub">{t['subtitle']}</div>
+        <div class="hero-badge">MLB Statcast 2024-2025</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.sidebar.markdown(f"# \U0001F1EC\U0001F1E7 {t['title']}")
     st.sidebar.caption(t["subtitle"])
@@ -1028,6 +1036,15 @@ def main():
     st.subheader(t["pitcher_summary"])
     summary = generate_pitcher_summary(stats, pdf, pitcher, lang)
     st.info(summary)
+
+    # --- Hitting Plan ---
+    st.divider()
+    st.subheader(t["hitting_plan_title"])
+    st.caption(t["hitting_plan_explain"])
+    hitting_plan = generate_hitting_plan(pdf, stats, pitcher, lang)
+    st.success(hitting_plan)
+
+    st.divider()
 
     # Individual Pitcher Radar
     _MLB_AVG_PR = {"K%": 22.4, "Whiff%": 25.0, "BB%": 8.3,
@@ -1328,6 +1345,11 @@ def main():
         fig_mix.tight_layout(rect=[0, 0, 0.82, 1])
         st.pyplot(fig_mix, use_container_width=True)
         plt.close(fig_mix)
+
+    # --- Pitch Selection Pie Charts (donut style from QF app) ---
+    st.divider()
+    st.subheader(t["count_pie_title"])
+    _lib_draw_pies(pdf, t, lang)
 
 
 if __name__ == "__main__":

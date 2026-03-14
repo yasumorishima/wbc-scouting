@@ -14,6 +14,13 @@ from scipy.stats import gaussian_kde
 
 from players_cuba_batters import CUBA_BATTERS, PLAYER_BY_NAME
 
+from scouting_lib import (
+    PREMIUM_CSS,
+    generate_pitching_plan,
+    generate_defensive_positioning,
+    analyze_team_weaknesses,
+)
+
 # ---------------------------------------------------------------------------
 # i18n
 # ---------------------------------------------------------------------------
@@ -57,7 +64,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Cuba's lineup is anchored by Yoán Moncada (3B), a former top prospect with extensive major-league experience. The roster blends MLB-experienced Cuban-heritage players with homegrown talent, combining power potential with the aggressive, free-swinging style that is a hallmark of Cuban baseball tradition."
+            "Cuba has a legendary baseball tradition and fields a physically imposing lineup. The team historically emphasizes power hitting and aggressive approach at the plate. MLB-experienced Cuban players may bring elite-level talent to anchor the lineup."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -120,6 +127,11 @@ TEXTS = {
             "- **DH** = Designated Hitter\n- **UTL** = Utility (multi-position player)"
         ),
         "pos_glossary_label": "Position abbreviations",
+        "pitching_plan_title": "Pitching Plan — How to Get This Batter Out",
+        "pitching_plan_explain": "Data-driven approach based on pitch type vulnerabilities, zone weaknesses, count tendencies, and platoon splits.",
+        "defensive_positioning": "Defensive Positioning & Shift Recommendation",
+        "defensive_explain": "Auto-generated from spray chart data: pull/center/oppo tendencies, batted ball types, and exit velocity.",
+        "team_weaknesses_title": "Team Weakness Analysis (Auto-Detected)",
     },
     "JA": {
         "title": "キューバ 打者スカウティングレポート",
@@ -160,7 +172,7 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "キューバのラインアップの中心は、元トッププロスペクトでメジャーリーグ豊富な経験を持つヨアン・モンカーダ（3B）。\n\nMLB経験者とキューバ国内出身選手が融合し、キューバ野球伝統の積極的な打撃スタイルと長打力を兼ね備えた打線を形成している。"
+            "キューバは野球の伝統国として長い歴史を誇り、身体的に強靭な打者が揃う打線が特徴とされている。\n\n積極的な打撃スタイルと長打力が持ち味で、MLB経験を持つキューバ系選手が打線の中心となる可能性がある。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
@@ -223,6 +235,11 @@ TEXTS = {
             "- **DH** = 指名打者\n- **UTL** = ユーティリティ（複数ポジション対応）"
         ),
         "pos_glossary_label": "ポジション略称の説明",
+        "pitching_plan_title": "投球プラン — この打者の攻略法",
+        "pitching_plan_explain": "球種別の弱点、ゾーン別打率、カウント傾向、左右差からデータに基づく攻め方を自動生成。",
+        "defensive_positioning": "守備位置・シフト推奨",
+        "defensive_explain": "スプレーチャートデータから自動生成: プル/センター/逆方向の傾向、打球種別、打球速度に基づく。",
+        "team_weaknesses_title": "チーム弱点分析（自動検出）",
     },
 }
 
@@ -742,35 +759,21 @@ def main():
         initial_sidebar_state="collapsed",
     )
 
-    # -- Responsive CSS for mobile --
-    st.markdown("""
-    <style>
-    @media (max-width: 768px) {
-        /* Shrink metric cards */
-        [data-testid="stMetric"] {
-            padding: 0.3rem 0.4rem;
-        }
-        [data-testid="stMetricLabel"] {
-            font-size: 0.75rem !important;
-        }
-        [data-testid="stMetricValue"] {
-            font-size: 1.1rem !important;
-        }
-        /* Tighter column gaps */
-        [data-testid="stHorizontalBlock"] {
-            gap: 0.3rem !important;
-        }
-        /* Readable table text */
-        .stDataFrame td, .stDataFrame th {
-            font-size: 0.8rem !important;
-        }
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # -- Premium dark theme CSS --
+    st.markdown(PREMIUM_CSS, unsafe_allow_html=True)
 
     # Sidebar
     lang = st.sidebar.radio("Language / \u8a00\u8a9e", ["JA", "EN"], horizontal=True)
     t = TEXTS[lang]
+
+    # -- Hero banner --
+    st.markdown(f"""
+    <div class="hero-banner">
+        <div class="hero-title">{t['title']}</div>
+        <div class="hero-sub">{t['subtitle']}</div>
+        <div class="hero-badge">MLB Statcast 2024-2025</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.sidebar.markdown(f"# \U0001F1E8\U0001F1FA {t['title']}")
     st.sidebar.caption(t["subtitle"])
@@ -826,11 +829,23 @@ def main():
                 "BB%": s["BB%"],
                 "xwOBA": s["xwOBA"],
             })
+            # Compute platoon vulnerability for team weakness analysis
+            _vs_l = pdf[pdf["p_throws"] == "L"]
+            _vs_r = pdf[pdf["p_throws"] == "R"]
+            _platoon_info = {}
+            if not _vs_l.empty and not _vs_r.empty:
+                _sl = batting_stats(_vs_l)
+                _sr = batting_stats(_vs_r)
+                if _sl["PA"] >= 30 and _sr["PA"] >= 30:
+                    _pdiff = abs(_sl["OPS"] - _sr["OPS"]) * 1000
+                    _platoon_info["platoon_diff"] = _pdiff
+                    _platoon_info["platoon_weak_side"] = "LHP" if _sl["OPS"] < _sr["OPS"] else "RHP"
             player_stats_list.append({
                 "name": _display_name(p["name"]),
                 "pos": p["pos"],
                 "team": p["team"],
                 **s,
+                **_platoon_info,
             })
 
         if rows:
@@ -1018,6 +1033,11 @@ def main():
 
             st.subheader(t["team_strengths"])
             st.info(t["strength_note"])
+
+            # --- Auto-detected team weaknesses ---
+            st.subheader(t["team_weaknesses_title"])
+            weakness_report = analyze_team_weaknesses(player_stats_list, lang)
+            st.warning(weakness_report)
         else:
             st.warning(t["no_data"])
         return
@@ -1071,6 +1091,22 @@ def main():
     st.subheader(t["player_summary"])
     summary = generate_player_summary(stats, pdf, player, lang)
     st.info(summary)
+
+    # --- Pitching Plan ---
+    st.divider()
+    st.subheader(t["pitching_plan_title"])
+    st.caption(t["pitching_plan_explain"])
+    pitching_plan = generate_pitching_plan(pdf, stats, player, lang)
+    st.success(pitching_plan)
+
+    # --- Defensive Positioning ---
+    st.divider()
+    st.subheader(t["defensive_positioning"])
+    st.caption(t["defensive_explain"])
+    defensive_pos = generate_defensive_positioning(pdf, player, lang)
+    st.warning(defensive_pos)
+
+    st.divider()
 
     # Individual Batting Radar
     _MLB_AVG_R = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}

@@ -14,6 +14,13 @@ from scipy.stats import gaussian_kde
 
 from players_usa_batters import USA_BATTERS, PLAYER_BY_NAME
 
+from scouting_lib import (
+    PREMIUM_CSS,
+    generate_pitching_plan,
+    generate_defensive_positioning,
+    analyze_team_weaknesses,
+)
+
 # ---------------------------------------------------------------------------
 # i18n
 # ---------------------------------------------------------------------------
@@ -24,7 +31,6 @@ TEXTS = {
         "select_player": "Select Player",
         "team_overview": "Team Overview",
         "season": "Season",
-        "all_seasons": "All",
         "profile": "Player Profile",
         "pos": "Pos",
         "team": "Team",
@@ -56,16 +62,9 @@ TEXTS = {
         "ahead": "Hitter Ahead (B > S)",
         "behind": "Hitter Behind (S > B)",
         "even": "Even (B = S)",
-        "top3_title": "Top 3 Batters (by OPS)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Team USA boasts one of the most dangerous lineups in the tournament. "
-            "Aaron Judge and Gunnar Henderson provide elite power, while Bryce Harper and "
-            "Kyle Schwarber add left-handed balance. Bobby Witt Jr. brings elite speed and "
-            "contact. The lineup is deep top-to-bottom with above-average hitters at nearly "
-            "every position. "
-            "Key vulnerabilities: some right-handed hitters may be susceptible to hard "
-            "left-handed pitching, and a few batters carry elevated strikeout rates."
+            "The USA fields arguably the deepest lineup in the tournament, with multiple MVP-caliber players across every position. The combination of power, speed, and plate discipline makes the USA one of the most complete offensive teams."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -89,8 +88,7 @@ TEXTS = {
             "- **xwOBA** = Expected Weighted On-Base Average (batted ball quality based on exit velocity & launch angle)"
         ),
         "glossary_pct": (
-            "- **K%** = Strikeout rate\n"
-            "- **BB%** = Walk rate"
+            "- **K%** = Strikeout rate\n- **BB%** = Walk rate"
         ),
         "glossary_pitch": (
             "- **Whiff%** = Swing-and-miss rate (misses / total swings)\n"
@@ -98,11 +96,8 @@ TEXTS = {
         ),
         "glossary_batted": (
             "- **Pull%** = Hit to batter's pull side\n"
-            "- **GB%** = Ground ball rate\n"
-            "- **LD%** = Line drive rate\n"
-            "- **FB%** = Fly ball rate\n"
-            "- **Avg EV** = Average exit velocity (mph)\n"
-            "- **Avg LA** = Average launch angle (degrees)"
+            "- **GB%** = Ground ball rate\n- **LD%** = Line drive rate\n- **FB%** = Fly ball rate\n"
+            "- **Avg EV** = Average exit velocity (mph)\n- **Avg LA** = Average launch angle (degrees)"
         ),
         "glossary_platoon": (
             "Platoon splits show how a batter performs against left-handed pitchers (LHP) "
@@ -110,28 +105,33 @@ TEXTS = {
         ),
         "player": "Player",
         "player_summary": "Scouting Summary",
+        "top3_title": "Top 3 Batters (by OPS)",
+        "team_radar_title": "Team Batting Profile",
+        "full_stats_table": "Full Stats Table",
+        "zone_caption": "Red zones = high batting avg (danger), Blue zones = low batting avg (attack)",
+        "spray_caption": "Shows where each batted ball landed on the field",
+        "pitch_caption": "Batting performance broken down by the type of pitch faced",
+        "platoon_caption": "Compares batting stats against left-handed vs right-handed pitchers",
         "glossary_count": (
             "- **PA** = Plate Appearances (total times at bat)\n"
             "- **AVG** = Batting Average (hits / at-bats)\n"
             "- **OBP** = On-Base Percentage\n"
             "- **SLG** = Slugging Percentage (total bases / at-bats)\n"
             "- **OPS** = OBP + SLG (overall offensive value)\n"
-            "- **K%** = Strikeout rate\n"
-            "- **BB%** = Walk rate"
+            "- **K%** = Strikeout rate\n- **BB%** = Walk rate"
         ),
         "pos_glossary": (
-            "- **C** = Catcher\n"
-            "- **1B** = First Base\n"
-            "- **2B** = Second Base\n"
-            "- **3B** = Third Base\n"
-            "- **SS** = Shortstop\n"
-            "- **LF** = Left Field\n"
-            "- **CF** = Center Field\n"
-            "- **RF** = Right Field\n"
-            "- **DH** = Designated Hitter\n"
-            "- **UTL** = Utility (multi-position player)"
+            "- **C** = Catcher\n- **1B** = First Base\n- **2B** = Second Base\n"
+            "- **3B** = Third Base\n- **SS** = Shortstop\n"
+            "- **LF** = Left Field\n- **CF** = Center Field\n- **RF** = Right Field\n"
+            "- **DH** = Designated Hitter\n- **UTL** = Utility (multi-position player)"
         ),
         "pos_glossary_label": "Position abbreviations",
+        "pitching_plan_title": "Pitching Plan — How to Get This Batter Out",
+        "pitching_plan_explain": "Data-driven approach based on pitch type vulnerabilities, zone weaknesses, count tendencies, and platoon splits.",
+        "defensive_positioning": "Defensive Positioning & Shift Recommendation",
+        "defensive_explain": "Auto-generated from spray chart data: pull/center/oppo tendencies, batted ball types, and exit velocity.",
+        "team_weaknesses_title": "Team Weakness Analysis (Auto-Detected)",
     },
     "JA": {
         "title": "アメリカ 打者スカウティングレポート",
@@ -139,7 +139,6 @@ TEXTS = {
         "select_player": "選手を選択",
         "team_overview": "チーム概要",
         "season": "シーズン",
-        "all_seasons": "全シーズン",
         "profile": "選手プロフィール",
         "pos": "ポジション",
         "team": "チーム",
@@ -171,15 +170,9 @@ TEXTS = {
         "ahead": "有利カウント (B > S)",
         "behind": "不利カウント (S > B)",
         "even": "イーブン (B = S)",
-        "top3_title": "注目打者 TOP3（OPS順）",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "アメリカは大会屈指の強力打線を誇る。"
-            "アーロン・ジャッジとガナー・ヘンダーソンはエリートレベルの長打力を持ち、"
-            "ブライス・ハーパーとカイル・シュワーバーが左打者として打線に厚みを加える。"
-            "ボビー・ウィットJr.は走力と打撃力を兼ね備えた万能型。\n\n"
-            "弱点: 一部の右打者は左投手の強い球に弱い傾向がある。"
-            "また三振率（K%）が高い打者も何人かいる。"
+            "アメリカはトーナメント最深の打線を誇り、全ポジションにMVP級の選手を配置できる可能性がある。\n\nパワー・スピード・選球眼を兼ね備えた最も完成度の高い攻撃陣の一つ。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
@@ -203,8 +196,7 @@ TEXTS = {
             "- **xwOBA** = 打球の質（打球速度と角度から算出した期待値）"
         ),
         "glossary_pct": (
-            "- **K%（三振率）** = 打席あたりの三振割合\n"
-            "- **BB%（四球率）** = 打席あたりの四球割合"
+            "- **K%（三振率）** = 打席あたりの三振割合\n- **BB%（四球率）** = 打席あたりの四球割合"
         ),
         "glossary_pitch": (
             "- **空振率（Whiff%）** = スイングに対する空振りの割合\n"
@@ -212,11 +204,8 @@ TEXTS = {
         ),
         "glossary_batted": (
             "- **プル%** = 引っ張り方向への打球割合\n"
-            "- **ゴロ%** = ゴロの割合\n"
-            "- **ライナー%** = ライナーの割合\n"
-            "- **フライ%** = フライの割合\n"
-            "- **平均打球速度** = 打球のスピード（mph）\n"
-            "- **平均打球角度** = 打球の打ち出し角度"
+            "- **ゴロ%** = ゴロの割合\n- **ライナー%** = ライナーの割合\n- **フライ%** = フライの割合\n"
+            "- **平均打球速度** = 打球のスピード（mph）\n- **平均打球角度** = 打球の打ち出し角度"
         ),
         "glossary_platoon": (
             "左右投手別成績は、左投手（LHP）と右投手（RHP）に対する打撃成績です。"
@@ -224,28 +213,33 @@ TEXTS = {
         ),
         "player": "選手",
         "player_summary": "スカウティング要約",
+        "top3_title": "注目打者 TOP3（OPS順）",
+        "team_radar_title": "チーム打線の特徴",
+        "full_stats_table": "詳細成績一覧",
+        "zone_caption": "赤いゾーン = よく打つ場所、青いゾーン = 打てない場所",
+        "spray_caption": "打球がフィールドのどこに飛んだかの分布図",
+        "pitch_caption": "対戦した球種ごとの打撃成績",
+        "platoon_caption": "左投手と右投手、それぞれに対する打撃成績の比較",
         "glossary_count": (
             "- **PA（打席数）** = 打席に立った総回数\n"
             "- **AVG（打率）** = 安打数 ÷ 打数\n"
             "- **OBP（出塁率）** = 塁に出た割合\n"
             "- **SLG（長打率）** = 塁打数 ÷ 打数\n"
             "- **OPS** = OBP + SLG（総合打撃指標）\n"
-            "- **K%（三振率）** = 打席あたりの三振割合\n"
-            "- **BB%（四球率）** = 打席あたりの四球割合"
+            "- **K%（三振率）** = 打席あたりの三振割合\n- **BB%（四球率）** = 打席あたりの四球割合"
         ),
         "pos_glossary": (
-            "- **C** = 捕手（キャッチャー）\n"
-            "- **1B** = 一塁手\n"
-            "- **2B** = 二塁手\n"
-            "- **3B** = 三塁手\n"
-            "- **SS** = 遊撃手（ショート）\n"
-            "- **LF** = 左翼手（レフト）\n"
-            "- **CF** = 中堅手（センター）\n"
-            "- **RF** = 右翼手（ライト）\n"
-            "- **DH** = 指名打者\n"
-            "- **UTL** = ユーティリティ（複数ポジション対応）"
+            "- **C** = 捕手（キャッチャー）\n- **1B** = 一塁手\n- **2B** = 二塁手\n"
+            "- **3B** = 三塁手\n- **SS** = 遊撃手（ショート）\n"
+            "- **LF** = 左翼手（レフト）\n- **CF** = 中堅手（センター）\n- **RF** = 右翼手（ライト）\n"
+            "- **DH** = 指名打者\n- **UTL** = ユーティリティ（複数ポジション対応）"
         ),
         "pos_glossary_label": "ポジション略称の説明",
+        "pitching_plan_title": "投球プラン — この打者の攻略法",
+        "pitching_plan_explain": "球種別の弱点、ゾーン別打率、カウント傾向、左右差からデータに基づく攻め方を自動生成。",
+        "defensive_positioning": "守備位置・シフト推奨",
+        "defensive_explain": "スプレーチャートデータから自動生成: プル/センター/逆方向の傾向、打球種別、打球速度に基づく。",
+        "team_weaknesses_title": "チーム弱点分析（自動検出）",
     },
 }
 
@@ -283,8 +277,10 @@ STADIUMS = {
 @st.cache_data
 def load_stadium_coords() -> pd.DataFrame:
     df = pd.read_csv(STADIUM_CSV)
+    # Apply pybaseball's coordinate transform
     df["x"] = (df["x"] - 125) * STADIUM_SCALE + 125
     df["y"] = -((df["y"] - 199) * STADIUM_SCALE + 199)
+    # Negate y to match our positive-y, inverted-axis convention
     df["y"] = -df["y"]
     return df
 
@@ -305,8 +301,6 @@ def load_data() -> pd.DataFrame:
 
 
 def filter_season(df: pd.DataFrame, season) -> pd.DataFrame:
-    if season == "All":
-        return df
     return df[df["season"] == int(season)]
 
 
@@ -365,6 +359,7 @@ def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
     strengths = []
     weaknesses = []
 
+    # Power
     if stats["SLG"] >= 0.450:
         strengths.append("elite power (SLG .450+)" if lang == "EN"
                          else "長打力が非常に高い（SLG .450以上）")
@@ -372,6 +367,7 @@ def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
         strengths.append("above-average power" if lang == "EN"
                          else "平均以上の長打力")
 
+    # Contact
     if stats["AVG"] >= 0.300:
         strengths.append("elite contact ability (AVG .300+)" if lang == "EN"
                          else "卓越したコンタクト力（打率 .300以上）")
@@ -379,14 +375,17 @@ def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
         strengths.append("solid contact hitter" if lang == "EN"
                          else "安定したコンタクトヒッター")
 
+    # Discipline
     if stats["BB%"] >= 10.0:
         strengths.append(f"patient approach (BB% {stats['BB%']:.1f})" if lang == "EN"
                          else f"選球眼が良い（四球率 {stats['BB%']:.1f}%）")
 
+    # xwOBA
     if stats["xwOBA"] and stats["xwOBA"] >= 0.350:
         strengths.append("high batted-ball quality (xwOBA .350+)" if lang == "EN"
                          else "打球の質が高い（xwOBA .350以上）")
 
+    # Strikeouts
     if stats["K%"] >= 25.0:
         weaknesses.append(f"high strikeout rate (K% {stats['K%']:.1f})" if lang == "EN"
                           else f"三振が多い（三振率 {stats['K%']:.1f}%）")
@@ -394,6 +393,7 @@ def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
         weaknesses.append(f"moderate strikeout rate (K% {stats['K%']:.1f})" if lang == "EN"
                           else f"三振がやや多い（三振率 {stats['K%']:.1f}%）")
 
+    # Platoon split
     vs_l = pdf[pdf["p_throws"] == "L"]
     vs_r = pdf[pdf["p_throws"] == "R"]
     if not vs_l.empty and not vs_r.empty:
@@ -416,6 +416,7 @@ def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
                         f"（OPS .{int(weak_ops * 1000):03d}）"
                     )
 
+    # Build summary
     parts = []
     if strengths:
         prefix = "Strengths: " if lang == "EN" else "強み: "
@@ -482,6 +483,7 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
         edgecolors="white", linewidth=0.5,
     )
 
+    # strike zone box
     sz_left, sz_right = -0.83, 0.83
     sz_bot, sz_top = 1.5, 3.5
     rect = patches.Rectangle(
@@ -490,6 +492,7 @@ def draw_zone_heatmap(df: pd.DataFrame, metric: str, title: str, ax):
     )
     ax.add_patch(rect)
 
+    # annotate cells
     for i in range(5):
         for j in range(5):
             val = grid[i, j]
@@ -756,34 +759,21 @@ def main():
         initial_sidebar_state="collapsed",
     )
 
-    # -- Responsive CSS for mobile --
-    st.markdown("""
-    <style>
-    @media (max-width: 768px) {
-        /* Shrink metric cards */
-        [data-testid="stMetric"] {
-            padding: 0.3rem 0.4rem;
-        }
-        [data-testid="stMetricLabel"] {
-            font-size: 0.75rem !important;
-        }
-        [data-testid="stMetricValue"] {
-            font-size: 1.1rem !important;
-        }
-        /* Tighter column gaps */
-        [data-testid="stHorizontalBlock"] {
-            gap: 0.3rem !important;
-        }
-        /* Readable table text */
-        .stDataFrame td, .stDataFrame th {
-            font-size: 0.8rem !important;
-        }
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # -- Premium dark theme CSS --
+    st.markdown(PREMIUM_CSS, unsafe_allow_html=True)
 
+    # Sidebar
     lang = st.sidebar.radio("Language / \u8a00\u8a9e", ["JA", "EN"], horizontal=True)
     t = TEXTS[lang]
+
+    # -- Hero banner --
+    st.markdown(f"""
+    <div class="hero-banner">
+        <div class="hero-title">{t['title']}</div>
+        <div class="hero-sub">{t['subtitle']}</div>
+        <div class="hero-badge">MLB Statcast 2024-2025</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.sidebar.markdown(f"# \U0001F1FA\U0001F1F8 {t['title']}")
     st.sidebar.caption(t["subtitle"])
@@ -797,52 +787,33 @@ def main():
         return name
 
     player_names = [t["team_overview"]] + [p["name"] for p in USA_BATTERS]
-    selected = st.sidebar.selectbox(t["select_player"], player_names)
+    selected = st.sidebar.selectbox(
+        t["select_player"], player_names,
+        format_func=lambda x: x if x == t["team_overview"] else _display_name(x),
+    )
 
     df_all = load_data()
 
-    seasons = ["All"] + sorted(df_all["season"].unique().tolist())
-    season = st.sidebar.selectbox(t["season"], seasons, format_func=lambda x: t["all_seasons"] if x == "All" else str(x))
+    seasons = sorted(df_all["season"].unique().tolist())
+    season = st.sidebar.selectbox(t["season"], seasons, index=len(seasons) - 1, format_func=str)
     df_all = filter_season(df_all, season)
 
     # -----------------------------------------------------------------------
     # Team Overview
     # -----------------------------------------------------------------------
     if selected == t["team_overview"]:
-        st.header(f"\U0001F1FA\U0001F1F8 {t['team_overview']}")
+        season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+        st.header(f"\U0001F1FA\U0001F1F8 {t['team_overview']} — {season_label}")
 
         st.info(t["overview_guide"])
-
-        with st.expander(t["glossary_stats"].split("**")[1].split("**")[0] + "..." if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
-            st.markdown(t["glossary_stats"])
-            st.markdown(t["glossary_pct"])
-
-        with st.expander(t["pos_glossary_label"]):
-            st.markdown(t["pos_glossary"])
 
         rows = []
         player_stats_list = []
         for p in USA_BATTERS:
             pdf = df_all[df_all["batter"] == p["mlbam_id"]]
             if pdf.empty:
-                rows.append({
-                    t["player"]: _display_name(p["name"]),
-                    "Pos": p["pos"],
-                    "Team": p["team"],
-                    "Bats": p["bats"],
-                    "PA": None,
-                    "AVG": None,
-                    "OBP": None,
-                    "SLG": None,
-                    "OPS": None,
-                    "HR": None,
-                    "K%": None,
-                    "BB%": None,
-                    "xwOBA": None,
-                })
                 continue
             s = batting_stats(pdf)
-            player_stats_list.append({"name": _display_name(p["name"]), "pos": p["pos"], "team": p["team"], **s})
             rows.append({
                 t["player"]: _display_name(p["name"]),
                 "Pos": p["pos"],
@@ -858,21 +829,26 @@ def main():
                 "BB%": s["BB%"],
                 "xwOBA": s["xwOBA"],
             })
+            # Compute platoon vulnerability for team weakness analysis
+            _vs_l = pdf[pdf["p_throws"] == "L"]
+            _vs_r = pdf[pdf["p_throws"] == "R"]
+            _platoon_info = {}
+            if not _vs_l.empty and not _vs_r.empty:
+                _sl = batting_stats(_vs_l)
+                _sr = batting_stats(_vs_r)
+                if _sl["PA"] >= 30 and _sr["PA"] >= 30:
+                    _pdiff = abs(_sl["OPS"] - _sr["OPS"]) * 1000
+                    _platoon_info["platoon_diff"] = _pdiff
+                    _platoon_info["platoon_weak_side"] = "LHP" if _sl["OPS"] < _sr["OPS"] else "RHP"
+            player_stats_list.append({
+                "name": _display_name(p["name"]),
+                "pos": p["pos"],
+                "team": p["team"],
+                **s,
+                **_platoon_info,
+            })
 
         if rows:
-            overview = pd.DataFrame(rows)
-            st.dataframe(
-                overview.style.format({
-                    "PA": "{:.0f}", "HR": "{:.0f}",
-                    "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
-                    "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-                    "xwOBA": "{:.3f}",
-                }, na_rep="—").background_gradient(subset=["OPS"], cmap="RdYlGn")
-                .background_gradient(subset=["K%"], cmap="RdYlGn_r"),
-                use_container_width=True,
-                hide_index=True,
-            )
-
             # --- TOP 3 Batters by OPS ---
             if player_stats_list:
                 sorted_by_ops = sorted(
@@ -883,11 +859,11 @@ def main():
                 top3 = sorted_by_ops[:3]
                 if top3:
                     st.subheader(t["top3_title"])
-                    st.caption(f"{season}" + (" season" if lang == "EN" else "年シーズン"))
+                    st.caption(f"{season}" + (" season" if lang == "EN" else "\u5e74\u30b7\u30fc\u30ba\u30f3"))
                     cols = st.columns(len(top3))
-                    avg_label = "AVG（打率）" if lang == "JA" else "AVG"
-                    hr_label = "HR（本塁打）" if lang == "JA" else "HR"
-                    xwoba_label = "xwOBA（期待打撃値）" if lang == "JA" else "xwOBA"
+                    avg_label = "AVG\uff08\u6253\u7387\uff09" if lang == "JA" else "AVG"
+                    hr_label = "HR\uff08\u672c\u5851\u6253\uff09" if lang == "JA" else "HR"
+                    xwoba_label = "xwOBA\uff08\u671f\u5f85\u6253\u6483\u5024\uff09" if lang == "JA" else "xwOBA"
                     _MLB_AVG_T3 = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
                     for i, ps in enumerate(top3):
                         with cols[i]:
@@ -896,10 +872,11 @@ def main():
                             sub_cols = st.columns(3)
                             sub_cols[0].metric(avg_label, f"{ps['AVG']:.3f}")
                             sub_cols[1].metric(hr_label, str(ps["HR"]))
-                            sub_cols[2].metric(xwoba_label, f"{ps['xwOBA']:.3f}" if ps["xwOBA"] else "—")
+                            sub_cols[2].metric(xwoba_label, f"{ps['xwOBA']:.3f}" if ps["xwOBA"] else "\u2014")
+                            # Mini radar chart per player
                             _t3_cats = ["AVG", "OBP", "SLG",
-                                        "K%" if lang == "EN" else "三振率",
-                                        "BB%" if lang == "EN" else "四球率"]
+                                        "K%" if lang == "EN" else "\u4e09\u632f\u7387",
+                                        "BB%" if lang == "EN" else "\u56db\u7403\u7387"]
                             _t3_pvals = [
                                 min(ps["AVG"] / 0.300, 1.0),
                                 min(ps["OBP"] / 0.380, 1.0),
@@ -937,8 +914,130 @@ def main():
                             st.pyplot(_fig_t3, use_container_width=True)
                             plt.close(_fig_t3)
 
+                # --- Team Batting Radar ---
+                valid_stats = [ps for ps in player_stats_list if ps["PA"] >= 50]
+                if valid_stats:
+                    st.subheader(t["team_radar_title"])
+                    avg_avg = np.mean([ps["AVG"] for ps in valid_stats])
+                    avg_obp = np.mean([ps["OBP"] for ps in valid_stats])
+                    avg_slg = np.mean([ps["SLG"] for ps in valid_stats])
+                    avg_k = np.mean([ps["K%"] for ps in valid_stats])
+                    avg_bb = np.mean([ps["BB%"] for ps in valid_stats])
+
+                    # Normalize to 0-1 (MLB typical ranges)
+                    norm_avg = min(avg_avg / 0.300, 1.0)
+                    norm_obp = min(avg_obp / 0.380, 1.0)
+                    norm_slg = min(avg_slg / 0.500, 1.0)
+                    norm_k = 1.0 - min(avg_k / 35.0, 1.0)  # lower K% is better
+                    norm_bb = min(avg_bb / 15.0, 1.0)
+
+                    categories = ["AVG", "OBP", "SLG",
+                                  "K%" if lang == "EN" else "\u4e09\u632f\u7387",
+                                  "BB%" if lang == "EN" else "\u56db\u7403\u7387"]
+                    values = [norm_avg, norm_obp, norm_slg, norm_k, norm_bb]
+                    raw_values = [f"{avg_avg:.3f}", f"{avg_obp:.3f}", f"{avg_slg:.3f}",
+                                 f"{avg_k:.1f}%", f"{avg_bb:.1f}%"]
+
+                    # MLB average for radar overlay
+                    mlb_avg = min(0.243 / 0.300, 1.0)
+                    mlb_obp = min(0.312 / 0.380, 1.0)
+                    mlb_slg = min(0.397 / 0.500, 1.0)
+                    mlb_k = 1.0 - min(22.4 / 35.0, 1.0)
+                    mlb_bb = min(8.3 / 15.0, 1.0)
+                    mlb_values = [mlb_avg, mlb_obp, mlb_slg, mlb_k, mlb_bb]
+
+                    angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+                    values_plot = values + [values[0]]
+                    angles_plot = angles + [angles[0]]
+                    mlb_plot = mlb_values + [mlb_values[0]]
+
+                    fig_radar, ax_radar = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True),
+                                                       facecolor="#0e1117")
+                    ax_radar.set_facecolor("#0e1117")
+                    ax_radar.plot(angles_plot, mlb_plot, "--", linewidth=1.5, color="#888888",
+                                  alpha=0.7, label="MLB avg")
+                    ax_radar.fill(angles_plot, mlb_plot, alpha=0.08, color="#888888")
+                    ax_radar.plot(angles_plot, values_plot, "o-", linewidth=2, color="#4fc3f7",
+                                  label="Team avg" if lang == "EN" else "\u30c1\u30fc\u30e0\u5e73\u5747")
+                    ax_radar.fill(angles_plot, values_plot, alpha=0.25, color="#4fc3f7")
+                    ax_radar.set_thetagrids(np.degrees(angles), categories, color="white", fontsize=11)
+                    ax_radar.set_ylim(0, 1)
+                    ax_radar.set_yticks([0.25, 0.5, 0.75, 1.0])
+                    ax_radar.set_yticklabels(["", "", "", ""], color="white")
+                    ax_radar.grid(color="gray", alpha=0.3)
+                    ax_radar.spines["polar"].set_color("gray")
+                    for angle, val, raw in zip(angles, values, raw_values):
+                        ax_radar.annotate(raw, xy=(angle, val), fontsize=9,
+                                          ha="center", va="bottom", color="white",
+                                          fontweight="bold")
+                    leg = ax_radar.legend(loc="upper right", bbox_to_anchor=(1.25, 1.1),
+                                          fontsize=9, facecolor="#0e1117", edgecolor="gray")
+                    for txt in leg.get_texts():
+                        txt.set_color("white")
+                    fig_radar.tight_layout()
+                    st.pyplot(fig_radar, use_container_width=True)
+                    plt.close(fig_radar)
+                    low_k_note = ("Lower K% is better for batters. Gray dashed = MLB avg." if lang == "EN"
+                                  else "\u4e09\u632f\u7387\u306f\u4f4e\u3044\u307b\u3069\u826f\u3044\uff08\u30b0\u30e9\u30d5\u3067\u306f\u4f4eK%\u307b\u3069\u5916\u5074\uff09\u3002\u7070\u8272\u7834\u7dda=MLB\u5e73\u5747\u3002")
+                    st.caption(low_k_note)
+
+            # --- Full Stats Table (in expander) ---
+            with st.expander(t["full_stats_table"], expanded=False):
+                with st.expander(t["glossary_stats"].split("**")[1].split("**")[0] + "..." if lang == "EN" else "\u7528\u8a9e\u306e\u8aac\u660e\u3092\u898b\u308b"):
+                    st.markdown(t["glossary_stats"])
+                    st.markdown(t["glossary_pct"])
+
+                with st.expander(t["pos_glossary_label"]):
+                    st.markdown(t["pos_glossary"])
+
+                overview = pd.DataFrame(rows)
+                if lang == "JA":
+                    ja_cols = {
+                        "Pos": "Pos\uff08\u5b88\u5099\uff09",
+                        "Bats": "Bats\uff08\u6253\u5e2d\uff09",
+                        "PA": "PA\uff08\u6253\u5e2d\uff09",
+                        "AVG": "AVG\uff08\u6253\u7387\uff09",
+                        "OBP": "OBP\uff08\u51fa\u5841\u7387\uff09",
+                        "SLG": "SLG\uff08\u9577\u6253\u7387\uff09",
+                        "OPS": "OPS\uff08\u51fa\u5841+\u9577\u6253\uff09",
+                        "HR": "HR\uff08\u672c\u5851\u6253\uff09",
+                        "K%": "K%\uff08\u4e09\u632f\u7387\uff09",
+                        "BB%": "BB%\uff08\u56db\u7403\u7387\uff09",
+                        "xwOBA": "xwOBA\uff08\u671f\u5f85\u6253\u6483\u5024\uff09",
+                    }
+                    overview = overview.rename(columns=ja_cols)
+                    fmt = {ja_cols.get(k, k): v for k, v in {
+                        "PA": "{:.0f}", "HR": "{:.0f}",
+                        "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
+                        "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
+                        "xwOBA": "{:.3f}",
+                    }.items()}
+                    ops_col = ja_cols["OPS"]
+                    k_col = ja_cols["K%"]
+                else:
+                    fmt = {
+                        "PA": "{:.0f}", "HR": "{:.0f}",
+                        "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
+                        "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
+                        "xwOBA": "{:.3f}",
+                    }
+                    ops_col = "OPS"
+                    k_col = "K%"
+                st.dataframe(
+                    overview.style.format(fmt, na_rep="\u2014")
+                    .background_gradient(subset=[ops_col], cmap="RdYlGn")
+                    .background_gradient(subset=[k_col], cmap="RdYlGn_r"),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
             st.subheader(t["team_strengths"])
             st.info(t["strength_note"])
+
+            # --- Auto-detected team weaknesses ---
+            st.subheader(t["team_weaknesses_title"])
+            weakness_report = analyze_team_weaknesses(player_stats_list, lang)
+            st.warning(weakness_report)
         else:
             st.warning(t["no_data"])
         return
@@ -955,7 +1054,8 @@ def main():
 
     stats = batting_stats(pdf)
 
-    st.header(f"\U0001F1FA\U0001F1F8 {player['name']}")
+    season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
+    st.header(f"\U0001F1FA\U0001F1F8 {_display_name(player['name'])} — {season_label}")
     c1, c2, c3 = st.columns(3)
     c1.metric(t["pos"], player["pos"])
     c2.metric(t["team"], player["team"])
@@ -991,6 +1091,22 @@ def main():
     st.subheader(t["player_summary"])
     summary = generate_player_summary(stats, pdf, player, lang)
     st.info(summary)
+
+    # --- Pitching Plan ---
+    st.divider()
+    st.subheader(t["pitching_plan_title"])
+    st.caption(t["pitching_plan_explain"])
+    pitching_plan = generate_pitching_plan(pdf, stats, player, lang)
+    st.success(pitching_plan)
+
+    # --- Defensive Positioning ---
+    st.divider()
+    st.subheader(t["defensive_positioning"])
+    st.caption(t["defensive_explain"])
+    defensive_pos = generate_defensive_positioning(pdf, player, lang)
+    st.warning(defensive_pos)
+
+    st.divider()
 
     # Individual Batting Radar
     _MLB_AVG_R = {"AVG": .243, "OBP": .312, "SLG": .397, "K%": 22.4, "BB%": 8.3}
@@ -1045,8 +1161,9 @@ def main():
 
     st.divider()
 
-    # Zone Heatmaps (vertical layout for mobile)
+    # Row 2: Zone Heatmaps (vertical layout for mobile)
     st.subheader(t["zone_heatmap"])
+    st.caption(t["zone_caption"])
     st.caption(t["danger_zone"])
     for hm_metric, hm_title in [("ba", t["ba_heatmap"]), ("xwoba", t["xwoba_heatmap"])]:
         fig_hm, ax_hm = plt.subplots(figsize=(6, 5), facecolor="#0e1117")
@@ -1080,11 +1197,12 @@ def main():
 
     st.divider()
 
-    # Spray Chart + Batted Ball
+    # Row 3: Spray Chart + Batted Ball
     col_spray, col_bb = st.columns([3, 2])
 
     with col_spray:
         st.subheader(t["spray_chart"])
+        st.caption(t["spray_caption"])
         stadium_keys = list(STADIUMS["EN"].keys())
         stadium_labels = [STADIUMS[lang][k] for k in stadium_keys]
         stadium_idx = st.selectbox(t["stadium"], range(len(stadium_keys)),
@@ -1131,8 +1249,9 @@ def main():
 
     st.divider()
 
-    # Pitch Type Performance
+    # Row 4: Pitch Type Performance
     st.subheader(t["pitch_type_perf"])
+    st.caption(t["pitch_caption"])
     with st.expander("What are Whiff% and Chase%?" if lang == "EN" else "\u7a7a\u632f\u7387\u30fb\u30c1\u30a7\u30a4\u30b9\u7387\u3068\u306f\uff1f"):
         st.markdown(t["glossary_pitch"])
 
@@ -1165,8 +1284,9 @@ def main():
 
     st.divider()
 
-    # Platoon Splits
+    # Row 5: Platoon Splits
     st.subheader(t["platoon"])
+    st.caption(t["platoon_caption"])
     with st.expander("What are platoon splits?" if lang == "EN" else "\u5de6\u53f3\u6295\u624b\u5225\u6210\u7e3e\u3068\u306f\uff1f"):
         st.markdown(t["glossary_platoon"])
 
@@ -1199,7 +1319,7 @@ def main():
 
     st.divider()
 
-    # Count-based Performance
+    # Row 6: Count-based Performance
     st.subheader(t["count_perf"])
     st.caption(t["count_explain"])
 

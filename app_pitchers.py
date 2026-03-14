@@ -13,6 +13,12 @@ from scipy.stats import gaussian_kde
 
 from players import VENEZUELA_PITCHERS, PITCHER_BY_NAME
 
+from scouting_lib import (
+    PREMIUM_CSS,
+    generate_hitting_plan,
+    draw_pitch_selection_pies as _lib_draw_pies,
+)
+
 # ---------------------------------------------------------------------------
 # i18n
 # ---------------------------------------------------------------------------
@@ -136,6 +142,14 @@ TEXTS = {
         "movement_caption": "Each dot is a pitch — shows how much each pitch type moves horizontally and vertically",
         "batted_ball_caption": "How opposing batters' batted balls behave against this pitcher",
         "platoon_caption": "Compares pitching stats against left-handed vs right-handed batters",
+        "hitting_plan_title": "Hitting Plan — How to Attack This Pitcher",
+        "hitting_plan_explain": "Data-driven approach based on pitch arsenal vulnerabilities, hittable zones, count tendencies, and platoon splits.",
+        "count_first_pitch": "First Pitch (0-0)",
+        "count_ahead_pitcher": "Pitcher Ahead (S>B)",
+        "count_behind_pitcher": "Pitcher Behind (B>S)",
+        "count_even_pitcher": "Even Count (B=S, >0)",
+        "count_two_strikes": "2 Strikes",
+        "count_pie_title": "Pitch Selection by Count (Visual)",
     },
     "JA": {
         "title": "ベネズエラ 投手スカウティングレポート",
@@ -254,6 +268,14 @@ TEXTS = {
         "movement_caption": "各ドットが1球 — 球種ごとの縦横の変化量を可視化",
         "batted_ball_caption": "この投手に対する打球の傾向（ゴロ・ライナー・フライの割合）",
         "platoon_caption": "左打者と右打者、それぞれに対する投球成績の比較",
+        "hitting_plan_title": "打撃プラン — この投手の攻略法",
+        "hitting_plan_explain": "球種別の弱点、被打率の高いゾーン、カウント傾向、左右差からデータに基づく攻め方を自動生成。",
+        "count_first_pitch": "初球 (0-0)",
+        "count_ahead_pitcher": "投手有利 (S>B)",
+        "count_behind_pitcher": "投手不利 (B>S)",
+        "count_even_pitcher": "イーブン (B=S, >0)",
+        "count_two_strikes": "2ストライク",
+        "count_pie_title": "カウント別 球種配分（ビジュアル）",
     },
 }
 
@@ -738,35 +760,21 @@ def main():
         initial_sidebar_state="collapsed",
     )
 
-    # -- Responsive CSS for mobile --
-    st.markdown("""
-    <style>
-    @media (max-width: 768px) {
-        /* Shrink metric cards */
-        [data-testid="stMetric"] {
-            padding: 0.3rem 0.4rem;
-        }
-        [data-testid="stMetricLabel"] {
-            font-size: 0.75rem !important;
-        }
-        [data-testid="stMetricValue"] {
-            font-size: 1.1rem !important;
-        }
-        /* Tighter column gaps */
-        [data-testid="stHorizontalBlock"] {
-            gap: 0.3rem !important;
-        }
-        /* Readable table text */
-        .stDataFrame td, .stDataFrame th {
-            font-size: 0.8rem !important;
-        }
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # -- Premium dark theme CSS --
+    st.markdown(PREMIUM_CSS, unsafe_allow_html=True)
 
     # Sidebar
     lang = st.sidebar.radio("Language / 言語", ["JA", "EN"], horizontal=True)
     t = TEXTS[lang]
+
+    # -- Hero banner --
+    st.markdown(f"""
+    <div class="hero-banner">
+        <div class="hero-title">{t['title']}</div>
+        <div class="hero-sub">{t['subtitle']}</div>
+        <div class="hero-badge">MLB Statcast 2024-2025</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.sidebar.markdown(f"# 🇻🇪 {t['title']}")
     st.sidebar.caption(t["subtitle"])
@@ -1061,6 +1069,15 @@ def main():
     st.subheader(t["pitcher_summary"])
     summary = generate_pitcher_summary(stats, pdf, pitcher, lang)
     st.info(summary)
+
+    # --- Hitting Plan ---
+    st.divider()
+    st.subheader(t["hitting_plan_title"])
+    st.caption(t["hitting_plan_explain"])
+    hitting_plan = generate_hitting_plan(pdf, stats, pitcher, lang)
+    st.success(hitting_plan)
+
+    st.divider()
 
     # Individual Pitcher Radar
     _MLB_AVG_PR = {"K%": 22.4, "Whiff%": 25.0, "BB%": 8.3,
@@ -1363,6 +1380,11 @@ def main():
         fig_mix.tight_layout(rect=[0, 0, 0.82, 1])
         st.pyplot(fig_mix, use_container_width=True)
         plt.close(fig_mix)
+
+    # --- Pitch Selection Pie Charts (donut style from QF app) ---
+    st.divider()
+    st.subheader(t["count_pie_title"])
+    _lib_draw_pies(pdf, t, lang)
 
 
 if __name__ == "__main__":

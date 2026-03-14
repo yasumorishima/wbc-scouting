@@ -1,4 +1,4 @@
-"""WBC 2026 Puerto Rico Batter Scouting Dashboard."""
+"""WBC 2026 Venezuela Batter Scouting Dashboard."""
 
 import pathlib
 
@@ -12,7 +12,7 @@ import pandas as pd
 import streamlit as st
 from scipy.stats import gaussian_kde
 
-from players_pr_batters import PR_BATTERS, PLAYER_BY_NAME
+from players_venezuela_batters import VENEZUELA_BATTERS, PLAYER_BY_NAME
 
 from scouting_lib import (
     PREMIUM_CSS,
@@ -26,7 +26,7 @@ from scouting_lib import (
 # ---------------------------------------------------------------------------
 TEXTS = {
     "EN": {
-        "title": "Puerto Rico Batter Scouting Report",
+        "title": "Venezuela Batter Scouting Report",
         "subtitle": "WBC 2026 — Projected Opponent Analysis",
         "select_player": "Select Player",
         "team_overview": "Team Overview",
@@ -64,7 +64,7 @@ TEXTS = {
         "even": "Even (B = S)",
         "team_strengths": "Team Strengths & Weaknesses",
         "strength_note": (
-            "Puerto Rico has a storied WBC history, featuring elite MLB talent throughout the lineup. Key contributors may include players with elite power and on-base skills, making Puerto Rico one of the most dangerous offensive teams in the field."
+            "Venezuela features a star-studded lineup led by Ronald Acuña Jr. and Luis Arráez. The combination of speed, contact, and power makes Venezuela one of the most dangerous offenses in the tournament."
         ),
         "no_data": "No data available for this selection.",
         "danger_zone": "Red = danger zone (high BA), Blue = attack zone (low BA)",
@@ -134,7 +134,7 @@ TEXTS = {
         "team_weaknesses_title": "Team Weakness Analysis (Auto-Detected)",
     },
     "JA": {
-        "title": "プエルトリコ 打者スカウティングレポート",
+        "title": "ベネズエラ 打者スカウティングレポート",
         "subtitle": "WBC 2026 — 対戦相手分析（想定）",
         "select_player": "選手を選択",
         "team_overview": "チーム概要",
@@ -172,7 +172,7 @@ TEXTS = {
         "even": "イーブン (B = S)",
         "team_strengths": "チームの強み・弱み",
         "strength_note": (
-            "プエルトリコはWBCで輝かしい実績を持つ強豪で、打線にエリートMLB選手が揃うと考えられている。\n\n長打力と出塁率を兼ね備えた打者が中心となり、最も得点力の高いチームの一つになる可能性がある。"
+            "ベネズエラはアクーニャJr.やアラエスを中心としたスター揃いの打線が特徴。\n\nスピード・コンタクト・パワーを兼ね備え、最も危険な攻撃力を持つチームの一つ。"
         ),
         "no_data": "このフィルターではデータがありません。",
         "danger_zone": "赤 = 危険ゾーン（高打率）、青 = 攻めるゾーン（低打率）",
@@ -288,7 +288,7 @@ def load_stadium_coords() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------------
-DATA_PATH = pathlib.Path(__file__).parent / "data" / "pr_statcast.csv"
+DATA_PATH = pathlib.Path(__file__).parent / "data" / "venezuela_statcast.csv"
 
 
 @st.cache_data
@@ -753,8 +753,8 @@ def count_category(balls: int, strikes: int) -> str:
 # ---------------------------------------------------------------------------
 def main():
     st.set_page_config(
-        page_title="Puerto Rico Scouting — WBC 2026",
-        page_icon="\U0001F1F5\U0001F1F7",
+        page_title="Venezuela Scouting — WBC 2026",
+        page_icon="\U0001F1FB\U0001F1EA",
         layout="wide",
         initial_sidebar_state="collapsed",
     )
@@ -775,10 +775,10 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    st.sidebar.markdown(f"# \U0001F1F5\U0001F1F7 {t['title']}")
+    st.sidebar.markdown(f"# \U0001F1FB\U0001F1EA {t['title']}")
     st.sidebar.caption(t["subtitle"])
 
-    _name_ja_map = {p["name"]: p.get("name_ja", "") for p in PR_BATTERS}
+    _name_ja_map = {p["name"]: p.get("name_ja", "") for p in VENEZUELA_BATTERS}
 
     def _display_name(name):
         ja = _name_ja_map.get(name, "")
@@ -786,7 +786,7 @@ def main():
             return f"{ja}（{name}）"
         return name
 
-    player_names = [t["team_overview"]] + [p["name"] for p in PR_BATTERS]
+    player_names = [t["team_overview"]] + [p["name"] for p in VENEZUELA_BATTERS]
     selected = st.sidebar.selectbox(
         t["select_player"], player_names,
         format_func=lambda x: x if x == t["team_overview"] else _display_name(x),
@@ -803,13 +803,13 @@ def main():
     # -----------------------------------------------------------------------
     if selected == t["team_overview"]:
         season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
-        st.header(f"\U0001F1F5\U0001F1F7 {t['team_overview']} — {season_label}")
+        st.header(f"\U0001F1FB\U0001F1EA {t['team_overview']} — {season_label}")
 
         st.info(t["overview_guide"])
 
         rows = []
         player_stats_list = []
-        for p in PR_BATTERS:
+        for p in VENEZUELA_BATTERS:
             pdf = df_all[df_all["batter"] == p["mlbam_id"]]
             if pdf.empty:
                 continue
@@ -1055,7 +1055,7 @@ def main():
     stats = batting_stats(pdf)
 
     season_label = f"{season} Season" if lang == "EN" else f"{season}年シーズン"
-    st.header(f"\U0001F1F5\U0001F1F7 {_display_name(player['name'])} — {season_label}")
+    st.header(f"\U0001F1FB\U0001F1EA {_display_name(player['name'])} — {season_label}")
     c1, c2, c3 = st.columns(3)
     c1.metric(t["pos"], player["pos"])
     c2.metric(t["team"], player["team"])
