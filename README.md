@@ -282,6 +282,51 @@ SELECT * FROM `data-platform-490901.wbc.wbc2026_rosters` LIMIT 10
 | `v_top_pitchers` | 投手被xwOBAクロスカントリーリーダーボード |
 | `v_plate_discipline` | 国別選球眼（空振り率・ゾーン内/外追い率） |
 
+#### 国別打球品質（`v_batter_quality_by_country`）
+
+| Country | PA | Avg EV | xwOBA | xBA | Barrel% |
+|---|---|---|---|---|---|
+| Japan | 3,553 | 85.2 | .383 | .363 | 8.9 |
+| USA | 17,879 | 84.3 | .357 | .339 | 7.9 |
+| Dominican Republic | 16,284 | 84.6 | .354 | .337 | 6.5 |
+| Venezuela | 14,663 | 83.3 | .330 | .327 | 5.8 |
+| Nicaragua | 1,018 | 84.8 | .329 | .357 | 8.6 |
+| Great Britain | 1,380 | 83.2 | .326 | .317 | 7.5 |
+| Italy | 3,412 | 84.1 | .325 | .327 | 6.7 |
+| Cuba | 346 | 82.3 | .323 | .315 | 6.6 |
+| Mexico | 7,480 | 83.2 | .322 | .323 | 5.2 |
+| Korea | 1,268 | 82.4 | .317 | .319 | 4.6 |
+
+#### 打者 xwOBA リーダーボード（`v_top_hitters`、TOP 10）
+
+| Player | Country | PA | Avg EV | xwOBA | Barrel% | Whiff% |
+|---|---|---|---|---|---|---|
+| Judge, Aaron | USA | 1,501 | 87.7 | .465 | 13.0 | 12.9 |
+| Soto, Juan | Dominican Republic | 1,519 | 87.5 | .449 | 10.3 | 7.2 |
+| Ohtani, Shohei | Japan | 1,622 | 86.9 | .433 | 11.8 | 13.1 |
+| Guerrero Jr., Vladimir | Dominican Republic | 1,489 | 86.0 | .402 | 6.0 | 8.7 |
+| Marte, Ketel | Dominican Republic | 1,165 | 86.0 | .392 | 7.0 | 9.0 |
+| Schwarber, Kyle | USA | 1,475 | 87.3 | .391 | 11.0 | 12.5 |
+| Witt Jr., Bobby | USA | 1,447 | 85.6 | .385 | 6.6 | 10.4 |
+| Tatis Jr., Fernando | Dominican Republic | 1,189 | 86.1 | .381 | 8.0 | 12.1 |
+| Acuña Jr., Ronald | Venezuela | 650 | 83.7 | .380 | 6.7 | 12.3 |
+| Aranda, Jonathan | Mexico | 580 | 84.7 | .377 | 6.7 | 10.3 |
+
+#### 投手 被xwOBA リーダーボード（`v_top_pitchers`、TOP 10）
+
+| Player | Country | Pitches | Avg Velo | Avg Spin | xwOBA Against | Whiff% |
+|---|---|---|---|---|---|---|
+| Avila, Luinder | Venezuela | 218 | 90.0 | 2,619 | .226 | 11.5 |
+| Díaz, Edwin | Puerto Rico | 2,173 | 93.6 | 2,310 | .249 | 17.5 |
+| Skubal, Tarik | USA | 6,458 | 92.7 | 2,102 | .251 | 16.0 |
+| Skenes, Paul | USA | 5,175 | 92.9 | 2,148 | .253 | 13.6 |
+| Jax, Griffin | USA | 2,211 | 92.1 | 2,615 | .263 | 18.1 |
+| Speier, Gabe | USA | 1,481 | 91.1 | 2,159 | .264 | 13.1 |
+| Muñoz, Andrés | Mexico | 2,152 | 92.3 | 2,240 | .265 | 16.2 |
+| Morgan, Eli | Israel | 845 | 87.0 | 2,282 | .266 | 12.1 |
+| Zastryzny, Rob | Canada | 509 | 87.6 | 2,439 | .268 | 14.7 |
+| Yamamoto, Yoshinobu | Japan | 5,001 | 90.0 | 2,153 | .275 | 12.4 |
+
 ## Planned
 
 - [x] 分析ビュー — BigQuery 上の 36 テーブルで SQL だけのスカウティング分析（国別比較・球種傾向等）を構築
