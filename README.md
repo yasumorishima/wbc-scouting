@@ -245,6 +245,22 @@ app_qf_jpn_ven.py        ← 準々決勝マッチアップ専用（5タブ構�
 
 ---
 
+## ☁️ BigQuery Data
+
+全データを Google BigQuery で公開しています（無料枠内で利用可能）。
+
+- **Project**: `data-platform-490901` / **Dataset**: `wbc`
+- **36 tables**, 551,945 rows
+- `wbc2026_rosters` — 312 players, 20 countries
+- 国別 Statcast テーブル（打者 + 投手）: `usa_statcast` (69,868), `dr_statcast` (62,503), `venezuela_statcast` (56,114) 等
+- MLB 球場データ (`mlb_stadiums`)
+
+```sql
+SELECT * FROM `data-platform-490901.wbc.wbc2026_rosters` LIMIT 10
+```
+
+---
+
 ## 🛠️ Tech Stack
 
 - Python 3.11
