@@ -259,6 +259,10 @@ app_qf_jpn_ven.py        ← 準々決勝マッチアップ専用（5タブ構�
 SELECT * FROM `data-platform-490901.wbc.wbc2026_rosters` LIMIT 10
 ```
 
+## Planned
+
+- [ ] BQML モデル + 分析ビュー — BigQuery 上の 36 テーブルで SQL だけのスカウティング分析（国別比較・球種傾向等）を構築
+
 ---
 
 ## 🛠️ Tech Stack
