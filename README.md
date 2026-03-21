@@ -259,9 +259,33 @@ app_qf_jpn_ven.py        ← 準々決勝マッチアップ専用（5タブ構�
 SELECT * FROM `data-platform-490901.wbc.wbc2026_rosters` LIMIT 10
 ```
 
+### GCP 分析基盤（BigQuery）
+
+18か国のStatcastデータをBigQueryに集約し、SQLだけでクロスカントリー分析が可能です。
+
+| 項目 | 値 |
+|---|---|
+| GCP プロジェクト | `data-platform-490901` |
+| データセット | `wbc` |
+| テーブル数 | 36（551,945行） |
+| 分析ビュー | 7 |
+
+#### 分析ビュー
+
+| ビュー | 用途 |
+|---|---|
+| `v_all_batters` | 全18か国の打者Statcastデータ統合 |
+| `v_all_pitchers` | 全16か国の投手Statcastデータ統合 |
+| `v_batter_quality_by_country` | 国別打球品質（平均EV・xwOBA・バレル率） |
+| `v_pitcher_arsenal_by_country` | 国別球種分析（球速・スピン・変化量） |
+| `v_top_hitters` | 打者xwOBAクロスカントリーリーダーボード |
+| `v_top_pitchers` | 投手被xwOBAクロスカントリーリーダーボード |
+| `v_plate_discipline` | 国別選球眼（空振り率・ゾーン内/外追い率） |
+
 ## Planned
 
-- [ ] BQML モデル + 分析ビュー — BigQuery 上の 36 テーブルで SQL だけのスカウティング分析（国別比較・球種傾向等）を構築
+- [x] 分析ビュー — BigQuery 上の 36 テーブルで SQL だけのスカウティング分析（国別比較・球種傾向等）を構築
+- ※ BQMLモデルはスカウティング用途では不要と判断（可視化・比較が主目的のため）
 
 ---
 
