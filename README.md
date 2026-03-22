@@ -24,6 +24,14 @@ Streamlit Community Cloud にデプロイ済み。Baseball Savant の Statcast �
 
 ---
 
+## 📊 Grafana ダッシュボード
+
+[WBC 2026 Scouting](https://yasumorishima.grafana.net/d/a287bbc1-163a-4199-80dd-7caf59932766) — 国別打撃力・投手力比較、xwOBA/球速散布図、プレートディシプリン分析。BigQuery (`data-platform-490901.wbc`) に接続。
+
+![WBC 2026 Scouting — Grafana Dashboard](docs/images/grafana-preview.png)
+
+---
+
 ## 📸 スクリーンショット
 
 ### 打者ダッシュボード
