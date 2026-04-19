@@ -24,14 +24,6 @@ Streamlit Community Cloud にデプロイ済み。Baseball Savant の Statcast �
 
 ---
 
-## 📊 Grafana ダッシュボード
-
-[WBC 2026 Scouting](https://yasumorishima.grafana.net/public-dashboards/e062c7e21d1b44ed8bcda8ca9c775719) — 国別打撃力・投手力比較、xwOBA/球速散布図、プレートディシプリン分析。BigQuery (`data-platform-490901.wbc`) に接続。
-
-![WBC 2026 Scouting — Grafana Dashboard](docs/images/grafana-preview.png)
-
----
-
 ## 📸 スクリーンショット
 
 ### 打者ダッシュボード
@@ -253,44 +245,11 @@ app_qf_jpn_ven.py        ← 準々決勝マッチアップ専用（5タブ構�
 
 ---
 
-## ☁️ BigQuery Data
+## 📊 分析サマリー
 
-全データを Google BigQuery で公開しています（無料枠内で利用可能）。
+> **2026-04-19 BigQuery `wbc` dataset 退役**（Grafana 公開廃止のため）。以下の国別集計は本プロジェクト Streamlit + 各国 Statcast CSV から算出。
 
-- **Project**: `data-platform-490901` / **Dataset**: `wbc`
-- **36 tables**, 551,945 rows
-- `wbc2026_rosters` — 312 players, 20 countries
-- 国別 Statcast テーブル（打者 + 投手）: `usa_statcast` (69,868), `dr_statcast` (62,503), `venezuela_statcast` (56,114) 等
-- MLB 球場データ (`mlb_stadiums`)
-
-```sql
-SELECT * FROM `data-platform-490901.wbc.wbc2026_rosters` LIMIT 10
-```
-
-### GCP 分析基盤（BigQuery）
-
-18か国のStatcastデータをBigQueryに集約し、SQLだけでクロスカントリー分析が可能です。
-
-| 項目 | 値 |
-|---|---|
-| GCP プロジェクト | `data-platform-490901` |
-| データセット | `wbc` |
-| テーブル数 | 36（551,945行） |
-| 分析ビュー | 7 |
-
-#### 分析ビュー
-
-| ビュー | 用途 |
-|---|---|
-| `v_all_batters` | 全18か国の打者Statcastデータ統合 |
-| `v_all_pitchers` | 全16か国の投手Statcastデータ統合 |
-| `v_batter_quality_by_country` | 国別打球品質（平均EV・xwOBA・バレル率） |
-| `v_pitcher_arsenal_by_country` | 国別球種分析（球速・スピン・変化量） |
-| `v_top_hitters` | 打者xwOBAクロスカントリーリーダーボード |
-| `v_top_pitchers` | 投手被xwOBAクロスカントリーリーダーボード |
-| `v_plate_discipline` | 国別選球眼（空振り率・ゾーン内/外追い率） |
-
-#### 国別打球品質（`v_batter_quality_by_country`）
+#### 国別打球品質
 
 | Country | PA | Avg EV | xwOBA | xBA | Barrel% |
 |---|---|---|---|---|---|
@@ -305,7 +264,7 @@ SELECT * FROM `data-platform-490901.wbc.wbc2026_rosters` LIMIT 10
 | Mexico | 7,480 | 83.2 | .322 | .323 | 5.2 |
 | Korea | 1,268 | 82.4 | .317 | .319 | 4.6 |
 
-#### 打者 xwOBA リーダーボード（`v_top_hitters`、TOP 10）
+#### 打者 xwOBA リーダーボード（TOP 10）
 
 | Player | Country | PA | Avg EV | xwOBA | Barrel% | Whiff% |
 |---|---|---|---|---|---|---|
@@ -320,7 +279,7 @@ SELECT * FROM `data-platform-490901.wbc.wbc2026_rosters` LIMIT 10
 | Acuña Jr., Ronald | Venezuela | 650 | 83.7 | .380 | 6.7 | 12.3 |
 | Aranda, Jonathan | Mexico | 580 | 84.7 | .377 | 6.7 | 10.3 |
 
-#### 投手 被xwOBA リーダーボード（`v_top_pitchers`、TOP 10）
+#### 投手 被xwOBA リーダーボード（TOP 10）
 
 | Player | Country | Pitches | Avg Velo | Avg Spin | xwOBA Against | Whiff% |
 |---|---|---|---|---|---|---|
@@ -334,11 +293,6 @@ SELECT * FROM `data-platform-490901.wbc.wbc2026_rosters` LIMIT 10
 | Morgan, Eli | Israel | 845 | 87.0 | 2,282 | .266 | 12.1 |
 | Zastryzny, Rob | Canada | 509 | 87.6 | 2,439 | .268 | 14.7 |
 | Yamamoto, Yoshinobu | Japan | 5,001 | 90.0 | 2,153 | .275 | 12.4 |
-
-## Planned
-
-- [x] 分析ビュー — BigQuery 上の 36 テーブルで SQL だけのスカウティング分析（国別比較・球種傾向等）を構築
-- ※ BQMLモデルはスカウティング用途では不要と判断（可視化・比較が主目的のため）
 
 ---
 
