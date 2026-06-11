@@ -215,7 +215,7 @@ Streamlit Community Cloud はアプリが一定時間使われないとスリー
 ### 仕組み
 
 - **`streamlit_apps.txt`** — 全アプリ URL の単一ソース。keepalive・health check の両方がここから読む
-- **Streamlit Keepalive**（Raspberry Pi Docker、10分ごと） — Playwright でブラウザアクセスし、スリープ中のアプリは wake-up ボタンをクリック
+- **Streamlit Keepalive**（`keepalive.yml`、GitHub Actions、6時間ごと） — Playwright でブラウザアクセスし、スリープ中のアプリは wake-up ボタンをクリック。run 末尾で自分自身を re-enable するため、60日無活動による scheduled workflow の自動 disable も回避（2026-06-12 追加）
 - **Detect New Apps**（`detect-new-apps.yml`、push時自動） — 新しい `app_*.py` が追加された際に `streamlit_apps.txt` に未登録なら issue を自動作成
 - **Streamlit Health Check**（[oss-contributions](https://github.com/yasumorishima/oss-contributions) 側、手動実行） — 全アプリの HTTP ステータスを確認
 
