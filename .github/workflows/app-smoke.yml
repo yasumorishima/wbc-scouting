@@ -1,0 +1,33 @@
+name: App smoke test
+
+# Run every app once with Streamlit's AppTest (one process per app) and fail
+# on any uncaught exception. The keepalive's health check only says the
+# server is up; it cannot see an app that crashes while running its script.
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      memo:
+        description: 'この実行の意図'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Run every app
+        run: python scripts/apptest_all.py
