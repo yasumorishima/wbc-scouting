@@ -47,9 +47,15 @@ async def visit(page, url: str) -> bool:
             await wake_btn.click()
             # Wait for the app to actually start (up to 90s)
             await page.wait_for_timeout(90_000)
-        else:
-            print(f"  OK    {url}")
-
+        # The page shell loads even when the app process is down, so a missing
+        # wake button proves nothing. Streamlit's health endpoint answers 200
+        # only when the app is up ("application is down" / 503 when it is not,
+        # 404 when no app is deployed at this URL).
+        health = await page.request.get(url.rstrip("/") + "/~/+/_stcore/health", timeout=TIMEOUT_MS)
+        if health.status != 200:
+            print(f"  NG    {url} — health {health.status}")
+            return False
+        print(f"  OK    {url}")
         return True
     except Exception as e:
         print(f"  NG    {url} — {e}")
