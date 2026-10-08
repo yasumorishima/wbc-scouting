@@ -215,7 +215,8 @@ Streamlit Community Cloud はアプリが一定時間使われないとスリー
 ### 仕組み
 
 - **`streamlit_apps.txt`** — 全アプリ URL の単一ソース。keepalive・health check の両方がここから読む
-- **Streamlit Keepalive**（`keepalive.yml`、GitHub Actions、6時間ごと） — Playwright でブラウザアクセスし、スリープ中のアプリは wake-up ボタンをクリック。run 末尾で自分自身を re-enable するため、60日無活動による scheduled workflow の自動 disable も回避（2026-06-12 追加）
+- **Streamlit Keepalive**（`keepalive.yml`、GitHub Actions、6時間ごと） — Playwright でブラウザアクセスし、スリープ中のアプリは wake-up ボタンをクリック。そのあと `<app>/~/+/_stcore/health` が 200 を返したアプリだけを OK と数える（2026-10-08 追加。落ちたアプリもページの枠は返すので、以前はそれも OK と数えていた）。run 末尾で自分自身を re-enable するため、60日無活動による scheduled workflow の自動 disable も回避（2026-06-12 追加）
+- **App smoke test**（`app-smoke.yml`、PR と push で自動） — 全アプリを Streamlit の AppTest で 1 回ずつ実行し、例外が出たら落ちる（2026-10-08 追加）。health は「サーバーが動いている」までしか言わず、スクリプトの途中で落ちるアプリは見えないため。アプリどうしでモジュール名とキャッシュを共有するので 1 アプリ 1 プロセスで回す（`scripts/apptest_all.py`）
 - **Detect New Apps**（`detect-new-apps.yml`、push時自動） — 新しい `app_*.py` が追加された際に `streamlit_apps.txt` に未登録なら issue を自動作成
 - **Streamlit Health Check**（[oss-contributions](https://github.com/yasumorishima/oss-contributions) 側、手動実行） — 全アプリの HTTP ステータスを確認
 
