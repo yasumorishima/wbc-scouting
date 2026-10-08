@@ -2780,7 +2780,7 @@ def main():
                             _t1_ct.style.format({
                                 "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                                 "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-                            }).background_gradient(subset=["AVG"], cmap="YlOrRd", vmin=0.150, vmax=0.350
+                            }, na_rep="\u2014").background_gradient(subset=["AVG"], cmap="YlOrRd", vmin=0.150, vmax=0.350
                             ).background_gradient(subset=["OPS"], cmap="YlOrRd", vmin=0.400, vmax=1.000
                             ).background_gradient(subset=["K%"], cmap="YlOrRd_r", vmin=10, vmax=40
                             ).map(lambda v: _style_count_type(v, t), subset=[_t1_type_col]),
@@ -3011,7 +3011,7 @@ def main():
                                 t["k_pct"]: "{:.1f}",
                                 t["bb_pct"]: "{:.1f}",
                                 t["whiff_pct"]: "{:.1f}",
-                            }).background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.150, vmax=0.350
+                            }, na_rep="\u2014").background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.150, vmax=0.350
                             ).background_gradient(subset=[t["k_pct"]], cmap="YlOrRd", vmin=10, vmax=40
                             ).background_gradient(subset=[t["whiff_pct"]], cmap="YlOrRd", vmin=15, vmax=45
                             ).map(lambda v: _style_count_type(v, t), subset=[_t1_pit_type_col]),
@@ -3573,8 +3573,7 @@ def main():
         disp_cols = ["role", "name", "pos", "team", "bats", "PA", "AVG", "OBP", "SLG", "OPS"]
         disp_df = sum_df[disp_cols].rename(columns=col_map)
         st.dataframe(
-            disp_df.style.format({"AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}", "OPS": "{:.3f}"}
-                                 ).background_gradient(subset=["AVG"], cmap="YlOrRd", vmin=0.200, vmax=0.320
+            disp_df.style.format({"AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}", "OPS": "{:.3f}"}, na_rep="\u2014").background_gradient(subset=["AVG"], cmap="YlOrRd", vmin=0.200, vmax=0.320
                                  ).background_gradient(subset=["OPS"], cmap="YlOrRd", vmin=0.500, vmax=0.900),
             use_container_width=True, hide_index=True, height=min(520, 38 + 35 * len(batter_rows)),
         )
@@ -3941,7 +3940,7 @@ def main():
                         count_table.style.format({
                             "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                             "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-                        }).background_gradient(subset=["AVG"], cmap="YlOrRd", vmin=0.150, vmax=0.350
+                        }, na_rep="\u2014").background_gradient(subset=["AVG"], cmap="YlOrRd", vmin=0.150, vmax=0.350
                         ).background_gradient(subset=["OPS"], cmap="YlOrRd", vmin=0.400, vmax=1.000
                         ).background_gradient(subset=["K%"], cmap="YlOrRd_r", vmin=10, vmax=40
                         ).map(lambda v: _style_count_type(v, t), subset=[_ct_type_col]),
@@ -4209,7 +4208,7 @@ def main():
                                 t["k_pct"]: "{:.1f}",
                                 t["bb_pct"]: "{:.1f}",
                                 t["whiff_pct"]: "{:.1f}",
-                            }).background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.150, vmax=0.350
+                            }, na_rep="\u2014").background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.150, vmax=0.350
                             ).background_gradient(subset=[t["k_pct"]], cmap="YlOrRd", vmin=10, vmax=40
                             ).background_gradient(subset=[t["whiff_pct"]], cmap="YlOrRd", vmin=15, vmax=45
                             ).map(lambda v: _style_count_type(v, t), subset=[_pit_type_col]),
@@ -4283,8 +4282,7 @@ def main():
         rp_disp_df = rp_sum_df[rp_disp_cols].rename(columns=rp_col_map)
         st.dataframe(
             rp_disp_df.style.format({t["opp_avg"]: "{:.3f}", t["k_pct"]: "{:.1f}",
-                                      t["bb_pct"]: "{:.1f}", t["whiff_pct"]: "{:.1f}"}
-                                    ).background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.180, vmax=0.300
+                                      t["bb_pct"]: "{:.1f}", t["whiff_pct"]: "{:.1f}"}, na_rep="\u2014").background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.180, vmax=0.300
                                     ).background_gradient(subset=[t["k_pct"]], cmap="YlOrRd", vmin=15, vmax=35
                                     ).background_gradient(subset=[t["whiff_pct"]], cmap="YlOrRd", vmin=18, vmax=40),
             use_container_width=True, hide_index=True, height=min(520, 38 + 35 * len(rp_rows)),
@@ -4527,7 +4525,7 @@ def main():
                                 t["k_pct"]: "{:.1f}",
                                 t["bb_pct"]: "{:.1f}",
                                 t["whiff_pct"]: "{:.1f}",
-                            }).background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.150, vmax=0.350
+                            }, na_rep="\u2014").background_gradient(subset=[t["opp_avg"]], cmap="YlOrRd", vmin=0.150, vmax=0.350
                             ).background_gradient(subset=[t["k_pct"]], cmap="YlOrRd", vmin=10, vmax=40
                             ).background_gradient(subset=[t["whiff_pct"]], cmap="YlOrRd", vmin=15, vmax=45
                             ).map(lambda v: _style_count_type(v, t), subset=[_rp_type_col]),

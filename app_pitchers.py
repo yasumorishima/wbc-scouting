@@ -796,6 +796,10 @@ def main():
         format_func=lambda x: x if x == t["team_overview"] else _display_name(x),
     )
 
+    if not DATA_PATH.exists():
+        st.info("No MLB Statcast data (2024-2025) for this team's players yet. / "
+                "このチームの選手には MLB の Statcast データ（2024〜2025）がまだありません。")
+        st.stop()
     df_all = load_data()
 
     seasons = sorted(df_all["season"].unique().tolist())
@@ -1004,7 +1008,7 @@ def main():
                         t["k_pct"]: "{:.1f}", t["bb_pct"]: "{:.1f}",
                         t["opp_avg"]: "{:.3f}", t["opp_slg"]: "{:.3f}",
                         t["xwoba_against"]: "{:.3f}",
-                    }).background_gradient(subset=[t["k_pct"]], cmap="RdYlGn")
+                    }, na_rep="\u2014").background_gradient(subset=[t["k_pct"]], cmap="RdYlGn")
                     .background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
                     use_container_width=True,
                     hide_index=True,
@@ -1319,7 +1323,7 @@ def main():
             count_table.style.format({
                 t["opp_avg"]: "{:.3f}", t["opp_slg"]: "{:.3f}",
                 t["k_pct"]: "{:.1f}", t["bb_pct"]: "{:.1f}",
-            }).background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
+            }, na_rep="\u2014").background_gradient(subset=[t["opp_avg"]], cmap="RdYlGn_r"),
             use_container_width=True,
             hide_index=True,
         )

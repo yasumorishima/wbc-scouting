@@ -798,6 +798,10 @@ def main():
         format_func=lambda x: x if x == t["team_overview"] else _display_name(x),
     )
 
+    if not DATA_PATH.exists():
+        st.info("No MLB Statcast data (2024-2025) for this team's players yet. / "
+                "このチームの選手には MLB の Statcast データ（2024〜2025）がまだありません。")
+        st.stop()
     df_all = load_data()
 
     seasons = sorted(df_all["season"].unique().tolist())
@@ -1366,7 +1370,7 @@ def main():
             count_table.style.format({
                 "AVG": "{:.3f}", "OBP": "{:.3f}", "SLG": "{:.3f}",
                 "OPS": "{:.3f}", "K%": "{:.1f}", "BB%": "{:.1f}",
-            }).background_gradient(subset=["OPS"], cmap="RdYlGn"),
+            }, na_rep="\u2014").background_gradient(subset=["OPS"], cmap="RdYlGn"),
             use_container_width=True,
             hide_index=True,
         )
