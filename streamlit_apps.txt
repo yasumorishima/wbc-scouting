@@ -38,6 +38,7 @@ https://wbc-kor-batters.streamlit.app/
 https://wbc-kor-pitchers.streamlit.app/
 https://wbc-twn-batters.streamlit.app/
 https://wbc-aus-batters.streamlit.app/
+https://wbc-aus-pitchers.streamlit.app/
 
 # WBC — Pool D (Miami)
 https://wbc-dr-batters.streamlit.app/
