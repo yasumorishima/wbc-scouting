@@ -3,7 +3,6 @@
 
 # Core apps (non-WBC)
 https://npb-prediction.streamlit.app/
-https://npb-prediction-bayes.streamlit.app/
 https://baseball-mlops.streamlit.app/
 https://yasumorishima-mlb-bat-tracking.streamlit.app/
 https://mlb-wp-engine.streamlit.app/
