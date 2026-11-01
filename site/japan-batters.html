@@ -16,6 +16,15 @@
         {
           requirements: ["matplotlib", "scipy", "matplotlib-fontja"],
           entrypoint: "app_japan.py",
+          // Same theme as .streamlit/config.toml (Streamlit Cloud reads that file; stlite needs it here).
+          streamlitConfig: {
+            "theme.base": "dark",
+            "theme.primaryColor": "#d32f2f",
+            "theme.backgroundColor": "#0e1117",
+            "theme.secondaryBackgroundColor": "#1a1a2e",
+            "theme.textColor": "#fafafa",
+            "theme.font": "sans serif",
+          },
           files: {
             "app_japan.py": { url: "./app/app_japan.py" },
             "scouting_lib.py": { url: "./app/scouting_lib.py" },
