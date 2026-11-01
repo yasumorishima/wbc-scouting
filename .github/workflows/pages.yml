@@ -30,6 +30,9 @@ on:
         description: "also open each app on Streamlit Cloud and require the same headings, figure counts and player"
         type: boolean
         default: false
+      only:
+        description: "check only these pages (comma-separated slugs, e.g. japan-batters,qf-jpn-ven); empty = all"
+        required: false
 
 permissions: {}
 
@@ -90,11 +93,13 @@ jobs:
         continue-on-error: true
         env:
           COMPARE_CLOUD: ${{ inputs.compare_cloud }}
+          ONLY: ${{ inputs.only }}
         run: |
           mkdir -p pages_check
-          CLOUD=""
-          if [ "$COMPARE_CLOUD" = "true" ]; then CLOUD="--cloud"; fi
-          python scripts/pages_check.py "https://yasumorishima.github.io/wbc-scouting" /tmp/site/apps.json $CLOUD
+          ARGS=()
+          if [ "$COMPARE_CLOUD" = "true" ]; then ARGS+=(--cloud); fi
+          if [ -n "$ONLY" ]; then ARGS+=(--only "$ONLY"); fi
+          python scripts/pages_check.py "https://yasumorishima.github.io/wbc-scouting" /tmp/site/apps.json "${ARGS[@]}"
       - name: Keep the summary and screenshots on the pages-check branch
         if: always()
         env:

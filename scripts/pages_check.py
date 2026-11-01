@@ -30,8 +30,9 @@ from PIL import Image
 from playwright.async_api import async_playwright
 
 LIMIT_MS = 300_000      # static pages (Pyodide start + package install)
-CLOUD_LIMIT_MS = 120_000
+CLOUD_LIMIT_MS = 300_000  # a sleeping cloud app is detected at once (ASLEEP), so this is only for slow runs
 IDLE_S = 4              # the app counts as idle after this many quiet seconds
+RUN_GRACE_S = 20        # after a widget change, wait at most this long to see the rerun start
 PARALLEL = 3
 MAX_PLAYERS = 8         # players tried for the detail view
 SHOT_WIDTH = 800        # stored screenshots are scaled to this width (JPEG)
@@ -52,13 +53,18 @@ STATE_JS = """() => {
   const imgs = [...root.querySelectorAll('img')].filter(i => i.complete && i.naturalWidth > 0 && i.getBoundingClientRect().width > 100);
   const heads = [...root.querySelectorAll('h1, h2, h3')].map(h => h.innerText.trim()).filter(Boolean);
   const status = document.querySelector('[data-testid="stStatusWidget"]');
+  const app = document.querySelector('[data-testid="stApp"]');
+  // Streamlit marks the app element with the script state (its own e2e tests wait on 'notRunning').
+  const scriptState = app ? app.getAttribute('data-test-script-state') : null;
   const text = document.body.innerText;
   return {
+    script_state: scriptState,
     images: imgs.length,
     headings: heads,
     exceptions: document.querySelectorAll('[data-testid="stException"]').length,
     traceback: text.includes('Traceback'),
-    running: !!(status && /Running/i.test(status.innerText)) || document.querySelectorAll('[data-stale="true"]').length > 0,
+    running: (scriptState !== null && scriptState !== 'notRunning') ||
+             !!(status && /Running/i.test(status.innerText)) || document.querySelectorAll('[data-stale="true"]').length > 0,
     alerts: [...root.querySelectorAll('[data-testid="stAlert"]')].map(a => a.innerText.slice(0, 200)),
     sidebar_select: document.querySelectorAll('[data-testid="stSidebar"] [data-testid="stSelectbox"]').length,
     textlen: root.innerText.length,
@@ -99,12 +105,14 @@ async def asleep(page):
     return False
 
 
-async def wait_idle(page, t0, ready, limit_ms, seen):
-    """Wait until ready(state) holds and nothing has changed for IDLE_S seconds.
+async def wait_idle(page, t0, ready, limit_ms, seen, need_run=False):
+    """Wait until ready(state) holds, the script is not running and nothing has changed for IDLE_S seconds.
 
+    need_run: after a widget change, accept only once this wait has seen the rerun start (or after
+    RUN_GRACE_S, for a rerun too quick to observe), so the previous view is never taken for the new one.
     seen["running"] records whether a run in progress was ever observed (proves the busy test can fire).
     """
-    last, quiet, state, fr = None, 0, None, None
+    last, quiet, state, fr, ran = None, 0, None, None, False
     while (time.monotonic() - t0) * 1000 < limit_ms:
         fr = await app_frame(page)
         state = None
@@ -115,10 +123,13 @@ async def wait_idle(page, t0, ready, limit_ms, seen):
                 state = None
         if state:
             seen["running"] = seen.get("running", False) or state["running"]
+            ran = ran or state["running"]
+            seen.setdefault("states", set()).add(str(state["script_state"]))
             if state["exceptions"] or state["traceback"]:
                 return fr, state, True
             key = (state["images"], tuple(state["headings"]), state["textlen"], tuple(state["alerts"]))
-            if ready(state) and not state["running"] and key == last:
+            started = ran or not need_run or time.monotonic() - t0 > RUN_GRACE_S
+            if started and ready(state) and not state["running"] and key == last:
                 quiet += 1
                 if quiet >= IDLE_S:
                     return fr, state, True
@@ -191,15 +202,11 @@ async def run_one(ctx, url, slug, expect_no_data, detail, out, shots, limit_ms):
                 name, n = await pick_option(page, fr, index)
                 if name is None:
                     break
-                # resolved = this player's view is drawn: figures, or the app's own notice. The first pick
-                # must also differ from the overview (so the old view is not taken for the new one); after a
-                # no-data player the next no-data view is identical, so only the idle wait guards it.
-                before = (tuple(st.get("headings", [])), tuple(st.get("alerts", [])), st.get("images")) \
-                    if index == 1 else None
-                resolved = lambda s, before=before: (s["images"] > 0 or len(s["alerts"]) > 0) and \
-                    (tuple(s["headings"]), tuple(s["alerts"]), s["images"]) != before  # noqa: E731
-                await page.wait_for_timeout(1500)
-                fr, st, ok2 = await wait_idle(page, t1, resolved if not expect_no_data else ready, limit_ms, seen)
+                # resolved = the rerun for this player has finished and drawn something (figures, or the
+                # app's own notice); need_run keeps the previous player's view from being taken for this one.
+                resolved = lambda s: s["images"] > 0 or len(s["alerts"]) > 0  # noqa: E731
+                fr, st, ok2 = await wait_idle(page, t1, resolved if not expect_no_data else ready, limit_ms, seen,
+                                              need_run=True)
                 res["detail_player"] = name
                 res["detail"] = {"seconds": round(time.monotonic() - t1, 1), "ready": ok2, **st}
                 if expect_no_data or not ok2 or st.get("images") or st.get("exceptions") or st.get("traceback"):
@@ -212,6 +219,7 @@ async def run_one(ctx, url, slug, expect_no_data, detail, out, shots, limit_ms):
         res["error"] = f"{type(e).__name__}: {e}"[:300]
     finally:
         res["saw_running"] = seen.get("running", False)
+        res["script_states"] = sorted(seen.get("states", set()))
         await page.close()
     return res
 
@@ -267,8 +275,13 @@ async def main():
     args = ap.parse_args()
     apps = json.loads(Path(args.apps_json).read_text(encoding="utf-8"))
     if args.only:
-        keep = set(args.only.split(","))
+        keep = {s.strip() for s in args.only.split(",") if s.strip()}
+        unknown = keep - {a["slug"] for a in apps}
+        if unknown:
+            sys.exit(f"--only: unknown page(s): {', '.join(sorted(unknown))}")
         apps = [a for a in apps if a["slug"] in keep]
+    if not apps:
+        sys.exit("no page to check")
     out = Path("pages_check")
     out.mkdir(exist_ok=True)
     base = args.base_url.rstrip("/")
