@@ -27,7 +27,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 STLITE = "@stlite/browser@1.12.0"
 # Packages given to every page (Pyodide / micropip installs them).
-REQUIREMENTS = ["matplotlib", "scipy", "matplotlib-fontja"]
+# matplotlib/scipy come from the Pyodide release stlite pins; the PyPI wheel is pinned here so a new
+# release cannot change all pages without a rebuild and check.
+REQUIREMENTS = ["matplotlib", "scipy", "matplotlib-fontja==1.1.0"]
 ALLOWED_THIRD_PARTY = {"streamlit", "pandas", "numpy", "matplotlib", "matplotlib_fontja", "scipy"}
 # Brazil's rosters have no MLB Statcast data; those apps show a notice and stop (fixed 2026-10-08).
 EXPECTED_MISSING = {"bra_statcast.csv", "bra_pitchers_statcast.csv"}
@@ -48,7 +50,7 @@ COUNTRY = {
     "dr": ("ドミニカ共和国", "Dominican Republic"), "venezuela": ("ベネズエラ", "Venezuela"),
     "ned": ("オランダ", "Netherlands"), "isr": ("イスラエル", "Israel"), "nic": ("ニカラグア", "Nicaragua"),
 }
-CSV_RE = re.compile(r"""["']([A-Za-z0-9_]+\.csv)["']""")
+CSV_RE = re.compile(r"""["']([A-Za-z0-9_.-]+\.csv)["']""")
 STDLIB = set(sys.stdlib_module_names)
 
 

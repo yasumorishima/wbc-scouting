@@ -4,8 +4,6 @@ name: Pages (stlite)
 # index page: https://yasumorishima.github.io/wbc-scouting/
 # After the deploy, scripts/pages_check.py opens every page in Chromium and checks that it renders;
 # its summary and screenshots are kept on the `pages-check` branch (replaced on every run).
-# Note: commits made by other workflows with GITHUB_TOKEN (data refreshes) do not trigger this
-# workflow; run it by hand after such a refresh.
 
 on:
   push:
@@ -19,20 +17,21 @@ on:
       - "scripts/build_pages.py"
       - "scripts/pages_check.py"
       - ".github/workflows/pages.yml"
+  # Data refreshes commit with GITHUB_TOKEN, which does not trigger push workflows.
+  workflow_run:
+    workflows: ["Fetch Statcast Data", "Fetch All Countries Statcast", "Generate Player Files"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       memo:
         description: "why this run"
         required: false
       compare_cloud:
-        description: "also open each app on Streamlit Cloud and require the same headings and figure counts"
+        description: "also open each app on Streamlit Cloud and require the same headings, figure counts and player"
         type: boolean
         default: false
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+permissions: {}
 
 concurrency:
   group: pages
@@ -40,12 +39,20 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -61,41 +68,53 @@ jobs:
   check:
     needs: deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Install Playwright
         run: |
-          pip install playwright pillow
+          pip install playwright==1.64.0 pillow==13.0.0
           playwright install chromium --with-deps
       - name: Rebuild apps.json (same script as the deploy)
         run: python scripts/build_pages.py /tmp/site
       - name: Open every page and check it renders
         id: check
         continue-on-error: true
+        env:
+          COMPARE_CLOUD: ${{ inputs.compare_cloud }}
         run: |
+          mkdir -p pages_check
           CLOUD=""
-          if [ "${{ inputs.compare_cloud }}" = "true" ]; then CLOUD="--cloud"; fi
+          if [ "$COMPARE_CLOUD" = "true" ]; then CLOUD="--cloud"; fi
           python scripts/pages_check.py "https://yasumorishima.github.io/wbc-scouting" /tmp/site/apps.json $CLOUD
       - name: Keep the summary and screenshots on the pages-check branch
         if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTCOME: ${{ steps.check.outcome }}
         run: |
+          mkdir -p pages_check /tmp/out
+          cp -r pages_check/. /tmp/out/
+          echo "run ${{ github.run_id }} (${{ github.sha }}) check outcome: ${OUTCOME:-not run}" > /tmp/out/RUN.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mkdir -p /tmp/out && cp -r pages_check/. /tmp/out/
           git checkout -q --orphan pages-check-new
           git rm -rq --cached . > /dev/null 2>&1 || true
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -r /tmp/out/. .
-          echo "run ${{ github.run_id }} (${{ github.sha }})" > RUN.txt
           git add -A
-          git commit -qm "pages check (run ${{ github.run_id }})"
-          git push -q -f origin pages-check-new:pages-check
+          git commit -qm "pages check (run ${{ github.run_id }}): ${OUTCOME:-not run}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" pages-check-new:pages-check
       - name: Fail if any page failed
         if: steps.check.outcome != 'success'
         run: |
-          cat pages_check/summary.md || true
+          cat /tmp/out/summary.md || true
           exit 1
