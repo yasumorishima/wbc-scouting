@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>WBC 2026 日本 打者スカウティング</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/stlite.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      // Runs the same Streamlit app (app_japan.py) in the browser with stlite (Pyodide).
+      // No server: nothing to sleep, nothing to keep alive.
+      import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/stlite.js";
+      mount(
+        {
+          requirements: ["matplotlib", "scipy", "matplotlib-fontja"],
+          entrypoint: "app_japan.py",
+          files: {
+            "app_japan.py": { url: "./app/app_japan.py" },
+            "scouting_lib.py": { url: "./app/scouting_lib.py" },
+            "players_japan_batters.py": { url: "./app/players_japan_batters.py" },
+            "data/japan_statcast.csv": { url: "./app/data/japan_statcast.csv" },
+            "data/mlbstadiums_wbc.csv": { url: "./app/data/mlbstadiums_wbc.csv" },
+          },
+        },
+        document.getElementById("root"),
+      );
+    </script>
+  </body>
+</html>

@@ -1,0 +1,88 @@
+name: Pages (stlite pilot)
+
+# Pilot: serve the Japan batters app as a static page (stlite runs Streamlit in the browser),
+# then open both the static page and the Streamlit Cloud app in Chromium, time the first render
+# and keep screenshots on the `pages-check` branch.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "site/**"
+      - "app_japan.py"
+      - "scouting_lib.py"
+      - "players_japan_batters.py"
+      - "data/japan_statcast.csv"
+      - "data/mlbstadiums_wbc.csv"
+      - "scripts/pages_check.py"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+    inputs:
+      memo:
+        description: "why this run"
+        required: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble the site
+        run: |
+          mkdir -p _site/app/data
+          cp site/japan-batters.html _site/japan-batters.html
+          cp app_japan.py scouting_lib.py players_japan_batters.py _site/app/
+          cp data/japan_statcast.csv data/mlbstadiums_wbc.csv _site/app/data/
+          touch _site/.nojekyll
+          ls -laR _site | head -30
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  check:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+      - name: Time first render and take screenshots
+        run: python scripts/pages_check.py "https://yasumorishima.github.io/wbc-scouting/japan-batters.html" "https://wbc-japan-batters.streamlit.app/"
+      - name: Keep screenshots on the pages-check branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p /tmp/out && cp pages_check/* /tmp/out/
+          git fetch -q origin pages-check || true
+          if git rev-parse -q --verify origin/pages-check >/dev/null; then
+            git checkout -q -B pages-check origin/pages-check
+          else
+            git checkout -q --orphan pages-check
+          fi
+          git rm -rq --cached . > /dev/null 2>&1 || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/out/* .
+          git add -A
+          git commit -qm "pages check (run ${{ github.run_id }})" || exit 0
+          git push -q origin pages-check
