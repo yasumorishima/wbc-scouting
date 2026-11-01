@@ -1,19 +1,22 @@
-name: Pages (stlite pilot)
+name: Pages (stlite)
 
-# Pilot: serve the Japan batters app as a static page (stlite runs Streamlit in the browser),
-# then open both the static page and the Streamlit Cloud app in Chromium, time the first render
-# and keep screenshots on the `pages-check` branch.
+# Every WBC app as a static page (stlite runs the unchanged Streamlit app in the browser), plus an
+# index page: https://yasumorishima.github.io/wbc-scouting/
+# After the deploy, scripts/pages_check.py opens every page in Chromium and checks that it renders;
+# its summary and screenshots are kept on the `pages-check` branch (replaced on every run).
+# Note: commits made by other workflows with GITHUB_TOKEN (data refreshes) do not trigger this
+# workflow; run it by hand after such a refresh.
 
 on:
   push:
     branches: [master]
     paths:
-      - "site/**"
-      - "app_japan.py"
+      - "app_*.py"
+      - "players*.py"
       - "scouting_lib.py"
-      - "players_japan_batters.py"
-      - "data/japan_statcast.csv"
-      - "data/mlbstadiums_wbc.csv"
+      - "data/**"
+      - ".streamlit/config.toml"
+      - "scripts/build_pages.py"
       - "scripts/pages_check.py"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
@@ -21,6 +24,10 @@ on:
       memo:
         description: "why this run"
         required: false
+      compare_cloud:
+        description: "also open each app on Streamlit Cloud and require the same headings and figure counts"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -39,14 +46,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Assemble the site
-        run: |
-          mkdir -p _site/app/data
-          cp site/japan-batters.html _site/japan-batters.html
-          cp app_japan.py scouting_lib.py players_japan_batters.py _site/app/
-          cp data/japan_statcast.csv data/mlbstadiums_wbc.csv _site/app/data/
-          touch _site/.nojekyll
-          ls -laR _site | head -30
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the site (stops if an app needs a file or package the page would not have)
+        run: python scripts/build_pages.py _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -57,7 +61,7 @@ jobs:
   check:
     needs: deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -65,24 +69,33 @@ jobs:
           python-version: "3.12"
       - name: Install Playwright
         run: |
-          pip install playwright
+          pip install playwright pillow
           playwright install chromium --with-deps
-      - name: Time first render and take screenshots
-        run: python scripts/pages_check.py "https://yasumorishima.github.io/wbc-scouting/japan-batters.html" "https://wbc-japan-batters.streamlit.app/"
-      - name: Keep screenshots on the pages-check branch
+      - name: Rebuild apps.json (same script as the deploy)
+        run: python scripts/build_pages.py /tmp/site
+      - name: Open every page and check it renders
+        id: check
+        continue-on-error: true
+        run: |
+          CLOUD=""
+          if [ "${{ inputs.compare_cloud }}" = "true" ]; then CLOUD="--cloud"; fi
+          python scripts/pages_check.py "https://yasumorishima.github.io/wbc-scouting" /tmp/site/apps.json $CLOUD
+      - name: Keep the summary and screenshots on the pages-check branch
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mkdir -p /tmp/out && cp pages_check/* /tmp/out/
-          git fetch -q origin pages-check || true
-          if git rev-parse -q --verify origin/pages-check >/dev/null; then
-            git checkout -q -B pages-check origin/pages-check
-          else
-            git checkout -q --orphan pages-check
-          fi
+          mkdir -p /tmp/out && cp -r pages_check/. /tmp/out/
+          git checkout -q --orphan pages-check-new
           git rm -rq --cached . > /dev/null 2>&1 || true
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-          cp /tmp/out/* .
+          cp -r /tmp/out/. .
+          echo "run ${{ github.run_id }} (${{ github.sha }})" > RUN.txt
           git add -A
-          git commit -qm "pages check (run ${{ github.run_id }})" || exit 0
-          git push -q origin pages-check
+          git commit -qm "pages check (run ${{ github.run_id }})"
+          git push -q -f origin pages-check-new:pages-check
+      - name: Fail if any page failed
+        if: steps.check.outcome != 'success'
+        run: |
+          cat pages_check/summary.md || true
+          exit 1
