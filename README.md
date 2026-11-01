@@ -2,25 +2,17 @@
 
 WBC 2026（World Baseball Classic）参加チームの Statcast データを可視化するスカウティングダッシュボード。
 
-Streamlit Community Cloud にデプロイ済み。Baseball Savant の Statcast データ（`mlbam_id` で紐付け）がある選手のみ表示。MLB 出場経験のない選手は Statcast データが存在しないため対象外。20か国 306選手中、97選手の MLBAM ID を 2026-03-08 に一括追加。
+GitHub Pages で公開（[stlite](https://github.com/whitphx/stlite) で同じ Streamlit アプリをブラウザの中で動かす＝サーバーが無く、眠らない）。大会中（2026-03）は Streamlit Community Cloud で公開していた（そちらのアプリも残してあるが、2026-11 に keepalive の対象から外したので眠っていることがある）。Baseball Savant の Statcast データ（`mlbam_id` で紐付け）がある選手のみ表示。MLB 出場経験のない選手は Statcast データが存在しないため対象外。20か国 306選手中、97選手の MLBAM ID を 2026-03-08 に一括追加。
 
 ## 🌐 ランディングページ
 
-**[https://wbc-2026-scouting-dashboard-zvg.caffeine.xyz/](https://wbc-2026-scouting-dashboard-zvg.caffeine.xyz/)**
+**[https://yasumorishima.github.io/wbc-scouting/](https://yasumorishima.github.io/wbc-scouting/)**
 
-全チームのダッシュボードリンクをプール別にまとめたランディングページ（ICP / Caffeine 上でホスト、英語・日本語対応）。
+全 37 ダッシュボードをプール別にまとめた目次（GitHub Pages）。国と打者・投手を選ぶと開きます。
 
-> **アプリが開くまで少々お待ちください ⏳**
->
-> Streamlit Community Cloud は一定時間使われないとアプリがスリープします。
-> リンクを開いた際に以下のメッセージが表示された場合は正常な動作です。
->
-> - **「Zzzz — This app has gone to sleep. Would you like to wake it back up?」**
->   → 「Yes, get this app back up!」ボタンをクリックしてください。
-> - **「Your app is in the oven」**
->   → アプリ起動中です。そのまま 30〜60 秒ほどお待ちください。
->
-> バグではありません。ボタンを押すかしばらく待つだけで、通常通り使えます。
+> 最初の表示には 15〜35 秒ほどかかります（ブラウザの中で Python を起動するため）。一度開くとブラウザに残るので、2 本目からは速くなります。準々決勝のページだけは 1〜2 分かかります（実測 78.6 秒）。
+
+大会中に使っていたランディングページ [wbc-2026-scouting-dashboard-zvg.caffeine.xyz](https://wbc-2026-scouting-dashboard-zvg.caffeine.xyz/)（ICP / Caffeine）は Streamlit Community Cloud 版へリンクしています（眠っていたら「Yes, get this app back up!」で起きます）。
 
 ---
 
@@ -104,38 +96,38 @@ Streamlit Community Cloud にデプロイ済み。Baseball Savant の Statcast �
 ### Pool A — San Juan
 | チーム | 打者 | 投手 |
 |---|---|---|
-| 🇵🇷 Puerto Rico | [Batters](https://wbc-pr-batters.streamlit.app/) | [Pitchers](https://wbc-pr-pitchers.streamlit.app/) |
-| 🇨🇺 Cuba | [Batters](https://wbc-cuba-batters.streamlit.app/) | [Pitchers](https://wbc-cuba-pitchers.streamlit.app/)  |
-| 🇨🇦 Canada | [Batters](https://wbc-can-batters.streamlit.app/) | [Pitchers](https://wbc-can-pitchers.streamlit.app/) |
-| 🇵🇦 Panama | [Batters](https://wbc-pan-batters.streamlit.app/) | [Pitchers](https://wbc-pan-pitchers.streamlit.app/) |
-| 🇨🇴 Colombia | [Batters](https://wbc-col-batters.streamlit.app/) | [Pitchers](https://wbc-col-pitchers.streamlit.app/) |
+| 🇵🇷 Puerto Rico | [Batters](https://yasumorishima.github.io/wbc-scouting/pr-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/pr-pitchers.html) |
+| 🇨🇺 Cuba | [Batters](https://yasumorishima.github.io/wbc-scouting/cuba-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/cuba-pitchers.html)  |
+| 🇨🇦 Canada | [Batters](https://yasumorishima.github.io/wbc-scouting/can-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/can-pitchers.html) |
+| 🇵🇦 Panama | [Batters](https://yasumorishima.github.io/wbc-scouting/pan-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/pan-pitchers.html) |
+| 🇨🇴 Colombia | [Batters](https://yasumorishima.github.io/wbc-scouting/col-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/col-pitchers.html) |
 
 ### Pool B — Houston
 | チーム | 打者 | 投手 |
 |---|---|---|
-| 🇺🇸 USA | [Batters](https://wbc-usa-batters.streamlit.app/) | [Pitchers](https://wbc-usa-pitchers.streamlit.app/) |
-| 🇲🇽 Mexico | [Batters](https://wbc-mex-batters.streamlit.app/) | [Pitchers](https://wbc-mex-pitchers.streamlit.app/) |
-| 🇮🇹 Italy | [Batters](https://wbc-ita-batters.streamlit.app/) | [Pitchers](https://wbc-ita-pitchers.streamlit.app/) |
-| 🇬🇧 Great Britain | [Batters](https://wbc-gb-batters.streamlit.app/) | [Pitchers](https://wbc-gb-pitchers.streamlit.app/) |
-| 🇧🇷 Brazil | [Batters](https://wbc-bra-batters.streamlit.app/) | [Pitchers](https://wbc-bra-pitchers.streamlit.app/) |
+| 🇺🇸 USA | [Batters](https://yasumorishima.github.io/wbc-scouting/usa-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/usa-pitchers.html) |
+| 🇲🇽 Mexico | [Batters](https://yasumorishima.github.io/wbc-scouting/mex-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/mex-pitchers.html) |
+| 🇮🇹 Italy | [Batters](https://yasumorishima.github.io/wbc-scouting/ita-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/ita-pitchers.html) |
+| 🇬🇧 Great Britain | [Batters](https://yasumorishima.github.io/wbc-scouting/gb-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/gb-pitchers.html) |
+| 🇧🇷 Brazil | [Batters](https://yasumorishima.github.io/wbc-scouting/bra-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/bra-pitchers.html) |
 
 ### Pool C — Tokyo Dome
 | チーム | 打者 | 投手 |
 |---|---|---|
-| 🇯🇵 Japan | [Batters](https://wbc-japan-batters.streamlit.app/) | [Pitchers](https://wbc-japan-pitchers.streamlit.app/) |
-| 🇰🇷 Korea | [Batters](https://wbc-kor-batters.streamlit.app/) | [Pitchers](https://wbc-kor-pitchers.streamlit.app/) |
-| 🇹🇼 Chinese Taipei | [Batters](https://wbc-twn-batters.streamlit.app/) | — |
-| 🇦🇺 Australia | [Batters](https://wbc-aus-batters.streamlit.app/) | [Pitchers](https://wbc-aus-pitchers.streamlit.app/) |
+| 🇯🇵 Japan | [Batters](https://yasumorishima.github.io/wbc-scouting/japan-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/japan-pitchers.html) |
+| 🇰🇷 Korea | [Batters](https://yasumorishima.github.io/wbc-scouting/kor-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/kor-pitchers.html) |
+| 🇹🇼 Chinese Taipei | [Batters](https://yasumorishima.github.io/wbc-scouting/twn-batters.html) | — |
+| 🇦🇺 Australia | [Batters](https://yasumorishima.github.io/wbc-scouting/aus-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/aus-pitchers.html) |
 | 🇨🇿 Czechia | — | — |
 
 ### Pool D — Miami
 | チーム | 打者 | 投手 |
 |---|---|---|
-| 🇩🇴 Dominican Republic | [Batters](https://wbc-dr-batters.streamlit.app/) | [Pitchers](https://wbc-dr-pitchers.streamlit.app/) |
-| 🇻🇪 Venezuela | [Batters](https://wbc-venezuela-batters.streamlit.app/) | [Pitchers](https://wbc-venezuela-pitchers.streamlit.app/) |
-| 🇳🇱 Netherlands | [Batters](https://wbc-ned-batters.streamlit.app/) | [Pitchers](https://wbc-ned-pitchers.streamlit.app/) |
-| 🇮🇱 Israel | [Batters](https://wbc-isr-batters.streamlit.app/) | [Pitchers](https://wbc-isr-pitchers.streamlit.app/) |
-| 🇳🇮 Nicaragua | [Batters](https://wbc-nic-batters.streamlit.app/) | — |
+| 🇩🇴 Dominican Republic | [Batters](https://yasumorishima.github.io/wbc-scouting/dr-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/dr-pitchers.html) |
+| 🇻🇪 Venezuela | [Batters](https://yasumorishima.github.io/wbc-scouting/venezuela-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/venezuela-pitchers.html) |
+| 🇳🇱 Netherlands | [Batters](https://yasumorishima.github.io/wbc-scouting/ned-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/ned-pitchers.html) |
+| 🇮🇱 Israel | [Batters](https://yasumorishima.github.io/wbc-scouting/isr-batters.html) | [Pitchers](https://yasumorishima.github.io/wbc-scouting/isr-pitchers.html) |
+| 🇳🇮 Nicaragua | [Batters](https://yasumorishima.github.io/wbc-scouting/nic-batters.html) | — |
 
 > **備考**
 > - Czechia: MLB/MiLB 組織所属選手なしのためダッシュボードなし
@@ -145,7 +137,7 @@ Streamlit Community Cloud にデプロイ済み。Baseball Savant の Statcast �
 ### 準々決勝 — Quarterfinals
 | カード | アプリ |
 |---|---|
-| 🇯🇵 Japan vs 🇻🇪 Venezuela | [Scouting Dashboard](https://wbc-qf-jpn-ven.streamlit.app/) |
+| 🇯🇵 Japan vs 🇻🇪 Venezuela | [Scouting Dashboard](https://yasumorishima.github.io/wbc-scouting/qf-jpn-ven.html) |
 
 <details>
 <summary>準々決勝アプリの特徴（クリックで展開）</summary>
@@ -208,23 +200,24 @@ Streamlit Community Cloud にデプロイ済み。Baseball Savant の Statcast �
 
 ---
 
-## 🔄 Keepalive & Health Check
+## 🔄 公開の仕組み（GitHub Pages）と Keepalive
 
-Streamlit Community Cloud はアプリが一定時間使われないとスリープする。これを防ぐために自動化を構築済み。
+### GitHub Pages（WBC の 37 本）
 
-### 仕組み
+- **`scripts/build_pages.py`** — `app_*.py` 1 本ごとに 1 ページを作る（名前は Streamlit のサブドメインと同じ＝`wbc-japan-batters.streamlit.app` → `japan-batters.html`）。各ページが読むファイル（同じ repo のモジュールと `data/*.csv`）はコードから自動で集める。知らない外部ライブラリを読むアプリ・無い CSV（ブラジルの 2 本を除く）・目次に載らない国があると止まる
+- **`Pages (stlite)`**（`pages.yml`、アプリ・データ・スクリプトの push で自動） — 組み立てて Pages に置いたあと、`scripts/pages_check.py` が全ページを Chromium で開き、表示されるまでの秒数・図の数・例外の有無を測り、最初の選手を選んだ詳細画面まで確かめる。結果と画面写真は `pages-check` ブランチ（毎回置き換え）。手動実行で `compare_cloud` を付けると Streamlit Community Cloud 版と見出し・図の数が一致するかも確かめる
+- ⚠️ ほかの workflow が `GITHUB_TOKEN` で入れた commit（データ更新）では動かないので、データを更新したら `Pages (stlite)` を手で実行する
 
-- **`streamlit_apps.txt`** — 全アプリ URL の単一ソース。keepalive・health check の両方がここから読む
-- **Streamlit Keepalive**（`keepalive.yml`、GitHub Actions、6時間ごと） — Playwright でブラウザアクセスし、スリープ中のアプリは wake-up ボタンをクリック。そのあと `<app>/~/+/_stcore/health` が 200 を返したアプリだけを OK と数える（2026-10-08 追加。落ちたアプリもページの枠は返すので、以前はそれも OK と数えていた）。run 末尾で自分自身を re-enable するため、60日無活動による scheduled workflow の自動 disable も回避（2026-06-12 追加）
-- **App smoke test**（`app-smoke.yml`、PR と push で自動） — 全アプリを Streamlit の AppTest で 1 回ずつ実行し、例外が出たら落ちる（2026-10-08 追加）。health は「サーバーが動いている」までしか言わず、スクリプトの途中で落ちるアプリは見えないため。アプリどうしでモジュール名とキャッシュを共有するので 1 アプリ 1 プロセスで回す（`scripts/apptest_all.py`）
-- **Detect New Apps**（`detect-new-apps.yml`、push時自動） — 新しい `app_*.py` が追加された際に `streamlit_apps.txt` に未登録なら issue を自動作成
-- **Streamlit Health Check**（[oss-contributions](https://github.com/yasumorishima/oss-contributions) 側、手動実行） — 全アプリの HTTP ステータスを確認
+### Keepalive（WBC 以外の 4 本）
+
+- **`streamlit_apps.txt`** — keepalive の対象 URL（ほかの repo の Streamlit アプリ 4 本：npb-prediction・baseball-mlops・mlb-bat-tracking・mlb-wp-engine）。WBC の 37 本は 2026-11 に Pages へ移したので外した
+- **Streamlit Keepalive**（`keepalive.yml`、GitHub Actions、6時間ごと） — Playwright でブラウザアクセスし、スリープ中のアプリは wake-up ボタンをクリック。そのあと `<app>/~/+/_stcore/health` が 200 を返したアプリだけを OK と数える。落ちていたアプリは 120 秒後にもう一度見る。run 末尾で自分自身を re-enable するため、60日無活動による scheduled workflow の自動 disable も回避
+- **App smoke test**（`app-smoke.yml`、PR と push で自動） — 全アプリを Streamlit の AppTest で 1 回ずつ実行し、例外が出たら落ちる。アプリどうしでモジュール名とキャッシュを共有するので 1 アプリ 1 プロセスで回す（`scripts/apptest_all.py`）
 
 ### 新しいアプリを追加したら
 
 1. `app_xxx.py` を作成・push
-2. `Detect New Apps` ワークフローが自動で未登録を検知 → issue が立つ
-3. `streamlit_apps.txt` に URL を 1 行追加して push → keepalive 対象に自動反映
+2. `Pages (stlite)` が自動でページを作って確かめる（新しい国なら `scripts/build_pages.py` の `POOLS` と `COUNTRY` に足す。足さないと組み立てが止まる）
 
 ---
 

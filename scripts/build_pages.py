@@ -201,7 +201,9 @@ def index_html(apps):
     if extra:
         rows.append('  <h2>準々決勝 Quarterfinal</h2>\n  <ul class="grid">')
         for a in extra:
-            rows.append('    <li><div class="name">日本 対 ベネズエラ<small>Japan vs Venezuela</small></div>'
+            # measured 78.6 s to first render in run 41310262764 (the other pages 18-30 s)
+            rows.append('    <li><div class="name">日本 対 ベネズエラ<small>Japan vs Venezuela'
+                        ' — 最初の表示に 1〜2 分 / first load 1–2 min</small></div>'
                         f'<div class="links"><a href="{a["slug"]}.html">開く <small>Open</small></a></div></li>')
         rows.append("  </ul>")
     listed = {f"{c}-{r}" for _, cs in POOLS for c in cs for r in ("batters", "pitchers")}
