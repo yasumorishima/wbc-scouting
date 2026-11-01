@@ -17,7 +17,7 @@ This project is worked on in Claude Code cloud. The owner starts a session with 
 - 2026-10-08: keepalive counts an app OK only when `<app>/~/+/_stcore/health` answers 200 (PR #1); dropped a dead non-linked deployment from `streamlit_apps.txt`; deployed `wbc-aus-pitchers`, fixed two apps that crashed in-script (None in number formats; Brazil had no CSV → now shows a notice and stops), added `app-smoke.yml` (PR #2); README updated (PR #3, `efe23f7`). Smoke run `37776267370`: `39 OK, 0 NG`.
 - 2026-11-01: CLAUDE.md added for cloud work. Latest keepalive run `41266729676` (2026-11-01, GitHub Actions): `Visiting 41 Streamlit apps... Done: 41 OK, 0 NG`.
 - 2026-11-01 (cloud, ~10:07 UTC): reachability measured (section below). Health of all 41 URLs in `streamlit_apps.txt`: 40 × 200, **wbc-japan-batters 400 = asleep** ("This app has gone to sleep due to inactivity"); not woken (measure-only run). The next keepalive run should wake it or report NG.
-- 2026-11-01 (local): keepalive gives every failed app a second look after 120 s and fails only if it is still down (a woken app can take longer than the 90 s wait);  takes an optional . Sleeping between keepalive runs is normal and self-healing (runs woke 1-3 apps on 2026-10-31); do not report it.
+- 2026-11-01 (local): keepalive gives every failed app a second look after 120 s and fails only if it is still down (a woken app can take longer than the 90 s wait); workflow_dispatch takes an optional memo input. Sleeping between keepalive runs is normal and self-healing (runs woke 1-3 apps on 2026-10-31); do not report it.
 
 ## Cloud reachability (measured 2026-11-01, cloud session)
 | Check (curl --max-time 60 unless noted) | Result | Proof |
