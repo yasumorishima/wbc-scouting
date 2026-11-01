@@ -12,7 +12,7 @@ GitHub Pages で公開（[stlite](https://github.com/whitphx/stlite) で同じ S
 
 > 最初の表示には 15〜35 秒ほどかかります（ブラウザの中で Python を起動するため）。一度開くとブラウザに残るので、2 本目からは速くなります。準々決勝のページだけは 1〜2 分かかります（実測 78.6 秒）。
 
-大会中に使っていたランディングページ [wbc-2026-scouting-dashboard-zvg.caffeine.xyz](https://wbc-2026-scouting-dashboard-zvg.caffeine.xyz/)（ICP / Caffeine）は Streamlit Community Cloud 版へリンクしています（眠っていたら「Yes, get this app back up!」で起きます）。
+大会中に使っていたランディングページ（日程つき）は、中身をそのまま ICP のサイトへ移し、リンク先を GitHub Pages 版にしました → [iqjbc-7aaaa-aaaaj-qnnsa-cai.icp0.io/#/wbc](https://iqjbc-7aaaa-aaaaj-qnnsa-cai.icp0.io/#/wbc)。元の [wbc-2026-scouting-dashboard-zvg.caffeine.xyz](https://wbc-2026-scouting-dashboard-zvg.caffeine.xyz/)（ICP / Caffeine）は Streamlit Community Cloud 版へリンクしたままです（眠っていたら「Yes, get this app back up!」で起きます）。
 
 ---
 
