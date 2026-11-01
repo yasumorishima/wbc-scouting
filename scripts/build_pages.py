@@ -169,8 +169,8 @@ INDEX = """<!doctype html>
 <body>
 <main>
   <h1>WBC 2026 スカウティング</h1>
-  <p class="lead">国と打者・投手を選ぶと、MLB Statcast（2024〜2025）から作った分析が開きます。最初の表示は 15〜25 秒ほどかかります（ブラウザの中で Python を起動するため）。<br>
-  Pick a country and batters or pitchers. Each dashboard is built from MLB Statcast 2024–2025; the first load takes 15–25 s because Python starts inside your browser.</p>
+  <p class="lead">国と打者・投手を選ぶと、MLB Statcast（2024〜2025）から作った分析が開きます。最初の表示は 15〜35 秒ほどかかります（ブラウザの中で Python を起動するため）。<br>
+  Pick a country and batters or pitchers. Each dashboard is built from MLB Statcast 2024–2025; the first load takes 15–35 s because Python starts inside your browser.</p>
 {body}
   <footer>{n} dashboards. Data: Baseball Savant Statcast (via pybaseball). Runs in the browser with <a href="https://github.com/whitphx/stlite">stlite</a>.
   Source: <a href="https://github.com/yasumorishima/wbc-scouting">github.com/yasumorishima/wbc-scouting</a>. Not affiliated with MLB or WBC.</footer>

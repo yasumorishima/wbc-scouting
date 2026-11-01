@@ -327,7 +327,10 @@ async def main():
                      f"{st.get('detail_player', '')}{f' ({skipped})' if skipped else ''} | {d.get('seconds', '')} | "
                      f"{d.get('images', '')} | {st.get('saw_running', '')} | {r['cloud_note']} | {'; '.join(r['problems'])} |")
     bad = [s for s in order if not results[s]["ok"]]
-    lines.append(f"\n{len(order) - len(bad)} OK, {len(bad)} NG. Timings after the first page use a warm browser cache.")
+    lines.append(f"\n{len(order) - len(bad)} OK, {len(bad)} NG. Timings after the first page use a warm browser cache; "
+                 f"3 pages load at once. 'detail s' is the time per player tried and includes up to {RUN_GRACE_S} s of "
+                 "waiting to see the rerun start: stlite never reports data-test-script-state 'running' (run "
+                 "41309172214), so it is not a render time.")
     (out / "summary.md").write_text("\n".join(lines) + "\n")
     print(lines[-1].strip())
     sys.exit(1 if bad else 0)
