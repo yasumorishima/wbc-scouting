@@ -19,6 +19,7 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 TIMEOUT_MS = 120_000  # 2 min per page (sleep → wake can be slow)
+RETRY_WAIT_MS = 120_000  # pause before the second look at apps that failed
 
 
 def load_urls() -> list[str]:
@@ -76,14 +77,22 @@ async def main() -> int:
         )
         page = await context.new_page()
 
-        ok = 0
-        for url in urls:
-            if await visit(page, url):
-                ok += 1
+        failed = [url for url in urls if not await visit(page, url)]
+
+        # An app that was woken may need more than the 90 s wait above to start.
+        # Look at every failed app once more after a pause, so a slow start is not
+        # reported as a failure; only apps still down after this are NG.
+        if failed:
+            print(f"Retrying {len(failed)} app(s) after {RETRY_WAIT_MS // 1000} s...")
+            await page.wait_for_timeout(RETRY_WAIT_MS)
+            failed = [url for url in failed if not await visit(page, url)]
+        ok = len(urls) - len(failed)
 
         await browser.close()
 
     ng = len(urls) - ok
+    for url in failed:
+        print(f"  STILL DOWN  {url}")
     print(f"Done: {ok} OK, {ng} NG")
     return 1 if ng > 0 else 0
 

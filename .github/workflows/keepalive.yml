@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: '0 */6 * * *'  # Every 6 hours
   workflow_dispatch:
+    inputs:
+      memo:
+        description: "why this run"
+        required: false
 
 permissions:
   contents: read
