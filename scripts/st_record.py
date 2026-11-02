@@ -13,6 +13,10 @@ import pickle
 import types
 
 import matplotlib
+# imported before the stand-in replaces `streamlit` in sys.modules (scripts/requirements-pages.txt
+# pins the version whose behaviour the pages copy)
+from streamlit.string_util import clean_text as _clean_text, extract_leading_icon as _leading_icon
+import streamlit.emojis  # noqa: F401,E402 - extract_leading_icon imports it lazily; have it in sys.modules
 
 matplotlib.use("Agg")
 
@@ -151,7 +155,10 @@ class Box:
 
     def _callout(self, kind, body, kw):
         _check(kind, kw)
-        self._add(("callout", kind, str(body)))
+        # Streamlit (1.66) takes a leading emoji of an alert's body as its icon, shown left of the
+        # text; the real Streamlit's own rule decides what counts as one
+        icon, rest = _leading_icon(_clean_text(body))
+        self._add(("callout", kind, rest, icon) if icon else ("callout", kind, str(body)))
 
     def info(self, body, **kw):
         self._callout("info", body, kw)

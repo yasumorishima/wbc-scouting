@@ -64,6 +64,10 @@ a { color: #4fc3f7; }
 hr { border: none; border-bottom: 1px solid var(--line); margin: 1rem 0; width: 100%; }
 
 .st-alert { padding: 1rem; border-radius: 0.5rem; }
+.st-alert.st-has-icon { display: flex; gap: 0.75rem; align-items: flex-start; }
+.st-alert-icon { flex: none; line-height: 1.6; }
+.st-alert-body { flex: 1 1 auto; min-width: 0; }
+.st-alert-body > :first-child { margin-top: 0; } .st-alert-body > :last-child { margin-bottom: 0; }
 .st-info { background: rgba(61, 157, 243, 0.2); color: rgb(61, 157, 243); }
 .st-warning { background: rgba(255, 227, 18, 0.2); color: rgb(255, 227, 18); }
 .st-success { background: rgba(61, 213, 109, 0.2); color: rgb(61, 213, 109); }
