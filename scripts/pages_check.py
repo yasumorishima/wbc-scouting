@@ -152,22 +152,28 @@ def answers(url, tries=4, base_wait=2.0, stop_at=float("inf")):
 
 def check_files(base, names, pause=30.0, base_wait=2.0, limit_s=FILES_LIMIT_S):
     """Ask base/<name> for every name: a 32-way sweep, then the ones refused for any reason but
-    404 (a host limiting the sweep) once more, 4 at a time, after a pause. Stops waiting after
-    limit_s in all; files not answered by then count as missing ("time limit"), so a host that
-    keeps refusing cannot use up the job's time before the pages are checked.
+    404 (a host limiting the sweep) again, 4 at a time, in rounds after a pause that doubles up to
+    4 minutes, until none is refused. Stops waiting after limit_s in all; files not answered by
+    then count as missing ("time limit"), so a host that keeps refusing cannot use up the job's
+    time before the pages are checked.
     Returns (missing names in order, {last answer: count})."""
     from concurrent.futures import ThreadPoolExecutor
     stop_at = time.time() + limit_s
     with ThreadPoolExecutor(32) as ex:
         why = dict(zip(names, ex.map(
             lambda n: answers(f"{base}/{n}", base_wait=base_wait, stop_at=stop_at), names)))
-    again = [n for n in names if why[n] is not None and why[n] != "404"]
-    if again and time.time() + pause < stop_at:
-        print(f"{len(again)} files did not answer in the sweep; asking again slowly", flush=True)
+    rnd = 0
+    while True:
+        again = [n for n in names if why[n] is not None and why[n] != "404"]
+        if not again or time.time() + pause >= stop_at:
+            break
+        rnd += 1
+        print(f"{len(again)} files not answered yet; round {rnd} after {pause:.0f} s", flush=True)
         time.sleep(pause)
         with ThreadPoolExecutor(4) as ex:
             why.update(zip(again, ex.map(
                 lambda n: answers(f"{base}/{n}", tries=6, base_wait=base_wait, stop_at=stop_at), again)))
+        pause = min(pause * 2, 240.0)
     missing = [n for n in names if why[n] is not None]
     reasons = {}
     for n in missing:

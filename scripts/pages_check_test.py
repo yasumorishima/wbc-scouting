@@ -19,6 +19,7 @@ except ImportError:  # the file check does not use the browser
 import pages_check as pc  # noqa: E402
 
 REFUSE_FOR = 1.5  # seconds from the first request: every "busy" file is refused with 429
+REFUSE_SLOW = 4.0  # "slow" files: refused longer than one slow round lasts
 t0 = None
 lock = threading.Lock()
 
@@ -39,6 +40,8 @@ class H(BaseHTTPRequestHandler):
             code = 503
         elif name.startswith("busy") and time.time() - t0 < REFUSE_FOR:
             code = 429
+        elif name.startswith("slow") and time.time() - t0 < REFUSE_SLOW:
+            code = 429
         else:
             code = 200
         self.send_response(code)
@@ -54,11 +57,20 @@ base = f"http://127.0.0.1:{srv.server_port}/img"
 names = [f"ok{i}.avif" for i in range(200)] + [f"busy{i}.avif" for i in range(300)] \
     + ["gone1.avif", "gone2.avif", "dead1.avif"]
 start = time.time()
-missing, reasons = pc.check_files(base, names, pause=1.0, base_wait=0.05)
+missing, reasons = pc.check_files(base, names, pause=1.0, base_wait=0.05, limit_s=8.0)
 took = time.time() - start
 print("missing", missing, "reasons", reasons, f"{took:.1f}s")
 assert missing == ["gone1.avif", "gone2.avif", "dead1.avif"], missing
-assert reasons == {"404": 2, "503": 1}, reasons
+assert reasons.pop("404") == 2 and len(reasons) == 1 and next(iter(reasons)).startswith("503"), reasons
+assert took < 11, "the time limit did not end the rounds"
+
+# refused for longer than one slow round (sweep about 0.4 s, round 1 at about 1.4-2.9 s,
+# round 2 at about 4.9 s): answered only because the rounds go on
+t0 = None
+slow = [f"slow{i}.avif" for i in range(4)]
+missing, reasons = pc.check_files(base, slow, pause=1.0, base_wait=0.05, limit_s=30.0)
+print("slow:", missing, reasons)
+assert missing == [], (missing, reasons)
 
 # the window really refuses: asked one at a time with short waits, some busy files never answer
 # (so the assertion above depends on the second pass, not on the window being empty)
