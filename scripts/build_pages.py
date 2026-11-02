@@ -14,7 +14,12 @@ The build stops (exit 1) when
   - an app imports a third-party package the build does not install (only ALLOWED_THIRD_PARTY,
     see scripts/requirements-pages.txt);
   - a referenced CSV is missing, unless it is in EXPECTED_MISSING (the app then shows its no-data notice);
-  - an app's country is not placed on the index page (POOLS).
+  - an app's country is not placed on the index page (scripts/index_data.json);
+  - index_data.json says a country has batter or pitcher dashboards and the apps disagree (a
+    dashboard counts only when its app exists and has its data).
+The index (pools, venues, schedule, notes, in Japanese and English) comes from
+scripts/index_data.json: moved on 2026-11-03 from the WBC page of the ICP site, which had copied
+the table of the Caffeine index page used during the tournament.
 Pages are named after the Streamlit Cloud subdomains (app_japan.py -> japan-batters.html, like
 wbc-japan-batters.streamlit.app), so the old URL maps to the new one by name.
 
@@ -37,21 +42,7 @@ OLD_APPS = {"app_pitchers.py"}
 # every figure reused (its own plotting and tables: measured 2026-11-02), so it is split.
 SHARDS = {"qf-jpn-ven": 8}
 
-POOLS = [
-    ("Pool A", ["pr", "cuba", "can", "pan", "col"]),
-    ("Pool B", ["usa", "mex", "ita", "gb", "bra"]),
-    ("Pool C", ["japan", "kor", "twn", "aus"]),
-    ("Pool D", ["dr", "venezuela", "ned", "isr", "nic"]),
-]
-COUNTRY = {
-    "pr": ("プエルトリコ", "Puerto Rico"), "cuba": ("キューバ", "Cuba"), "can": ("カナダ", "Canada"),
-    "pan": ("パナマ", "Panama"), "col": ("コロンビア", "Colombia"), "usa": ("アメリカ", "USA"),
-    "mex": ("メキシコ", "Mexico"), "ita": ("イタリア", "Italy"), "gb": ("イギリス", "Great Britain"),
-    "bra": ("ブラジル", "Brazil"), "japan": ("日本", "Japan"), "kor": ("韓国", "Korea"),
-    "twn": ("チャイニーズ・タイペイ", "Chinese Taipei"), "aus": ("オーストラリア", "Australia"),
-    "dr": ("ドミニカ共和国", "Dominican Republic"), "venezuela": ("ベネズエラ", "Venezuela"),
-    "ned": ("オランダ", "Netherlands"), "isr": ("イスラエル", "Israel"), "nic": ("ニカラグア", "Nicaragua"),
-}
+INDEX_DATA = json.loads((ROOT / "scripts" / "index_data.json").read_text(encoding="utf-8"))
 CSV_RE = re.compile(r"""["']([A-Za-z0-9_.-]+\.csv)["']""")
 STDLIB = set(sys.stdlib_module_names)
 
@@ -113,74 +104,184 @@ def page_title(entry):
 
 
 INDEX = """<!doctype html>
-<html lang="ja">
+<html lang="ja" data-lang="ja">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>WBC 2026 Scouting</title>
+<script>
+  // Language: the last choice on this device, else the browser's. Set before the first paint.
+  (function () {{
+    var l = null;
+    try {{ l = localStorage.getItem("wbc-lang"); }} catch (e) {{}}
+    if (l !== "ja" && l !== "en") l = /^ja\\b/i.test(navigator.language || "") ? "ja" : "en";
+    document.documentElement.setAttribute("data-lang", l);
+    document.documentElement.lang = l;
+  }})();
+</script>
 <style>
   :root {{ --bg:#0e1117; --card:#1a1a2e; --text:#fafafa; --muted:#a0a4b0; --accent:#d32f2f; --line:#2c2f3f; }}
   * {{ box-sizing:border-box; }}
-  body {{ margin:0; background:var(--bg); color:var(--text); font:16px/1.6 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif; }}
+  html, body {{ background:var(--bg); }}
+  body {{ margin:0; color:var(--text); font:16px/1.6 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif; }}
+  [data-lang="ja"] .en, [data-lang="en"] .ja {{ display:none !important; }}
   main {{ max-width:960px; margin:0 auto; padding:24px 16px 48px; }}
+  .top {{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }}
   h1 {{ font-size:1.6rem; margin:0 0 4px; }}
-  p.lead {{ color:var(--muted); margin:0 0 24px; }}
+  .langs {{ display:flex; gap:4px; }}
+  .langs button {{ min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--muted); font:inherit; cursor:pointer; }}
+  .langs button[aria-pressed="true"] {{ background:var(--card); color:var(--text); border-color:var(--muted); }}
+  p.lead {{ margin:0 0 6px; }}
+  p.sub, p.small {{ color:var(--muted); font-size:.9rem; margin:0 0 12px; }}
   h2 {{ font-size:1.1rem; margin:28px 0 10px; border-left:4px solid var(--accent); padding-left:8px; }}
+  h2 small {{ color:var(--muted); font-weight:400; margin-left:8px; font-size:.9rem; }}
+  h3 {{ font-size:1rem; margin:18px 0 6px; }}
+  details.sched {{ margin-top:20px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:4px 14px; }}
+  details.sched summary {{ cursor:pointer; font-weight:600; min-height:44px; display:flex; align-items:center; }}
+  .scroll {{ overflow-x:auto; margin-bottom:12px; }}
+  table {{ border-collapse:collapse; font-size:.85rem; }}
+  th, td {{ border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; white-space:nowrap; }}
+  thead th {{ background:#12141f; }}
+  td small, th small {{ display:block; color:var(--muted); font-size:.75rem; }}
   ul.grid {{ list-style:none; padding:0; margin:0; display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }}
-  li {{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }}
-  .name {{ font-weight:600; margin-bottom:8px; }}
-  .name small {{ display:block; color:var(--muted); font-weight:400; font-size:.85rem; }}
+  ul.grid > li {{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }}
+  .name {{ font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:8px; }}
+  .code {{ font-size:.75rem; font-weight:700; letter-spacing:.05em; padding:2px 6px; border-radius:4px; border:1px solid var(--line); color:var(--muted); }}
   .links {{ display:flex; gap:8px; }}
   .links a, .links .none {{ flex:1; text-align:center; padding:8px 6px; border-radius:8px; text-decoration:none; }}
   .links a {{ background:var(--accent); color:#fff; }}
-  .links a:focus-visible {{ outline:3px solid #fff; outline-offset:2px; }}
-  .links .none {{ border:1px dashed var(--line); color:var(--muted); }}
-  .links small {{ font-size:.8rem; opacity:.85; }}
-  footer {{ margin-top:36px; color:var(--muted); font-size:.85rem; }}
+  a:focus-visible, button:focus-visible, summary:focus-visible, .scroll:focus-visible {{ outline:3px solid #fff; outline-offset:2px; }}
+  .links .none {{ border:1px dashed var(--line); color:var(--muted); font-size:.9rem; }}
+  ul.notes {{ color:var(--muted); font-size:.9rem; padding-left:1.2em; }}
+  footer {{ margin-top:24px; color:var(--muted); font-size:.85rem; }}
   footer a {{ color:var(--muted); }}
 </style>
 </head>
 <body>
 <main>
-  <h1>WBC 2026 スカウティング</h1>
-  <p class="lead">国と打者・投手を選ぶと、MLB Statcast（2024〜2025）から作った分析が開きます。<br>
-  Pick a country and batters or pitchers. Each dashboard is built from MLB Statcast 2024–2025.</p>
+  <div class="top">
+    <h1>{title}</h1>
+    <div class="langs" role="group" aria-label="Language / 言語">
+      <button type="button" data-l="ja" lang="ja">日本語</button><button type="button" data-l="en" lang="en">English</button>
+    </div>
+  </div>
+  <p class="lead">{lede}</p>
+  <p class="sub">{sub}</p>
 {body}
-  <footer>{n} dashboards. Data: Baseball Savant Statcast (via pybaseball). Every view is pre-rendered from the Streamlit apps.
-  Source: <a href="https://github.com/yasumorishima/wbc-scouting">github.com/yasumorishima/wbc-scouting</a>. Not affiliated with MLB or WBC.</footer>
+  <footer>{n} dashboards. {credit} Every view is pre-rendered from the Streamlit apps.
+  <a href="https://github.com/yasumorishima/wbc-scouting">{source}</a></footer>
 </main>
+<script>
+  (function () {{
+    var root = document.documentElement, buttons = document.querySelectorAll(".langs button");
+    function show() {{
+      buttons.forEach(function (b) {{ b.setAttribute("aria-pressed", String(b.dataset.l === root.dataset.lang)); }});
+    }}
+    buttons.forEach(function (b) {{
+      b.addEventListener("click", function () {{
+        root.dataset.lang = b.dataset.l; root.lang = b.dataset.l;
+        try {{ localStorage.setItem("wbc-lang", b.dataset.l); }} catch (e) {{}}
+        show();
+      }});
+    }});
+    show();
+  }})();
+</script>
 </body>
 </html>
 """
 
+LOCAL_TIME = re.compile(r"^(.+?)(\(\d{1,2}/\d{1,2} [^)]*\b(?:AST|CT|ET)\))$")
+
+
+def esc(text):
+    return html.escape(str(text))
+
+
+def bi(key_or_pair, tag="span"):
+    """The same text in both languages; CSS shows the chosen one."""
+    if isinstance(key_or_pair, str):
+        ja, en = INDEX_DATA["text"]["ja"][key_or_pair], INDEX_DATA["text"]["en"][key_or_pair]
+    else:
+        ja, en = key_or_pair
+    return f'<{tag} class="ja" lang="ja">{esc(ja)}</{tag}><{tag} class="en" lang="en">{esc(en)}</{tag}>'
+
+
+def cell(tag, text, extra=""):
+    """A schedule cell; a game's local time in parentheses goes on its own small line."""
+    m = LOCAL_TIME.match(text)
+    inner = f"{esc(m.group(1))}<small>{esc(m.group(2))}</small>" if m else esc(text)
+    return f"<{tag}{extra}>{inner}</{tag}>"
+
+
+def schedule_table(rows, label_key, lang):
+    head = "".join(cell("th", t, ' scope="col"') for t in rows[0])
+    games, body = rows[1:], []
+    for i, row in enumerate(games):
+        tds = []
+        if row[0]:
+            # one heading cell per day, spanning that day's games
+            span = 1
+            while i + span < len(games) and not games[i + span][0]:
+                span += 1
+            tds.append(cell("th", row[0], f' scope="rowgroup" rowspan="{span}"'))
+        tds += [cell("td", t) for t in row[1:]]
+        body.append(f"<tr>{''.join(tds)}</tr>")
+    label = esc(INDEX_DATA["text"][lang][label_key])
+    return (f'<div class="scroll {lang}" lang="{lang}" tabindex="0" role="region" aria-label="{label}">'
+            f'<table><thead><tr>{head}</tr></thead><tbody>{"".join(body)}</tbody></table></div>')
+
+
+def has_dashboard(by_slug, slug):
+    """Listed only when the app exists and has its data (Brazil's apps only show a no-data notice)."""
+    a = by_slug.get(slug)
+    return bool(a) and not a["missing_csv"]
+
 
 def index_html(apps):
     by_slug = {a["slug"]: a for a in apps}
-    rows = []
-    for pool, countries in POOLS:
-        rows.append(f'  <h2>{pool}</h2>\n  <ul class="grid">')
-        for c in countries:
-            links = []
-            for role, ja, en in (("batters", "打者", "Batters"), ("pitchers", "投手", "Pitchers")):
-                a = by_slug.get(f"{c}-{role}")
-                if a:
-                    links.append(f'<a href="{a["slug"]}.html">{ja} <small>{en}</small></a>')
-                else:
-                    links.append(f'<span class="none">{ja} <small>なし / none</small></span>')
-            ja, en = COUNTRY[c]
-            rows.append(f'    <li><div class="name">{html.escape(ja)}<small>{html.escape(en)}</small></div>'
-                        f'<div class="links">{"".join(links)}</div></li>')
+    sched = INDEX_DATA["schedule"]
+    rows = ['  <details class="sched">', f"    <summary>{bi('wb_schedule')}</summary>",
+            f"    <h3>{bi('wb_round1')}</h3>", f'    <p class="small">{bi("wb_tz")}</p>']
+    rows += ["    " + schedule_table(sched[lang][0], "wb_round1", lang) for lang in ("ja", "en")]
+    rows.append(f"    <h3>{bi('wb_knockout')}</h3>")
+    rows += ["    " + schedule_table(sched[lang][1], "wb_knockout", lang) for lang in ("ja", "en")]
+    rows.append("  </details>")
+    mismatched, placed = [], set()
+    for pool in INDEX_DATA["pools"]:
+        rows.append(f'  <h2>Pool {esc(pool["id"])}<small>{bi((pool["venueJa"], pool["venueEn"]))}</small></h2>')
+        rows.append('  <ul class="grid">')
+        for team in pool["teams"]:
+            c = team["slug"]
+            have = {r: has_dashboard(by_slug, f"{c}-{r}") for r in ("batters", "pitchers")}
+            placed.update(f"{c}-{r}" for r in ("batters", "pitchers"))
+            for r in have:
+                if have[r] != bool(team[r]):
+                    mismatched.append(f"{c}-{r}: index_data.json says {team[r]}, the apps say {have[r]}")
+            if not any(have.values()):
+                links = f'<span class="none">{bi("wb_noData", "b")}<br>{bi("wb_noMlb")}</span>'
+            else:
+                links = "".join(
+                    f'<a href="{c}-{r}.html">{bi("wb_" + r)}</a>' if have[r]
+                    else f'<span class="none">{bi("wb_no" + r.capitalize())}</span>'
+                    for r in ("batters", "pitchers"))
+            rows.append(f'    <li><div class="name"><span class="code">{esc(team["code"])}</span>'
+                        f'{bi((team["ja"], team["en"]))}</div><div class="links">{links}</div></li>')
         rows.append("  </ul>")
     extra = [a for a in apps if a["slug"].startswith("qf-")]
     if extra:
-        rows.append('  <h2>準々決勝 Quarterfinal</h2>\n  <ul class="grid">')
+        rows.append(f'  <h2>{bi("wb_qfTitle")}</h2>\n  <ul class="grid">')
         for a in extra:
-            rows.append('    <li><div class="name">日本 対 ベネズエラ<small>Japan vs Venezuela</small></div>'
-                        f'<div class="links"><a href="{a["slug"]}.html">開く <small>Open</small></a></div></li>')
+            rows.append(f'    <li><div class="name"><span class="code">QF</span>{bi("wb_qfName")}</div>'
+                        f'<div class="links"><a href="{a["slug"]}.html">{bi("wb_qfOpen")}</a></div></li>')
         rows.append("  </ul>")
-    listed = {f"{c}-{r}" for _, cs in POOLS for c in cs for r in ("batters", "pitchers")}
-    unlisted = [a["slug"] for a in apps if a["slug"] not in listed and not a["slug"].startswith("qf-")]
-    return INDEX.format(body="\n".join(rows), n=len(apps)), unlisted
+    rows.append(f'  <h2>{bi("wb_notes")}</h2>\n  <ul class="notes">')
+    rows += [f"    <li>{bi(k)}</li>" for k in ("wb_note1", "wb_note2", "wb_note3", "wb_note4")]
+    rows.append("  </ul>")
+    unlisted = [a["slug"] for a in apps if a["slug"] not in placed and not a["slug"].startswith("qf-")]
+    page = INDEX.format(title=bi("wb_title"), lede=bi("wb_lede"), sub=bi("wb_sub"), body="\n".join(rows),
+                        n=sum(1 for a in apps if not a["missing_csv"]), credit=bi("wb_credit"), source=bi("wb_source"))
+    return page, unlisted, mismatched
 
 
 def checked_apps():
@@ -197,9 +298,10 @@ def checked_apps():
                 errors.append(f"{slug}: data/{c} is referenced but missing")
         apps.append({"slug": slug, "entry": entry, "title": page_title(entry), "py": sorted(py),
                      "csv": present, "missing_csv": missing})
-    index, unlisted = index_html(apps) if apps else ("", [])
+    index, unlisted, mismatched = index_html(apps) if apps else ("", [], [])
     for s in unlisted:
-        errors.append(f"{s}: not placed on the index page (add its country to POOLS)")
+        errors.append(f"{s}: not placed on the index page (add its country to scripts/index_data.json)")
+    errors += mismatched
     if errors:
         print("BUILD STOPPED:\n  " + "\n  ".join(errors), file=sys.stderr)
         sys.exit(1)

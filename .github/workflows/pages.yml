@@ -23,6 +23,7 @@ on:
       - "scouting_lib.py"
       - "data/**"
       - "scripts/build_pages.py"
+      - "scripts/index_data.json"
       - "scripts/prerender*.py"
       - "scripts/prerender_page.*"
       - "scripts/st_record.py"
