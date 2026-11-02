@@ -50,7 +50,8 @@
     const score = s => nav.sidebar.slice(i + 1).filter(k => k in s.c && s.c[k] === cur[k]).length;
     const best = cands.reduce((a, b) => (score(b) > score(a) ? b : a));
     const root = data.prefix;
-    // the next page keeps main-area choices only when reached this way (one Streamlit session)
+    // the next page starts from what this page shows now (one Streamlit session)
+    save();
     try { sessionStorage.setItem(MOVED, "1"); } catch (e2) { /* storage off */ }
     location.href = best.k === nav.default ? `${root}${nav.slug}.html` : `${root}${nav.slug}/${best.k}.html`;
   });
@@ -114,12 +115,22 @@
   // The same rule across the pages of this dashboard (another player or season): a main-area
   // widget with the same label, options and default keeps its value (Streamlit's widget id
   // includes all three).
+  // Stored: `last` = what the page left most recently showed (a sidebar move starts from it) and
+  // `pages[path]` = what each page showed when left (Back/Forward return to it).
   const KEEP = `wbc-inner-${nav.slug}`;
-  const save = () => {
-    const keep = {};
-    for (const [id, [o, v]] of Object.entries(prevOf(cur))) keep[id] = [data.labels[id], o, v, data.defaults[id]];
-    try { sessionStorage.setItem(KEEP, JSON.stringify(keep)); } catch (e) { /* storage off */ }
+  const readKeep = () => {
+    let k = null;
+    try { k = JSON.parse(sessionStorage.getItem(KEEP) || "null"); } catch (e) { k = null; }
+    return k && typeof k === "object" && k.pages && typeof k.pages === "object" ? k : { last: {}, pages: {} };
   };
+  function save() {
+    const now = {};
+    for (const [id, [o, v]] of Object.entries(prevOf(cur))) now[id] = [data.labels[id], o, v, data.defaults[id]];
+    const k = readKeep();
+    k.last = now;
+    k.pages[location.pathname] = now;
+    try { sessionStorage.setItem(KEEP, JSON.stringify(k)); } catch (e) { /* storage off */ }
+  }
   main.addEventListener("change", e => {
     const el = e.target.closest("[data-w]");
     if (!el) return;
@@ -132,13 +143,14 @@
   // or Back/Forward). Opening it fresh (a link, the address bar) or reloading starts at the
   // defaults, as a new Streamlit session does.
   const restore = fromCache => {
-    let keep = {};
-    try { keep = JSON.parse(sessionStorage.getItem(KEEP) || "{}"); } catch (e) { keep = {}; }
+    const stored = readKeep();
     let moved = false;
     try { moved = sessionStorage.getItem(MOVED) === "1"; sessionStorage.removeItem(MOVED); } catch (e) { /* storage off */ }
     const nav0 = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
     const history = nav0 && nav0.type === "back_forward";
-    if (!fromCache && !moved && !history) keep = {};
+    let keep = {};
+    if (fromCache || history) keep = stored.pages[location.pathname] || {};
+    else if (moved) keep = stored.last || {};
     const prev = {};
     for (const [id, k] of Object.entries(keep)) {
       if (Array.isArray(k) && k.length === 4 && data.labels[id] === k[0] && data.defaults[id] === k[3]) {

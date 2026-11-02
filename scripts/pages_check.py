@@ -14,7 +14,9 @@ For each dashboard (manifest/index.json on the site, written by scripts/prerende
   4. choosing another player in the sidebar opens that player's page, and Back shows the first
      page with its own sidebar choices and the main-area choice made before leaving; opening the
      address again starts at the defaults.
-On every page, nothing marked hidden (closed tab panels, ...) may be displayed.
+On every page, nothing marked hidden (closed tab panels, ...) may be displayed, and the main column
+has a heading (or the no-data notice of an app without data). A dashboard must draw a figure in
+some state of some page, unless every page shows the no-data notice.
 Output: pages_check/result.json, pages_check/summary.md, pages_check/<slug>.jpg / <slug>_phone.jpg.
 Exit 1 when anything fails.
 
@@ -34,6 +36,7 @@ from playwright.async_api import async_playwright
 
 FIRST_MS = 3_000      # the first screen of a dashboard (with its figures) must show within this
 PARALLEL = 6
+NO_DATA = "Statcast"  # the no-data notice of apps without data mentions Statcast
 SHOT_WIDTH = 800
 
 # every figure of the state in document order (figures in a closed tab or expander count too:
@@ -165,12 +168,22 @@ async def check_app(browser, base, m, out):
         shown_hidden = await page.evaluate(HIDDEN_SHOWN_JS)
         if shown_hidden:
             res["errors"].append(f"{outer}: hidden elements are displayed: {shown_hidden}")
+        # a page has a heading in its main column, or (an app without data) its no-data notice
+        head = await page.evaluate("""(nd) => document.querySelectorAll('.block-container :is(h1, h2, h3)').length > 0
+            || [...document.querySelectorAll('.block-container [data-testid=stAlert]')].some(a => a.textContent.includes(nd))""", NO_DATA)
+        if not head:
+            res["errors"].append(f"{outer}: no heading and no no-data notice")
+        if any(s["images"] for s in states):
+            res["pages_with_figures"] = res.get("pages_with_figures", 0) + 1
+        elif await page.evaluate("""(nd) => [...document.querySelectorAll('.block-container [data-testid=stAlert]')]
+            .some(a => a.textContent.includes(nd))""", NO_DATA):
+            res["no_data_pages"] = res.get("no_data_pages", 0) + 1
         side = m.get("sidebar_text", {}).get(outer)
         if side and await page.evaluate(TEXT_JS, "#sidebar .st-sb-inner") != side:
             res["errors"].append(f"{outer}: sidebar text differs from the build")
         by_inner = {json.dumps(s["inner"], sort_keys=True): s for s in states}
 
-        async def same(s, what):
+        async def same(s, what, outer=outer):
             shown = await page.evaluate(SHOWN_JS)
             text = await page.evaluate(TEXT_JS, ".block-container")
             if shown != s["images"] or text != s["text"]:
@@ -203,6 +216,12 @@ async def check_app(browser, base, m, out):
                     res["errors"].append(f"{outer} {wid}={val}: the controls show {now}, which is no built state")
                 else:
                     await same(s, f"{wid}={val}")
+
+    # a dashboard draws figures somewhere (a player without Statcast rows draws none and says so);
+    # only an app without data may have none, and then every page shows its no-data notice
+    if not res.get("pages_with_figures") and res.get("no_data_pages", 0) != res["pages"]:
+        res["errors"].append(f"no state of any page has a figure ({res.get('no_data_pages', 0)} of "
+                             f"{res['pages']} pages show the no-data notice)")
 
     # 4. the sidebar opens another player's page. Start from a page with main-area choices (when
     # the dashboard has one) and a neighbour page that differs in one sidebar choice.
@@ -268,7 +287,12 @@ async def check_app(browser, base, m, out):
 
 async def run(base, only):
     index = fetch_json(f"{base}/manifest/index.json")
+    unknown = sorted(set(only) - set(index["slugs"]))
+    if unknown:
+        sys.exit(f"--only names dashboards the site does not have: {', '.join(unknown)}")
     slugs = [s for s in index["slugs"] if not only or s in only]
+    if not slugs:
+        sys.exit("no dashboard to check")
     out = Path("pages_check")
     out.mkdir(exist_ok=True)
     manifests = {s: fetch_json(f"{base}/manifest/{s}.json") for s in slugs}

@@ -43,6 +43,29 @@ class _KeyPickler(pickle.Pickler):
         return tuple(r)
 
 
+def fig_alt(fig):
+    """A text alternative for a chart, for screen readers: the figure's titles (its own and each
+    plot's), else each plot's axis labels, else its category labels. Empty only for a figure with
+    none of these."""
+    parts = []
+    sup = getattr(fig, "_suptitle", None)
+    if sup is not None:
+        parts.append(sup.get_text())
+    for ax in fig.axes:
+        parts += [ax.get_title(loc=loc) for loc in ("left", "center", "right")]
+    if not any(p.strip() for p in parts):
+        parts = [" / ".join(x for x in (ax.get_ylabel(), ax.get_xlabel()) if x.strip()) for ax in fig.axes]
+    if not any(p.strip() for p in parts):  # e.g. a radar chart: its categories
+        parts = [", ".join(t.get_text() for t in ax.get_xticklabels() if t.get_text().strip()) for ax in fig.axes]
+    seen, out = set(), []
+    for p in (" ".join(p.split()) for p in parts):
+        if p and p not in seen:
+            seen.add(p)
+            out.append(p)
+    alt = " · ".join(out)
+    return alt if len(alt) <= 300 else alt[:299] + "…"
+
+
 def fig_key(fig, rc):
     buf = io.BytesIO()
     _KeyPickler(buf, protocol=5).dump(fig)
@@ -172,7 +195,7 @@ class Box:
                 FIG_CACHE[key] = hit
         sha, data = hit
         self.run.png.setdefault(sha, data)
-        self._add(("image", sha))
+        self._add(("image", sha, fig_alt(fig)))
 
     # -- layout
     def columns(self, spec, **kw):

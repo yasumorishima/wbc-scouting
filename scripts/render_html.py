@@ -37,10 +37,10 @@ class Renderer:
     def __init__(self, image_info, prefix):
         self.image_info, self.prefix = image_info, prefix
 
-    def image(self, sha, png):
+    def image(self, sha, png, alt=""):
         name, w, h = self.image_info(sha, png)
         return (f'<div data-testid="stImage" class="st-img"><img src="{self.prefix}img/{name}" '
-                f'width="{w}" height="{h}" loading="lazy" decoding="async" alt=""></div>')
+                f'width="{w}" height="{h}" loading="lazy" decoding="async" alt="{html.escape(alt, quote=True)}"></div>')
 
     def items(self, items, run, widget_html):
         return "".join(self.item(it, run, widget_html) for it in items)
@@ -92,7 +92,7 @@ class Renderer:
             return (f'<div class="st-df" data-testid="stDataFrame"><div class="df-scroll" '
                     f'style="max-height:{int(height)}px">{it[1]}</div></div>')
         if kind == "image":
-            return self.image(it[1], run.png[it[1]])
+            return self.image(it[1], run.png[it[1]], it[2] if len(it) > 2 else "")
         if kind == "columns":
             weights, cols = it[1], it[2]
             inner = "".join(
