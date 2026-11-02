@@ -293,11 +293,15 @@ def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
     lines = []
     if strengths:
         header = "**Strengths:**" if lang == "EN" else "**強み:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for s in strengths:
             lines.append(f"- {s}")
     if weaknesses:
         header = "**Weaknesses:**" if lang == "EN" else "**弱み:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for w in weaknesses:
             lines.append(f"- {w}")
@@ -361,11 +365,15 @@ def generate_pitcher_summary(stats: dict, pdf: pd.DataFrame, pitcher: dict,
     lines = []
     if strengths:
         header = "**Strengths:**" if lang == "EN" else "**強み:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for s in strengths:
             lines.append(f"- {s}")
     if weaknesses:
         header = "**Weaknesses:**" if lang == "EN" else "**弱み:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for w in weaknesses:
             lines.append(f"- {w}")
@@ -1363,6 +1371,8 @@ def analyze_team_weaknesses(player_stats_list: list, lang: str) -> str:
     high_k = [ps for ps in player_stats_list if ps["PA"] >= 50 and ps["K%"] >= 22.4]
     if high_k:
         header = "**High K% batters (≥22.4% MLB avg):**" if lang == "EN" else "**三振率が高い打者（≥22.4% MLB平均）:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for ps in sorted(high_k, key=lambda x: x["K%"], reverse=True):
             lines.append(f"- {ps['name']}: K% {ps['K%']:.1f}%")
@@ -1371,6 +1381,8 @@ def analyze_team_weaknesses(player_stats_list: list, lang: str) -> str:
     low_bb = [ps for ps in player_stats_list if ps["PA"] >= 50 and ps["BB%"] < 7.0]
     if low_bb:
         header = "**Low BB% batters (<7%):**" if lang == "EN" else "**四球率が低い打者（<7%）:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for ps in sorted(low_bb, key=lambda x: x["BB%"]):
             lines.append(f"- {ps['name']}: BB% {ps['BB%']:.1f}%")
@@ -1380,6 +1392,8 @@ def analyze_team_weaknesses(player_stats_list: list, lang: str) -> str:
                     if ps.get("platoon_diff") and ps["platoon_diff"] >= 80]
     if platoon_weak:
         header = "**Platoon vulnerability (OPS diff ≥80 pts):**" if lang == "EN" else "**左右差が大きい打者（OPS差≥80pts）:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for ps in sorted(platoon_weak, key=lambda x: x["platoon_diff"], reverse=True):
             weak = ps.get("platoon_weak_side", "?")

@@ -658,6 +658,8 @@ def generate_sp_pitch_analysis(df: pd.DataFrame, lang: str) -> str:
             mix_items.append(f"  - {label}: 使用率{pct:.0f}%, 空振率{w_pct:.0f}%, 被打率{ba_str}")
 
     header = "**Pitch Mix (overall):**" if lang == "EN" else "**球種配分（全体）:**"
+    if lines:  # a blank line, or Markdown reads the heading as part of the list above
+        lines.append("")
     lines.append(header)
     lines.extend(mix_items)
 
@@ -812,11 +814,15 @@ def generate_player_summary(stats: dict, pdf: pd.DataFrame, player: dict,
     lines = []
     if strengths:
         header = "**Strengths:**" if lang == "EN" else "**強み:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for s in strengths:
             lines.append(f"- {s}")
     if weaknesses:
         header = "**Weaknesses:**" if lang == "EN" else "**弱み:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for w in weaknesses:
             lines.append(f"- {w}")
@@ -882,11 +888,15 @@ def generate_pitcher_summary(stats: dict, pdf: pd.DataFrame, pitcher: dict,
     lines = []
     if strengths:
         header = "**Strengths:**" if lang == "EN" else "**強み:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for s in strengths:
             lines.append(f"- {s}")
     if weaknesses:
         header = "**Weaknesses:**" if lang == "EN" else "**弱み:**"
+        if lines:  # a blank line, or Markdown reads the heading as part of the list above
+            lines.append("")
         lines.append(header)
         for w in weaknesses:
             lines.append(f"- {w}")
