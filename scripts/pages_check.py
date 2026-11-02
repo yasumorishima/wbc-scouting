@@ -15,8 +15,9 @@ For each dashboard (manifest/index.json on the site, written by scripts/prerende
      page with its own sidebar choices and the main-area choice made before leaving; opening the
      address again starts at the defaults.
 On every page, nothing marked hidden (closed tab panels, ...) may be displayed, and the main column
-has a heading (or the no-data notice of an app without data). A dashboard must draw a figure in
-some state of some page, unless every page shows the no-data notice.
+has a heading or a notice (on the dashboard's own address: a heading, or the no-data notice of an
+app without data). A dashboard must draw a figure in some state of some page, unless every page
+shows the no-data notice.
 Output: pages_check/result.json, pages_check/summary.md, pages_check/<slug>.jpg / <slug>_phone.jpg.
 Exit 1 when anything fails.
 
@@ -168,11 +169,14 @@ async def check_app(browser, base, m, out):
         shown_hidden = await page.evaluate(HIDDEN_SHOWN_JS)
         if shown_hidden:
             res["errors"].append(f"{outer}: hidden elements are displayed: {shown_hidden}")
-        # a page has a heading in its main column, or (an app without data) its no-data notice
-        head = await page.evaluate("""(nd) => document.querySelectorAll('.block-container :is(h1, h2, h3)').length > 0
-            || [...document.querySelectorAll('.block-container [data-testid=stAlert]')].some(a => a.textContent.includes(nd))""", NO_DATA)
+        # the dashboard's own address shows a heading in its main column (an app without data: its
+        # no-data notice); another page shows a heading or the app's notice (a player without data
+        # for the chosen season gets "このフィルターではデータがありません。" and nothing else)
+        head = await page.evaluate("""([nd, first]) => document.querySelectorAll('.block-container :is(h1, h2, h3)').length > 0
+            || [...document.querySelectorAll('.block-container [data-testid=stAlert]')].some(a => !first || a.textContent.includes(nd))""",
+                                   [NO_DATA, outer == m["default"]])
         if not head:
-            res["errors"].append(f"{outer}: no heading and no no-data notice")
+            res["errors"].append(f"{outer}: no heading and no notice in the main column")
         if any(s["images"] for s in states):
             res["pages_with_figures"] = res.get("pages_with_figures", 0) + 1
         elif await page.evaluate("""(nd) => [...document.querySelectorAll('.block-container [data-testid=stAlert]')]
