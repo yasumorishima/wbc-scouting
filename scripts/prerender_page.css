@@ -1,0 +1,125 @@
+/* Streamlit's dark theme as set in .streamlit/config.toml, for the pre-rendered pages.
+   The app's own PREMIUM_CSS comes in the page body (st.markdown) and styles on top of this. */
+:root {
+  --bg: #0e1117; --bg2: #1a1a2e; --text: #fafafa; --muted: rgba(250, 250, 250, 0.6);
+  --primary: #d32f2f; --line: rgba(250, 250, 250, 0.2); --gap: 1rem;
+  color-scheme: dark;  /* dark scrollbars and form controls, as in the dark Streamlit theme */
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body {
+  font-family: "Source Sans 3", "Source Sans Pro", system-ui, -apple-system, "Segoe UI",
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+  font-size: 16px; line-height: 1.6; -webkit-text-size-adjust: 100%;
+}
+a { color: #4fc3f7; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.st-app { min-height: 100vh; background: var(--bg); }
+/* Streamlit's top bar: 60px, scrolls away with the page; the sidebar button stays reachable */
+.st-header { position: absolute; top: 0; left: 0; right: 0; height: 60px; background: var(--bg); z-index: 20; }
+.st-sb-toggle { position: fixed; top: 8px; left: 8px; z-index: 40; }
+.st-sb-toggle {
+  width: 44px; height: 44px; border: 0; border-radius: 8px; cursor: pointer;
+  background: rgba(14, 17, 23, 0.85); color: var(--text); font-size: 1.4rem; line-height: 1;
+}
+.st-sb-toggle:hover { background: rgba(250, 250, 250, 0.12); }
+.st-sb-toggle:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible,
+[role="tab"]:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.st-sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 30; width: min(21rem, 88vw);
+  overflow-y: auto; background: var(--bg2); padding: 4.25rem 1.5rem 2rem;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.45);
+}
+/* any rule that sets display (tab panels are display:flex) would otherwise show hidden elements */
+[hidden] { display: none !important; }
+/* Streamlit sets smaller headings in the sidebar (measured: h1 24px) */
+.st-sidebar .st-md h1 { font-size: 1.5rem; padding: 1.25rem 0 1rem; margin: 0; }
+.st-sidebar .st-md h2 { font-size: 1.25rem; } .st-sidebar .st-md h3 { font-size: 1.125rem; }
+.st-sb-inner, .block-container, .st-col, .st-exp-body, [role="tabpanel"] {
+  display: flex; flex-direction: column; gap: var(--gap); min-width: 0;
+}
+.seg { display: contents; }
+
+.block-container { width: 100%; padding: 4rem 1rem 6rem; }
+@media (min-width: 736px) { .block-container { padding: 6rem 5rem 10rem; } }
+
+.st-md > :first-child, .st-caption > :first-child, .st-alert > :first-child { margin-top: 0; }
+.st-md > :last-child, .st-caption > :last-child, .st-alert > :last-child { margin-bottom: 0; }
+.st-md p { margin: 0 0 1rem; }
+.st-md h1, .st-md h2, .st-md h3, .st-md h4 { line-height: 1.2; font-weight: 600; }
+.st-md h1 { font-size: 2.75rem; } .st-md h2 { font-size: 2.25rem; }
+.st-md h3 { font-size: 1.75rem; margin: 0; padding: 0.5rem 0 1rem; }
+.st-md h4 { font-size: 1.5rem; }
+.st-md ul, .st-md ol { margin: 0 0 1rem; padding-left: 1.4em; }
+.st-md table { border-collapse: collapse; margin: 0 0 1rem; }
+.st-md th, .st-md td { border: 1px solid var(--line); padding: 0.25rem 0.75rem; }
+.st-md code { background: rgba(250, 250, 250, 0.08); padding: 0.1em 0.3em; border-radius: 4px; }
+.st-h h2, .st-h h3 { margin: 0; font-weight: 600; line-height: 1.2; scroll-margin-top: 4rem; }
+.st-h h2 { font-size: 2.25rem; padding: 1rem 0; }
+.st-h h3 { font-size: 1.75rem; padding: 0.75rem 0 1rem; }
+@media (max-width: 640px) { .st-h h2 { font-size: 1.75rem; } .st-h h3 { font-size: 1.4rem; } }
+.st-caption { color: var(--muted); font-size: 0.875rem; }
+.st-caption p { margin: 0 0 0.5rem; }
+hr { border: none; border-bottom: 1px solid var(--line); margin: 1rem 0; width: 100%; }
+
+.st-alert { padding: 1rem; border-radius: 0.5rem; }
+.st-info { background: rgba(61, 157, 243, 0.2); color: rgb(61, 157, 243); }
+.st-warning { background: rgba(255, 227, 18, 0.2); color: rgb(255, 227, 18); }
+.st-success { background: rgba(61, 213, 109, 0.2); color: rgb(61, 213, 109); }
+.st-alert p { margin: 0 0 0.5rem; }
+
+.st-metric { min-width: 0; }
+/* like Streamlit: one line each, cut with an ellipsis when the column is narrow */
+.st-metric [data-testid="stMetricLabel"] p { margin: 0; font-size: 0.875rem; }
+.st-metric [data-testid="stMetricLabel"], .st-metric [data-testid="stMetricValue"] {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.st-metric [data-testid="stMetricLabel"] { display: flex; align-items: center; gap: 0.3rem; }
+.st-metric [data-testid="stMetricLabel"] p { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.st-metric [data-testid="stMetricValue"] { font-size: 2.25rem; line-height: 1.3; }
+.st-metric [data-testid="stMetricValue"] p { margin: 0; overflow: hidden; text-overflow: ellipsis; }
+.st-help {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 1rem;
+  border: 1px solid var(--muted); border-radius: 50%; color: var(--muted); font-size: 0.7rem; cursor: help;
+}
+.st-delta { font-size: 1rem; display: inline-block; padding: 0 0.4rem; border-radius: 0.75rem; }
+.st-delta.up, .st-delta.down-good { color: #3dd56d; background: rgba(61, 213, 109, 0.15); }
+.st-delta.down, .st-delta.up-bad { color: #ff6c6c; background: rgba(255, 75, 75, 0.15); }
+.st-delta.off { color: var(--muted); }
+
+.st-cols { display: flex; gap: var(--gap); flex-wrap: wrap; align-items: flex-start; width: 100%; }
+@media (max-width: 640px) { .st-col { flex: 1 1 100% !important; } }
+
+.st-img img { display: block; width: 100%; height: auto; }
+
+.st-exp { border: 1px solid var(--line); border-radius: 0.5rem; }
+.st-exp > summary { cursor: pointer; padding: 0.75rem 1rem; list-style: none; display: flex; gap: 0.5rem; align-items: center; min-height: 44px; }
+.st-exp > summary::-webkit-details-marker { display: none; }
+.st-exp > summary::after { content: "\25BE"; margin-left: auto; transition: transform 0.15s; }
+.st-exp[open] > summary::after { transform: rotate(180deg); }
+.st-exp-body { padding: 0 1rem 1rem; }
+
+.st-df { width: 100%; }
+.df-scroll { overflow: auto; max-width: 100%; border: 1px solid rgba(250, 250, 250, 0.1); border-radius: 0.5rem; }
+.df-scroll table { border-collapse: collapse; font-size: 0.875rem; width: 100%; }
+.df-scroll th, .df-scroll td { border: 1px solid rgba(250, 250, 250, 0.1); padding: 0.3rem 0.6rem; white-space: nowrap; text-align: right; }
+.df-scroll thead th { background: var(--bg2); color: var(--muted); font-weight: 600; text-align: right; position: sticky; top: 0; z-index: 1; }
+.df-scroll tbody th { color: var(--muted); font-weight: 400; text-align: left; }
+.df-scroll td:first-child { text-align: left; }
+
+.st-wlabel { font-size: 0.875rem; margin-bottom: 0.25rem; }
+.st-wlabel p { margin: 0; }
+.st-select select {
+  width: 100%; min-height: 44px; padding: 0 0.75rem; font: inherit; color: var(--text);
+  background: #262730; border: 1px solid var(--line); border-radius: 0.5rem;
+}
+.st-radio-opts { display: flex; flex-direction: column; gap: 0.25rem; }
+.st-radio.horizontal .st-radio-opts { flex-direction: row; flex-wrap: wrap; gap: 1rem; }
+.st-radio label, .st-check label { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px; cursor: pointer; }
+.st-radio input, .st-check input { accent-color: var(--primary); width: 1.1rem; height: 1.1rem; margin: 0; }
+
+.st-tabs [role="tablist"] { display: flex; gap: 0.5rem; overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 1rem; }
+.st-tabs [role="tab"] { background: none; border: 0; color: var(--text); padding: 0.5rem 1rem; font: inherit; cursor: pointer; min-height: 44px; }
+.st-tabs [role="tab"][aria-selected="true"] { border-bottom: 2px solid var(--primary); }
+.st-tabs [role="tab"] p { margin: 0; }
