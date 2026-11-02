@@ -170,7 +170,8 @@ def real(app, choices, widgets):
         delta = e.delta if e.delta not in (None, "") else None
         out["metric"].append((norm(e.label), norm(e.value), None if delta is None else norm(delta)))
     out["tables"] = sorted(table_sig(e.value) for e in main.dataframe)
-    out["figures"] = len(main.get("imgs"))
+    # st.pyplot is "imgs" in AppTest up to streamlit 1.5x and "image" in 1.66
+    out["figures"] = len(main.get("imgs")) + len(main.get("image"))
     out["text"] = sorted(out["text"])
     side = at.sidebar
     out["sidebar"] = sorted([norm(e.value) for kind in ("title", "header", "subheader") for e in getattr(side, kind)]
