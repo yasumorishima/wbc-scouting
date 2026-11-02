@@ -60,47 +60,75 @@ print("missing", missing, "reasons", reasons, f"{took:.1f}s")
 assert missing == ["gone1.avif", "gone2.avif", "dead1.avif"], missing
 assert reasons == {"404": 2, "503": 1}, reasons
 
-# the sweep alone (as before this change: no slow second pass) would have lost the busy files
+# the window really refuses: asked one at a time with short waits, some busy files never answer
+# (so the assertion above depends on the second pass, not on the window being empty)
 t0 = None
 why = {n: pc.answers(f"{base}/{n}", tries=3, base_wait=0.05) for n in names[200:260]}
 lost = sum(w is not None for w in why.values())
-print("sweep only, busy files lost:", lost)
-assert lost > 0, "the test window does not refuse anything; it would not catch the old behaviour"
+print("without a second pass, busy files lost:", lost)
+assert lost > 0, "the test window does not refuse anything"
 
 # 404 is not retried: one request, no waiting
 s = time.time()
 assert pc.answers(f"{base}/gone9.avif", tries=6, base_wait=1.0) == "404"
 assert time.time() - s < 0.5
+
+# a host that keeps refusing: the time limit ends the waiting, and the files count as missing
+s = time.time()
+dead = [f"dead{i}.avif" for i in range(40)]
+missing, reasons = pc.check_files(base, dead, pause=0.2, base_wait=0.2, limit_s=1.0)
+print("time limit:", reasons, f"{time.time() - s:.1f}s")
+assert missing == dead, missing
+assert time.time() - s < 3, "the limit did not stop the waiting"
+assert all("time limit" in k for k in reasons), reasons
 srv.shutdown()
 
-# page loads: opened again while the host answers 429/5xx, not on 404; timed from the last try
+# page loads: opened again while the host answers 429/5xx or the load fails, not on 404;
+# the first screen is timed from the last attempt; must_goto raises unless 200
 import asyncio  # noqa: E402
 import types  # noqa: E402
 
 
 class FakePage:
-    def __init__(self, codes):
-        self.codes, self.calls = list(codes), 0
+    def __init__(self, answers_):
+        self.answers, self.calls, self.times = list(answers_), 0, []
 
     async def goto(self, url, wait_until=None):
         self.calls += 1
-        return types.SimpleNamespace(status=self.codes.pop(0))
+        self.times.append(time.time())
+        a = self.answers.pop(0)
+        if isinstance(a, Exception):
+            raise a
+        return None if a is None else types.SimpleNamespace(status=a)
 
 
-async def no_wait(_):
-    pass
+async def short_wait(_):
+    time.sleep(0.01)
 
 
-real_sleep, pc.asyncio.sleep = pc.asyncio.sleep, no_wait
+real_sleep, pc.asyncio.sleep = pc.asyncio.sleep, short_wait
 try:
-    for codes, want_status, want_calls in [([503, 200], 200, 2), ([429, 502, 200], 200, 3),
-                                           ([404], 404, 1), ([200], 200, 1), ([503] * 4, 503, 4)]:
-        p = FakePage(codes)
-        before = time.time()
-        r, started = asyncio.run(pc.goto(p, "u"))
-        assert (r.status, p.calls) == (want_status, want_calls), (codes, r.status, p.calls)
-        assert started >= before
-    print("goto: retries 429/5xx only")
+    drop = RuntimeError("net::ERR_CONNECTION_RESET at u\ncall log")
+    for seq, want_status, want_calls in [([503, 200], 200, 2), ([429, 502, 200], 200, 3),
+                                         ([drop, 200], 200, 2), ([None, 200], 200, 2),
+                                         ([404], 404, 1), ([200], 200, 1), ([503] * 4, 503, 4),
+                                         ([drop] * 4, None, 4)]:
+        p = FakePage(seq)
+        r, started, err = asyncio.run(pc.goto(p, "u"))
+        assert (r.status if r else None, p.calls) == (want_status, want_calls), (seq, r, p.calls)
+        assert started <= p.times[-1] < started + 0.005 and (len(p.times) == 1 or started > p.times[-2]), "not timed from the last attempt"
+        assert (err is not None) == (r is None and seq[-1] is drop), (seq, err)
+    assert pc.answered(None, "RuntimeError: net::ERR_CONNECTION_RESET at u") .startswith("RuntimeError")
+    assert asyncio.run(pc.goto(FakePage([200]), "u", tries=0))[0].status == 200
+    for seq in ([404], [503] * 4, [drop] * 4):
+        try:
+            asyncio.run(pc.must_goto(FakePage(seq), "u"))
+            raise AssertionError(f"must_goto passed on {seq}")
+        except pc.NotLoaded as e:
+            print("must_goto:", e)
+    asyncio.run(pc.must_goto(FakePage([502, 200]), "u"))
+    assert pc.first_line(ValueError(""), 10) == "ValueError: "
+    print("goto: retries 429/5xx and failed loads only")
 finally:
     pc.asyncio.sleep = real_sleep
 print("TEST OK")
