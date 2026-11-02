@@ -63,6 +63,10 @@ class Renderer:
         if kind == "divider":
             return '<hr data-testid="stDivider">'
         if kind == "callout":
+            if len(it) > 3 and it[3]:  # an icon taken from the start of the body, as Streamlit does
+                return (f'<div data-testid="stAlert" class="st-alert st-{it[1]} st-has-icon" role="alert">'
+                        f'<span class="st-alert-icon" aria-hidden="true">{html.escape(it[3])}</span>'
+                        f'<div class="st-alert-body">{markdown_html(it[2])}</div></div>')
             return (f'<div data-testid="stAlert" class="st-alert st-{it[1]}" role="alert">'
                     f'{markdown_html(it[2])}</div>')
         if kind == "metric":
