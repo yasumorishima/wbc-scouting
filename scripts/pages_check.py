@@ -165,11 +165,13 @@ def check_files(base, names, pause=30.0, base_wait=2.0, limit_s=FILES_LIMIT_S):
     rnd = 0
     while True:
         again = [n for n in names if why[n] is not None and why[n] != "404"]
-        if not again or time.time() + pause >= stop_at:
+        left = stop_at - time.time()
+        if not again or left < 5:
             break
         rnd += 1
-        print(f"{len(again)} files not answered yet; round {rnd} after {pause:.0f} s", flush=True)
-        time.sleep(pause)
+        wait = min(pause, left - 4)  # the last round still gets the time that is left
+        print(f"{len(again)} files not answered yet; round {rnd} after {wait:.0f} s", flush=True)
+        time.sleep(wait)
         with ThreadPoolExecutor(4) as ex:
             why.update(zip(again, ex.map(
                 lambda n: answers(f"{base}/{n}", tries=6, base_wait=base_wait, stop_at=stop_at), again)))
