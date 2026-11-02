@@ -1,9 +1,15 @@
-name: Pages (stlite)
+name: Pages (pre-rendered)
 
-# Every WBC app as a static page (stlite runs the unchanged Streamlit app in the browser), plus an
-# index page: https://yasumorishima.github.io/wbc-scouting/
-# After the deploy, scripts/pages_check.py opens every page in Chromium and checks that it renders;
-# its summary and screenshots are kept on the `pages-check` branch (replaced on every run).
+# Every WBC dashboard as static pages that open at once: scripts/prerender.py runs each unchanged
+# Streamlit app once per widget state (language, player, season, stadium, density, pitch type, ...)
+# and writes the HTML and figures; https://yasumorishima.github.io/wbc-scouting/
+#   render  one job per dashboard (a heavy one is split, see SHARDS in build_pages.py); before its
+#           states are kept, scripts/prerender_check.py runs sampled states in the real Streamlit
+#           runtime (AppTest) and requires the same output;
+#   deploy  makes the pages from the parts, writes the index, stops above SIZE_LIMIT_MB, publishes;
+#   check   scripts/pages_check.py opens every page of every dashboard in Chromium and selects
+#           every state with the page's own controls; summary and screenshots go to the
+#           `pages-check` branch (replaced on every run).
 
 on:
   push:
@@ -13,8 +19,12 @@ on:
       - "players*.py"
       - "scouting_lib.py"
       - "data/**"
-      - ".streamlit/config.toml"
       - "scripts/build_pages.py"
+      - "scripts/prerender*.py"
+      - "scripts/prerender_page.*"
+      - "scripts/st_record.py"
+      - "scripts/render_html.py"
+      - "scripts/requirements-pages.txt"
       - "scripts/pages_check.py"
       - ".github/workflows/pages.yml"
   # Data refreshes commit with GITHUB_TOKEN, which does not trigger push workflows.
@@ -26,12 +36,8 @@ on:
       memo:
         description: "why this run"
         required: false
-      compare_cloud:
-        description: "also open each app on Streamlit Cloud and require the same headings, figure counts and player"
-        type: boolean
-        default: false
       only:
-        description: "check only these pages (comma-separated slugs, e.g. japan-batters,qf-jpn-ven); empty = all"
+        description: "check only these dashboards in the browser (comma-separated slugs); empty = all"
         required: false
 
 permissions: {}
@@ -40,17 +46,18 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  SIZE_LIMIT_MB: 950   # GitHub Pages publishes at most 1 GB
+
 jobs:
-  deploy:
+  plan:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      apps: ${{ steps.list.outputs.apps }}
+      sha: ${{ steps.list.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,17 +66,105 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Build the site (stops if an app needs a file or package the page would not have)
-        run: python scripts/build_pages.py _site
+      # every later job checks out this same commit, so a data commit landing during the run
+      # cannot give a site built from two data versions
+      - name: List the dashboards (stops if an app needs a file or package the build would not have)
+        id: list
+        run: |
+          echo "apps=$(python scripts/build_pages.py list)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  render:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      max-parallel: 20
+      matrix:
+        app: ${{ fromJSON(needs.plan.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements-pages.txt
+      - run: pip install -r scripts/requirements-pages.txt
+      - name: Render every state of ${{ matrix.app.slug }} (shard ${{ matrix.app.shard }} of ${{ matrix.app.of }})
+        run: python scripts/prerender.py _part "${{ matrix.app.entry }}" --jobs 4 --shard "${{ matrix.app.shard }}/${{ matrix.app.of }}"
+      - name: Same output as the real Streamlit runtime (sampled states)
+        run: python scripts/prerender_check.py _part --per-app ${{ matrix.app.of > 1 && 3 || 6 }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.app.slug }}-${{ matrix.app.shard }}
+          path: _part
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
+          include-hidden-files: false
+
+  deploy:
+    needs: [plan, render]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      actions: write   # to delete this run's part-* artifacts once the site is published
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: part-*
+          path: _site
+          merge-multiple: true
+      - name: Pages from the build jobs' parts (stops if a shard is missing)
+        run: |
+          pip install -r scripts/requirements-pages.txt
+          python scripts/prerender.py _site --assemble
+      - name: Index page (stops unless every dashboard was rendered)
+        run: python scripts/build_pages.py index _site
+      - name: Size (GitHub Pages limit)
+        run: |
+          mb=$(du -sm _site | cut -f1)
+          echo "site: ${mb} MB, $(find _site/img -type f | wc -l) figures, $(find _site -name '*.html' | wc -l) pages" | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ "$mb" -gt "$SIZE_LIMIT_MB" ]; then echo "site is over ${SIZE_LIMIT_MB} MB"; exit 1; fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
+      # The parts are about as large as the site; artifact storage is shared by every repository of
+      # the account, and when it is full uploads fail everywhere. A failed run keeps them (1 day).
+      - name: Delete this run's part-* artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN: ${{ github.run_id }}
+        run: |
+          gh api --paginate "repos/$REPO/actions/runs/$RUN/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.name | startswith("part-")) | .id' > ids.txt
+          echo "deleting $(wc -l < ids.txt) artifacts"
+          while read -r id; do gh api -X DELETE "repos/$REPO/actions/artifacts/$id"; done < ids.txt
 
   check:
-    needs: deploy
+    needs: [plan, deploy]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -77,29 +172,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: master
+          ref: ${{ needs.plan.outputs.sha }}
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Install Playwright
         run: |
-          pip install playwright==1.64.0 pillow==13.0.0
+          pip install playwright==1.64.0 pillow==11.3.0
           playwright install chromium --with-deps
-      - name: Rebuild apps.json (same script as the deploy)
-        run: python scripts/build_pages.py /tmp/site
-      - name: Open every page and check it renders
+      - name: Open every page and select every state
         id: check
         continue-on-error: true
         env:
-          COMPARE_CLOUD: ${{ inputs.compare_cloud }}
           ONLY: ${{ inputs.only }}
         run: |
           mkdir -p pages_check
           ARGS=()
-          if [ "$COMPARE_CLOUD" = "true" ]; then ARGS+=(--cloud); fi
           if [ -n "$ONLY" ]; then ARGS+=(--only "$ONLY"); fi
-          python scripts/pages_check.py "https://yasumorishima.github.io/wbc-scouting" /tmp/site/apps.json "${ARGS[@]}"
+          python scripts/pages_check.py "https://yasumorishima.github.io/wbc-scouting" "${ARGS[@]}"
       - name: Keep the summary and screenshots on the pages-check branch
         if: always()
         env:

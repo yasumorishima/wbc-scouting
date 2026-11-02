@@ -1,0 +1,13 @@
+# Pinned for scripts/prerender.py (the static pages are rendered once, so the versions decide what
+# every page shows; change them on purpose and re-check). pandas 2.x like the original apps
+# (pandas 3 changes the string dtype); matplotlib/numpy/scipy as in the Pyodide build stlite used.
+pandas==2.2.3
+numpy==2.0.2
+scipy==1.14.1
+matplotlib==3.8.4
+matplotlib-fontja==1.1.0
+markdown-it-py==3.0.0
+pillow==11.3.0
+jinja2==3.1.6
+# only for the check against the real app (streamlit.testing AppTest)
+streamlit==1.50.0
