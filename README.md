@@ -2,7 +2,7 @@
 
 WBC 2026（World Baseball Classic）参加チームの Statcast データを可視化するスカウティングダッシュボード。
 
-GitHub Pages で公開（[stlite](https://github.com/whitphx/stlite) で同じ Streamlit アプリをブラウザの中で動かす＝サーバーが無く、眠らない）。大会中（2026-03）は Streamlit Community Cloud で公開していた（そちらのアプリも残してあるが、2026-11 に keepalive の対象から外したので眠っていることがある）。Baseball Savant の Statcast データ（`mlbam_id` で紐付け）がある選手のみ表示。MLB 出場経験のない選手は Statcast データが存在しないため対象外。20か国 306選手中、97選手の MLBAM ID を 2026-03-08 に一括追加。
+GitHub Pages で公開（同じ Streamlit アプリを、選べる状態ごとにあらかじめ実行して作った静的ページ＝開いた瞬間に表示され、サーバーが無く眠らない）。大会中（2026-03）は Streamlit Community Cloud で公開していた（そちらのアプリも残してあるが、2026-11 に keepalive の対象から外したので眠っていることがある）。Baseball Savant の Statcast データ（`mlbam_id` で紐付け）がある選手のみ表示。MLB 出場経験のない選手は Statcast データが存在しないため対象外。20か国 306選手中、97選手の MLBAM ID を 2026-03-08 に一括追加。
 
 ## 🌐 ランディングページ
 
@@ -10,7 +10,7 @@ GitHub Pages で公開（[stlite](https://github.com/whitphx/stlite) で同じ S
 
 全 37 ダッシュボードをプール別にまとめた目次（GitHub Pages）。国と打者・投手を選ぶと開きます。
 
-> 最初の表示には 15〜35 秒ほどかかります（ブラウザの中で Python を起動するため）。一度開くとブラウザに残るので、2 本目からは速くなります。準々決勝のページだけは 1〜2 分かかります（実測 78.6 秒）。
+> 開いてすぐ表示されます（選手・シーズン・球場・球種などの組み合わせを全部あらかじめ作ってあるため。最初の画面が出るまで、37 本の中央値 0.4 秒・最長 1.4 秒＝2026-11-02 の公開後の確認で実測）。
 
 大会中に使っていたランディングページ（日程つき）は、中身をそのまま ICP のサイトへ移し、リンク先を GitHub Pages 版にしました → [iqjbc-7aaaa-aaaaj-qnnsa-cai.icp0.io/#/wbc](https://iqjbc-7aaaa-aaaaj-qnnsa-cai.icp0.io/#/wbc)。元の [wbc-2026-scouting-dashboard-zvg.caffeine.xyz](https://wbc-2026-scouting-dashboard-zvg.caffeine.xyz/)（ICP / Caffeine）は Streamlit Community Cloud 版へリンクしたままです（眠っていたら「Yes, get this app back up!」で起きます）。
 
@@ -204,9 +204,8 @@ GitHub Pages で公開（[stlite](https://github.com/whitphx/stlite) で同じ S
 
 ### GitHub Pages（WBC の 37 本）
 
-- **`scripts/build_pages.py`** — `app_*.py` 1 本ごとに 1 ページを作る（名前は Streamlit のサブドメインと同じ＝`wbc-japan-batters.streamlit.app` → `japan-batters.html`）。各ページが読むファイル（同じ repo のモジュールと `data/*.csv`）はコードから自動で集める。知らない外部ライブラリを読むアプリ・無い CSV（ブラジルの 2 本を除く）・目次に載らない国があると止まる
-- **`Pages (stlite)`**（`pages.yml`、アプリ・データ・スクリプトの push で自動） — 組み立てて Pages に置いたあと、`scripts/pages_check.py` が全ページを Chromium で開き、表示されるまでの秒数・図の数・例外の有無を測り、最初の選手を選んだ詳細画面まで確かめる。結果と画面写真は `pages-check` ブランチ（毎回置き換え）。手動実行で `compare_cloud` を付けると Streamlit Community Cloud 版と見出し・図の数が一致するかも確かめる
-- ⚠️ ほかの workflow が `GITHUB_TOKEN` で入れた commit（データ更新）では動かないので、データを更新したら `Pages (stlite)` を手で実行する
+- **`scripts/prerender.py`** — 変更なしの `app_*.py` を、Streamlit の代わりに記録用の部品（`scripts/st_record.py`）で、選べる状態ごとに 1 回ずつ実行し、HTML と図（AVIF）を作る。名前は Streamlit のサブドメインと同じ（`wbc-japan-batters.streamlit.app` → `japan-batters.html`）。サイドバー（言語・選手・シーズン）は状態ごとに別ページ、本文の選択（球場・密度・球種など）は作り置きの部分をページの中で差し替える（`scripts/prerender_page.js`）。どの選択肢を選んでも作った状態にたどり着くことを、組み立てのときに確かめる
+- **`Pages (pre-rendered)`**（`pages.yml`、アプリ・データ・スクリプトの push とデータ更新の workflow の完了で自動） — ダッシュボードごとに 1 ジョブで作り（準々決勝は 8 分割）、いくつかの状態を本物の Streamlit（AppTest）でも実行して同じ文字・表・図の数になるかを確かめてから置く。容量が 950MB を超えたら止まる。置いたあと `scripts/pages_check.py` が全ページ・全状態を Chromium で開き、図と文字が作ったときと同じか、どの選択肢も働くか、隠れたタブが出ていないか、「戻る」と開き直しで選択が正しいかを確かめる。結果と画面写真は `pages-check` ブランチ（毎回置き換え）
 
 ### Keepalive（WBC 以外の 4 本）
 
@@ -217,7 +216,7 @@ GitHub Pages で公開（[stlite](https://github.com/whitphx/stlite) で同じ S
 ### 新しいアプリを追加したら
 
 1. `app_xxx.py` を作成・push
-2. `Pages (stlite)` が自動でページを作って確かめる（新しい国なら `scripts/build_pages.py` の `POOLS` と `COUNTRY` に足す。足さないと組み立てが止まる）
+2. `Pages (pre-rendered)` が自動でページを作って確かめる（新しい国なら `scripts/build_pages.py` の `POOLS` と `COUNTRY` に足す。足さないと組み立てが止まる）
 
 ---
 
