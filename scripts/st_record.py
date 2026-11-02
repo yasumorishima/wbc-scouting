@@ -181,6 +181,7 @@ class Box:
         # whose pickled state and matplotlib settings equal an earlier one's draws the same picture,
         # so the drawing is reused. The key is taken before drawing; a figure that cannot be pickled
         # is drawn every time.
+        alt = fig_alt(fig)  # before drawing: the same figure state whether or not the cache hits
         try:
             key = fig_key(fig, plt.rcParams)
         except Exception:  # noqa: BLE001 - not picklable: no reuse
@@ -195,7 +196,7 @@ class Box:
                 FIG_CACHE[key] = hit
         sha, data = hit
         self.run.png.setdefault(sha, data)
-        self._add(("image", sha, fig_alt(fig)))
+        self._add(("image", sha, alt))
 
     # -- layout
     def columns(self, spec, **kw):

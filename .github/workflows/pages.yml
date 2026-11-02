@@ -9,7 +9,8 @@ name: Pages (pre-rendered)
 #   verify  makes the pages from the parts, writes the index, stops above SIZE_LIMIT_MB, then opens
 #           the built site in Chromium (scripts/pages_check.py: every page, every state, every
 #           control option) and hands it to deploy only if everything passes;
-#   deploy  publishes (skipped by a manual run with publish = false: a dry run, e.g. on a branch);
+#   deploy  publishes; a manual run publishes only from master with every dashboard checked
+#           (publish = false, a branch, or `only` make it a dry run);
 #   check   the same browser check on the published site; summary and screenshots go to the
 #           `pages-check` branch (replaced on every run).
 
@@ -42,7 +43,7 @@ on:
         description: "check only these dashboards in the browser (comma-separated slugs); empty = all"
         required: false
       publish:
-        description: "publish the site (false = build and check only)"
+        description: "publish the site (only from master and with `only` empty; false = build and check only)"
         type: boolean
         default: true
 
@@ -122,6 +123,7 @@ jobs:
     timeout-minutes: 150
     permissions:
       contents: read
+      actions: write   # to delete this run's part-* artifacts once the site is assembled
     steps:
       - uses: actions/checkout@v4
         with:
@@ -158,6 +160,7 @@ jobs:
         run: |
           python -m http.server 8000 --directory _site --bind 127.0.0.1 > /tmp/http.log 2>&1 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8000/manifest/index.json && break; sleep 1; done
+          curl -sf -o /dev/null http://127.0.0.1:8000/manifest/index.json || { echo "local server did not start"; cat /tmp/http.log; exit 1; }
           mkdir -p /tmp/local_check && cd /tmp/local_check
           ARGS=()
           if [ -n "$ONLY" ]; then ARGS+=(--only "$ONLY"); fi
@@ -177,24 +180,8 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
-
-  deploy:
-    needs: [plan, verify]
-    if: github.event_name != 'workflow_dispatch' || inputs.publish
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-      actions: write   # to delete this run's part-* artifacts once the site is published
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/configure-pages@v5
-      - id: deployment
-        uses: actions/deploy-pages@v4
-      # The parts are about as large as the site and are not needed once it is published.
+      # The parts are about as large as the site and are not needed once it is assembled and
+      # checked (published or not); artifact storage is shared by the account's repositories.
       - name: Delete this run's part-* artifacts
         env:
           GH_TOKEN: ${{ github.token }}
@@ -202,9 +189,26 @@ jobs:
           RUN: ${{ github.run_id }}
         run: |
           gh api --paginate "repos/$REPO/actions/runs/$RUN/artifacts?per_page=100" \
-            --jq '.artifacts[] | select(.name | startswith("part-")) | .id' > ids.txt
-          echo "deleting $(wc -l < ids.txt) artifacts"
-          while read -r id; do gh api -X DELETE "repos/$REPO/actions/artifacts/$id"; done < ids.txt
+            --jq '.artifacts[] | select(.name | startswith("part-")) | .id' > /tmp/ids.txt
+          echo "deleting $(wc -l < /tmp/ids.txt) artifacts"
+          while read -r id; do gh api -X DELETE "repos/$REPO/actions/artifacts/$id"; done < /tmp/ids.txt
+
+  deploy:
+    needs: [plan, verify]
+    # a manual run publishes only from master and only when every dashboard was checked
+    if: github.event_name != 'workflow_dispatch' || (inputs.publish && inputs.only == '' && github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - id: deployment
+        uses: actions/deploy-pages@v4
 
   check:
     needs: [plan, deploy]

@@ -160,6 +160,8 @@
     apply(pick(prev) || data.variants[0]);
   };
   restore(false);
+  // whichever way the page is left (Back, a link, the sidebar), Back/Forward return to what it shows
+  window.addEventListener("pagehide", save);
   window.addEventListener("pageshow", e => {
     resetSidebar();
     // back/forward cache: the page comes back as it was left; take up the choices kept since
