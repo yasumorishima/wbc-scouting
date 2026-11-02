@@ -29,6 +29,7 @@ on:
       - "scripts/render_html.py"
       - "scripts/requirements-pages.txt"
       - "scripts/pages_check.py"
+      - "scripts/pages_check_test.py"
       - ".github/workflows/pages.yml"
   # Data refreshes commit with GITHUB_TOKEN, which does not trigger push workflows.
   workflow_run:
@@ -154,6 +155,8 @@ jobs:
         run: |
           pip install playwright==1.64.0
           playwright install chromium --with-deps
+      - name: Test the check itself (retries on refusals, not on 404)
+        run: python scripts/pages_check_test.py
       - name: Open every page and select every state (before publishing)
         env:
           ONLY: ${{ inputs.only }}

@@ -29,6 +29,7 @@ import io
 import json
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -37,6 +38,7 @@ from playwright.async_api import async_playwright
 
 FIRST_MS = 3_000      # the first screen of a dashboard (with its figures) must show within this
 PARALLEL = 6
+FILES_LIMIT_S = 1800  # at most this long asking for figure files (the check job has 120 min)
 NO_DATA = "Statcast"  # the no-data notice of apps without data mentions Statcast
 SHOT_WIDTH = 800
 
@@ -117,6 +119,62 @@ def fetch_json(url):
         return json.loads(r.read().decode("utf-8"))
 
 
+def answers(url, tries=4, base_wait=2.0, stop_at=float("inf")):
+    """None when url answers 200 to HEAD, else why it did not (the last status or error).
+    A 404 is final; anything else (429, 5xx, a dropped connection) is waited out and retried,
+    and still counts if it never answers. No waiting past stop_at."""
+    if time.time() >= stop_at:
+        return "time limit"
+    req = urllib.request.Request(url, method="HEAD")
+    why = "no answer"
+    for i in range(tries):
+        wait = base_wait * 2 ** i
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                if r.status == 200:
+                    return None
+                why = str(r.status)
+        except urllib.error.HTTPError as e:
+            why = str(e.code)
+            if e.code == 404:
+                return why
+            retry_after = (e.headers or {}).get("Retry-After", "")
+            if retry_after.isdigit():
+                wait = max(wait, min(int(retry_after), 60))
+        except Exception as e:  # noqa: BLE001 - retried, then counted as missing
+            why = type(e).__name__
+        if i + 1 < tries:
+            if time.time() + wait >= stop_at:
+                return f"{why}, then time limit"
+            time.sleep(wait)
+    return why
+
+
+def check_files(base, names, pause=30.0, base_wait=2.0, limit_s=FILES_LIMIT_S):
+    """Ask base/<name> for every name: a 32-way sweep, then the ones refused for any reason but
+    404 (a host limiting the sweep) once more, 4 at a time, after a pause. Stops waiting after
+    limit_s in all; files not answered by then count as missing ("time limit"), so a host that
+    keeps refusing cannot use up the job's time before the pages are checked.
+    Returns (missing names in order, {last answer: count})."""
+    from concurrent.futures import ThreadPoolExecutor
+    stop_at = time.time() + limit_s
+    with ThreadPoolExecutor(32) as ex:
+        why = dict(zip(names, ex.map(
+            lambda n: answers(f"{base}/{n}", base_wait=base_wait, stop_at=stop_at), names)))
+    again = [n for n in names if why[n] is not None and why[n] != "404"]
+    if again and time.time() + pause < stop_at:
+        print(f"{len(again)} files did not answer in the sweep; asking again slowly", flush=True)
+        time.sleep(pause)
+        with ThreadPoolExecutor(4) as ex:
+            why.update(zip(again, ex.map(
+                lambda n: answers(f"{base}/{n}", tries=6, base_wait=base_wait, stop_at=stop_at), again)))
+    missing = [n for n in names if why[n] is not None]
+    reasons = {}
+    for n in missing:
+        reasons[why[n]] = reasons.get(why[n], 0) + 1
+    return missing, reasons
+
+
 async def shot(page, path, width):
     await page.set_viewport_size({"width": width, "height": 900})
     await page.evaluate("() => document.querySelectorAll('img[loading=lazy]').forEach(i => i.loading = 'eager')")
@@ -129,19 +187,53 @@ async def shot(page, path, width):
     im.save(path, quality=70)
 
 
-async def check_app(browser, base, m, out):
+class NotLoaded(Exception):
+    pass
+
+
+def first_line(e, n):
+    return f"{type(e).__name__}: {(str(e).splitlines() or [''])[0][:n]}"
+
+
+def answered(resp, err):
+    return f"{resp.status}" if resp is not None else (err or "nothing")
+
+
+async def goto(page, url, wait_until="domcontentloaded", tries=4):
+    """page.goto, opened again (after 2, 4, 8 s) while the host answers 429 or 5xx or the load
+    fails (a dropped connection, a timeout). Returns (response or None, the time the last attempt
+    started, the last load error) so the first screen is timed from the attempt that answered."""
+    resp, started, err = None, time.time(), None
+    for i in range(max(tries, 1)):
+        started = time.time()
+        try:
+            resp, err = await page.goto(url, wait_until=wait_until), None
+        except Exception as e:  # noqa: BLE001 - Playwright raises on net::ERR_* and timeouts
+            resp, err = None, f"{first_line(e, 120)}"
+        if resp is not None and resp.status != 429 and resp.status < 500:
+            break
+        if i + 1 < tries:
+            await asyncio.sleep(2 * 2 ** i)
+    return resp, started, err
+
+
+async def must_goto(page, url):
+    """goto, raising NotLoaded unless the page answered 200."""
+    resp, _, err = await goto(page, url)
+    if resp is None or resp.status != 200:
+        raise NotLoaded(f"{url} answered {answered(resp, err)}")
+
+
+async def check_app(ctx, res, base, m, out):
+    """Fills res (errors, pages, states, ...); the caller owns ctx and records anything raised."""
     slug = m["slug"]
-    res = {"slug": slug, "errors": [], "states": 0, "pages": 0}
-    ctx = await browser.new_context(viewport={"width": 1280, "height": 900})
     page = await ctx.new_page()
     page.on("pageerror", lambda e: res["errors"].append(f"script error: {e}"))
 
     # 1. the address everyone links to
-    t0 = time.time()
-    resp = await page.goto(f"{base}/{slug}.html", wait_until="commit")
+    resp, t0, err = await goto(page, f"{base}/{slug}.html", wait_until="commit")
     if not resp or resp.status != 200:
-        res["errors"].append(f"{slug}.html answered {resp.status if resp else 'nothing'}")
-        await ctx.close()
+        res["errors"].append(f"{slug}.html answered {answered(resp, err)}")
         return res
     try:
         await page.wait_for_function(FIRST_JS, timeout=FIRST_MS * 5)
@@ -161,9 +253,9 @@ async def check_app(browser, base, m, out):
         by_outer.setdefault(s["outer"], []).append(s)
     for outer, states in by_outer.items():
         url = f"{base}/{slug}/{outer}.html"
-        r = await page.goto(url, wait_until="domcontentloaded")
+        r, _, err = await goto(page, url)
         if not r or r.status != 200:
-            res["errors"].append(f"{slug}/{outer}.html answered {r.status if r else 'nothing'}")
+            res["errors"].append(f"{slug}/{outer}.html answered {answered(r, err)}")
             continue
         res["pages"] += 1
         shown_hidden = await page.evaluate(HIDDEN_SHOWN_JS)
@@ -205,7 +297,7 @@ async def check_app(browser, base, m, out):
                 break
         # every option of every control does something: from the page's first state, choose it;
         # the controls must then name a built state, and the page must show exactly that state
-        await page.goto(url, wait_until="domcontentloaded")
+        await must_goto(page, url)
         for wid, values in (await page.evaluate(CONTROLS_JS)).items():
             for val in values:
                 if len(res["errors"]) > 20:
@@ -246,7 +338,7 @@ async def check_app(browser, base, m, out):
         home = pages[start]
         # a main-area choice other than the default, made before leaving (kept on the way Back)
         other = next((s for s in home if s["inner"] != home[0]["inner"]), None)
-        await page.goto(url_of(start), wait_until="domcontentloaded")
+        await must_goto(page, url_of(start))
         if other:
             await page.evaluate(SET_JS, other["inner"])
         await page.click(".st-sb-toggle")
@@ -281,11 +373,10 @@ async def check_app(browser, base, m, out):
                           or await page.evaluate(TEXT_JS, ".block-container") != other["text"]):
                         res["errors"].append(f"after Back the controls show {now} but the page shows another state")
                     # opening the address again is a new session: the defaults
-                    await page.goto(url_of(start), wait_until="domcontentloaded")
+                    await must_goto(page, url_of(start))
                     now = await page.evaluate(VALUES_JS)
                     if now != home[0]["inner"]:
                         res["errors"].append(f"opened again, the page shows {now}, not the defaults {home[0]['inner']}")
-    await ctx.close()
     return res
 
 
@@ -304,19 +395,7 @@ async def run(base, only):
     # 3. every figure file answers
     names = sorted({f"{sha}.{index['ext']}" for m in manifests.values() for s in m["states"] for sha in s["images"]})
 
-    def answers(name):
-        req = urllib.request.Request(f"{base}/img/{name}", method="HEAD")
-        for _ in range(3):
-            try:
-                with urllib.request.urlopen(req, timeout=60) as r:
-                    return r.status == 200
-            except Exception:  # noqa: BLE001 - retried, then counted as missing
-                time.sleep(2)
-        return False
-
-    from concurrent.futures import ThreadPoolExecutor
-    with ThreadPoolExecutor(32) as ex:
-        missing = [n for n, ok in zip(names, ex.map(answers, names)) if not ok]
+    missing, reasons = check_files(f"{base}/img", names)
 
     sem = asyncio.Semaphore(PARALLEL)
     async with async_playwright() as p:
@@ -324,7 +403,16 @@ async def run(base, only):
 
         async def one(s):
             async with sem:
-                r = await check_app(browser, base, manifests[s], out)
+                r = {"slug": s, "errors": [], "states": 0, "pages": 0}
+                ctx = await browser.new_context(viewport={"width": 1280, "height": 900})
+                try:
+                    await check_app(ctx, r, base, manifests[s], out)
+                except NotLoaded as e:
+                    r["errors"].append(f"check stopped: {e}")
+                except Exception as e:  # noqa: BLE001 - this dashboard fails; the others are still checked
+                    r["errors"].append(f"check stopped: {first_line(e, 200)}")
+                finally:
+                    await ctx.close()
                 print(("OK  " if not r["errors"] else "FAIL"), s,
                       f"pages={r['pages']} states={r['states']} options={r.get('options', 0)}",
                       f"first={r.get('first_ms')}ms ({r.get('first_figures')} figures on the first screen)",
@@ -344,9 +432,11 @@ async def run(base, only):
         lines.append(f"| {r['slug']} | {r['pages']} | {r['states']} | {r.get('first_ms', '-')} ms | "
                      f"{'; '.join(r['errors'][:2]) or 'none'} |")
     if missing:
-        lines += ["", f"Missing figure files ({len(missing)}): " + ", ".join(missing[:20])]
+        lines += ["", f"Missing figure files ({len(missing)}; by last answer: "
+                  + ", ".join(f"{k} {v}" for k, v in sorted(reasons.items())) + "): " + ", ".join(missing[:20])]
     (out / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    (out / "result.json").write_text(json.dumps({"results": results, "missing": missing}, indent=1), encoding="utf-8")
+    (out / "result.json").write_text(json.dumps({"results": results, "missing": missing,
+                                                 "missing_by_answer": reasons}, indent=1), encoding="utf-8")
     print("\n".join(lines[:3]))
     return 1 if bad or missing else 0
 
