@@ -56,13 +56,16 @@ base = f"http://127.0.0.1:{srv.server_port}/img"
 
 names = [f"ok{i}.avif" for i in range(200)] + [f"busy{i}.avif" for i in range(300)] \
     + ["gone1.avif", "gone2.avif", "dead1.avif"]
+# check_files skips a round when under 5 s of the limit is left, so the limit must leave room after
+# the first sweep: on a slow runner that sweep took over 3 s, and with an 8 s limit no round ran
+# (run 41562415321); 15 s leaves a round unless the sweep takes over 10 s
 start = time.time()
-missing, reasons = pc.check_files(base, names, pause=1.0, base_wait=0.05, limit_s=8.0)
+missing, reasons = pc.check_files(base, names, pause=1.0, base_wait=0.05, limit_s=15.0)
 took = time.time() - start
 print("missing", missing, "reasons", reasons, f"{took:.1f}s")
 assert missing == ["gone1.avif", "gone2.avif", "dead1.avif"], missing
 assert reasons.pop("404") == 2 and len(reasons) == 1 and next(iter(reasons)).startswith("503"), reasons
-assert took < 11, "the time limit did not end the rounds"
+assert took < 18, "the time limit did not end the rounds"
 
 # refused for longer than one slow round (sweep about 0.4 s, round 1 at about 1.4-2.9 s,
 # round 2 at about 4.9 s): answered only because the rounds go on
