@@ -8,11 +8,11 @@ GitHub Pages で公開（同じ Streamlit アプリを、選べる状態ごと�
 
 **[https://yasumorishima.github.io/wbc-scouting/](https://yasumorishima.github.io/wbc-scouting/)**
 
-全 37 ダッシュボードをプール別にまとめた目次（GitHub Pages）。国と打者・投手を選ぶと開きます。
+全 37 ダッシュボードをプール別にまとめた目次（GitHub Pages）。大会の日程（1次ラウンド・決勝トーナメント）・会場・備考つきで、日本語と英語を切り替えられます。国と打者・投手を選ぶと開きます。
 
 > 開いてすぐ表示されます（選手・シーズン・球場・球種などの組み合わせを全部あらかじめ作ってあるため。最初の画面が出るまで、37 本の中央値 0.4 秒・最長 1.4 秒＝2026-11-02 の公開後の確認で実測）。
 
-大会中に使っていたランディングページ（日程つき）は、中身をそのまま ICP のサイトへ移し、リンク先を GitHub Pages 版にしました → [iqjbc-7aaaa-aaaaj-qnnsa-cai.icp0.io/#/wbc](https://iqjbc-7aaaa-aaaaj-qnnsa-cai.icp0.io/#/wbc)。元の [wbc-2026-scouting-dashboard-zvg.caffeine.xyz](https://wbc-2026-scouting-dashboard-zvg.caffeine.xyz/)（ICP / Caffeine）は Streamlit Community Cloud 版へリンクしたままです（眠っていたら「Yes, get this app back up!」で起きます）。
+大会中に使っていたランディングページ（日程つき）の中身は、この目次に入れました（2026-11-03。日程と文言は `scripts/index_data.json`）。一時的に置いていた ICP のサイトの `#/wbc` は、開くとこの目次へ移ります。元の [wbc-2026-scouting-dashboard-zvg.caffeine.xyz](https://wbc-2026-scouting-dashboard-zvg.caffeine.xyz/)（ICP / Caffeine）は Streamlit Community Cloud 版へリンクしたままです（眠っていたら「Yes, get this app back up!」で起きます）。
 
 ---
 
