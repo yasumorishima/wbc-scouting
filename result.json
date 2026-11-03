@@ -1,0 +1,514 @@
+{
+ "results": [
+  {
+   "slug": "aus-batters",
+   "errors": [],
+   "states": 34,
+   "pages": 16,
+   "first_ms": 552,
+   "first_figures": 1,
+   "pages_with_figures": 10,
+   "options": 24,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "aus-pitchers",
+   "errors": [],
+   "states": 8,
+   "pages": 6,
+   "first_ms": 423,
+   "first_figures": 0,
+   "pages_with_figures": 2,
+   "options": 6,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "bra-batters",
+   "errors": [],
+   "states": 4,
+   "pages": 4,
+   "first_ms": 311,
+   "first_figures": 0,
+   "no_data_pages": 4
+  },
+  {
+   "slug": "bra-pitchers",
+   "errors": [],
+   "states": 10,
+   "pages": 10,
+   "first_ms": 384,
+   "first_figures": 0,
+   "no_data_pages": 10
+  },
+  {
+   "slug": "can-batters",
+   "errors": [],
+   "states": 168,
+   "pages": 48,
+   "first_ms": 549,
+   "first_figures": 3,
+   "pages_with_figures": 44,
+   "options": 160,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "can-pitchers",
+   "errors": [],
+   "states": 250,
+   "pages": 48,
+   "first_ms": 465,
+   "first_figures": 3,
+   "pages_with_figures": 22,
+   "options": 146,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "col-batters",
+   "errors": [],
+   "states": 66,
+   "pages": 24,
+   "first_ms": 511,
+   "first_figures": 1,
+   "pages_with_figures": 16,
+   "options": 56,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "col-pitchers",
+   "errors": [],
+   "states": 130,
+   "pages": 28,
+   "first_ms": 232,
+   "first_figures": 1,
+   "pages_with_figures": 14,
+   "options": 76,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "cuba-batters",
+   "errors": [],
+   "states": 38,
+   "pages": 20,
+   "first_ms": 332,
+   "first_figures": 1,
+   "pages_with_figures": 10,
+   "options": 24,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "cuba-pitchers",
+   "errors": [],
+   "states": 68,
+   "pages": 20,
+   "first_ms": 1078,
+   "first_figures": 1,
+   "pages_with_figures": 8,
+   "options": 34,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "dr-batters",
+   "errors": [],
+   "states": 238,
+   "pages": 64,
+   "first_ms": 425,
+   "first_figures": 3,
+   "pages_with_figures": 62,
+   "options": 232,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "dr-pitchers",
+   "errors": [],
+   "states": 584,
+   "pages": 60,
+   "first_ms": 360,
+   "first_figures": 3,
+   "pages_with_figures": 56,
+   "options": 392,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "gb-batters",
+   "errors": [],
+   "states": 100,
+   "pages": 40,
+   "first_ms": 352,
+   "first_figures": 2,
+   "pages_with_figures": 24,
+   "options": 80,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "gb-pitchers",
+   "errors": [],
+   "states": 124,
+   "pages": 48,
+   "first_ms": 315,
+   "first_figures": 2,
+   "pages_with_figures": 12,
+   "options": 58,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "isr-batters",
+   "errors": [],
+   "states": 156,
+   "pages": 48,
+   "first_ms": 306,
+   "first_figures": 3,
+   "pages_with_figures": 40,
+   "options": 144,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "isr-pitchers",
+   "errors": [],
+   "states": 288,
+   "pages": 56,
+   "first_ms": 305,
+   "first_figures": 3,
+   "pages_with_figures": 28,
+   "options": 176,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "ita-batters",
+   "errors": [],
+   "states": 130,
+   "pages": 52,
+   "first_ms": 342,
+   "first_figures": 3,
+   "pages_with_figures": 30,
+   "options": 104,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "ita-pitchers",
+   "errors": [],
+   "states": 500,
+   "pages": 56,
+   "first_ms": 382,
+   "first_figures": 3,
+   "pages_with_figures": 48,
+   "options": 332,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "japan-batters",
+   "errors": [],
+   "states": 60,
+   "pages": 24,
+   "first_ms": 488,
+   "first_figures": 3,
+   "pages_with_figures": 16,
+   "options": 48,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "japan-pitchers",
+   "errors": [],
+   "states": 202,
+   "pages": 20,
+   "first_ms": 354,
+   "first_figures": 3,
+   "pages_with_figures": 18,
+   "options": 126,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "kor-batters",
+   "errors": [],
+   "states": 62,
+   "pages": 20,
+   "first_ms": 344,
+   "first_figures": 3,
+   "pages_with_figures": 18,
+   "options": 56,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "kor-pitchers",
+   "errors": [],
+   "states": 122,
+   "pages": 16,
+   "first_ms": 284,
+   "first_figures": 2,
+   "pages_with_figures": 14,
+   "options": 78,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "mex-batters",
+   "errors": [],
+   "states": 146,
+   "pages": 44,
+   "first_ms": 420,
+   "first_figures": 3,
+   "pages_with_figures": 38,
+   "options": 136,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "mex-pitchers",
+   "errors": [],
+   "states": 402,
+   "pages": 48,
+   "first_ms": 396,
+   "first_figures": 3,
+   "pages_with_figures": 38,
+   "options": 262,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "ned-batters",
+   "errors": [],
+   "states": 104,
+   "pages": 32,
+   "first_ms": 467,
+   "first_figures": 3,
+   "pages_with_figures": 28,
+   "options": 96,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "ned-pitchers",
+   "errors": [],
+   "states": 82,
+   "pages": 36,
+   "first_ms": 273,
+   "first_figures": 1,
+   "pages_with_figures": 10,
+   "options": 38,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "nic-batters",
+   "errors": [],
+   "states": 40,
+   "pages": 16,
+   "first_ms": 333,
+   "first_figures": 1,
+   "pages_with_figures": 12,
+   "options": 32,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "pan-batters",
+   "errors": [],
+   "states": 124,
+   "pages": 40,
+   "first_ms": 365,
+   "first_figures": 3,
+   "pages_with_figures": 32,
+   "options": 112,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "pan-pitchers",
+   "errors": [],
+   "states": 72,
+   "pages": 28,
+   "first_ms": 297,
+   "first_figures": 1,
+   "pages_with_figures": 8,
+   "options": 32,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "pr-batters",
+   "errors": [],
+   "states": 110,
+   "pages": 32,
+   "first_ms": 512,
+   "first_figures": 3,
+   "pages_with_figures": 30,
+   "options": 104,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "pr-pitchers",
+   "errors": [],
+   "states": 218,
+   "pages": 32,
+   "first_ms": 512,
+   "first_figures": 3,
+   "pages_with_figures": 22,
+   "options": 138,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "qf-jpn-ven",
+   "errors": [],
+   "states": 728,
+   "pages": 4,
+   "first_ms": 849,
+   "first_figures": 0,
+   "pages_with_figures": 4,
+   "options": 108,
+   "back_kept": {
+    "m0": 0,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "twn-batters",
+   "errors": [],
+   "states": 62,
+   "pages": 20,
+   "first_ms": 312,
+   "first_figures": 1,
+   "pages_with_figures": 18,
+   "options": 56,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "usa-batters",
+   "errors": [],
+   "states": 228,
+   "pages": 60,
+   "first_ms": 315,
+   "first_figures": 3,
+   "pages_with_figures": 60,
+   "options": 224,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "usa-pitchers",
+   "errors": [],
+   "states": 756,
+   "pages": 68,
+   "first_ms": 276,
+   "first_figures": 3,
+   "pages_with_figures": 64,
+   "options": 494,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  },
+  {
+   "slug": "venezuela-batters",
+   "errors": [],
+   "states": 212,
+   "pages": 56,
+   "first_ms": 409,
+   "first_figures": 3,
+   "pages_with_figures": 56,
+   "options": 208,
+   "back_kept": {
+    "m0": 0,
+    "m1": 0
+   }
+  },
+  {
+   "slug": "venezuela-pitchers",
+   "errors": [],
+   "states": 626,
+   "pages": 64,
+   "first_ms": 406,
+   "first_figures": 3,
+   "pages_with_figures": 54,
+   "options": 406,
+   "back_kept": {
+    "m0": 1,
+    "m1": 1
+   }
+  }
+ ],
+ "missing": [],
+ "missing_by_answer": {}
+}
