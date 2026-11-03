@@ -86,7 +86,7 @@ python scripts/apptest_all.py      # expects "39 OK, 0 NG" (GitHub Actions run 3
 ```
 - Single app locally: `streamlit run app_japan.py` (use AppTest; cloud has Playwright Chromium, which can also open the live apps).
 - Data refresh / player files are **GitHub Actions only and dispatch-only** (`fetch-statcast.yml`, `fetch-all-statcast.yml`, `gen-player-files.yml`), so cloud cannot start them; running the scripts in cloud is possible (`python fetch_data_generic.py --country japan [--pitchers] [--year 2025]`, `python scripts/gen_player_files.py --country japan`) and commits go through a PR.
-- Adding an app: create `app_<x>.py`, push; `pages.yml` builds and checks its page (a new country must be added to `POOLS` and `COUNTRY` in `scripts/build_pages.py`, or the build stops).
+- Adding an app: create `app_<x>.py`, push; `pages.yml` builds and checks its page (a new country must be added to `scripts/index_data.json`, or the build stops).
 - Build one dashboard in cloud without deploying: `pip install -r scripts/requirements-pages.txt && python scripts/prerender.py _site app_japan.py --jobs 4` (japan-batters: 60 states, ~6 min on a Raspberry Pi 5 with 2 processes), then `python scripts/prerender_check.py _site --per-app 6`. The quarterfinal app has 728 states; build it only in GitHub Actions (8 shards).
 - Whole-site dry run of a branch: dispatch `pages.yml` on that branch. A run on a branch never publishes, and neither does `publish=false` or a non-empty `only`. A full run takes about 80 min, most of it the 8 quarterfinal shards. Cloud cannot dispatch, so the owner or a local session starts it. A merge to `master` builds, checks and publishes by itself; nothing is published unless the `verify` job's browser check passes.
 

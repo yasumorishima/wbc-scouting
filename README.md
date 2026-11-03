@@ -216,7 +216,7 @@ GitHub Pages で公開（同じ Streamlit アプリを、選べる状態ごと�
 ### 新しいアプリを追加したら
 
 1. `app_xxx.py` を作成・push
-2. `Pages (pre-rendered)` が自動でページを作って確かめる（新しい国なら `scripts/build_pages.py` の `POOLS` と `COUNTRY` に足す。足さないと組み立てが止まる）
+2. `Pages (pre-rendered)` が自動でページを作って確かめる（新しい国なら `scripts/index_data.json` に足す。足さないと組み立てが止まる）
 
 ---
 
