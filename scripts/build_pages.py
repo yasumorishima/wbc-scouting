@@ -168,7 +168,7 @@ INDEX = """<!doctype html>
   <p class="lead">{lede}</p>
   <p class="sub">{sub}</p>
 {body}
-  <footer>{n} dashboards. {credit} Every view is pre-rendered from the Streamlit apps.
+  <footer>{count} {credit} {made}
   <a href="https://github.com/yasumorishima/wbc-scouting">{source}</a></footer>
 </main>
 <script>
@@ -279,8 +279,10 @@ def index_html(apps):
     rows += [f"    <li>{bi(k)}</li>" for k in ("wb_note1", "wb_note2", "wb_note3", "wb_note4")]
     rows.append("  </ul>")
     unlisted = [a["slug"] for a in apps if a["slug"] not in placed and not a["slug"].startswith("qf-")]
+    n = sum(1 for a in apps if not a["missing_csv"])
     page = INDEX.format(title=bi("wb_title"), lede=bi("wb_lede"), sub=bi("wb_sub"), body="\n".join(rows),
-                        n=sum(1 for a in apps if not a["missing_csv"]), credit=bi("wb_credit"), source=bi("wb_source"))
+                        count=bi((f"ダッシュボード {n} 本。", f"{n} dashboards.")), credit=bi("wb_credit"),
+                        made=bi(("どの画面も Streamlit アプリから作り置きしたものです。", "Every view is pre-rendered from the Streamlit apps.")), source=bi("wb_source"))
     return page, unlisted, mismatched
 
 
