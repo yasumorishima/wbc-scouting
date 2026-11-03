@@ -56,7 +56,7 @@ base = f"http://127.0.0.1:{srv.server_port}/img"
 
 names = [f"ok{i}.avif" for i in range(200)] + [f"busy{i}.avif" for i in range(300)] \
     + ["gone1.avif", "gone2.avif", "dead1.avif"]
-# check_files skips a round when under 5 s of the limit is left, so the limit must leave room after
+# check_files runs no further round once under 5 s of the limit is left, so the limit must leave room after
 # the first sweep: on a slow runner that sweep took over 3 s, and with an 8 s limit no round ran
 # (run 41562415321); 15 s leaves a round unless the sweep takes over 10 s
 start = time.time()
